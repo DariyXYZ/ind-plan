@@ -71,6 +71,40 @@ def clusters(items,e):
     g={}
     for i in range(n): g.setdefault(f(i),[]).append(items[i])
     return list(g.values())
+# мебель: одна вещь = кривые, которые касаются друг друга (ближе e) или лежат внутри замкнутого контура другой
+# (подушки в кровати, конфорки в плите). Пересечения габаритов мало: столик в «уголке» дивана — отдельный предмет.
+def _sd(p,a,b):
+    dx,dy=b[0]-a[0],b[1]-a[1];L=dx*dx+dy*dy
+    t=0 if L==0 else max(0,min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/L))
+    return ((p[0]-a[0]-dx*t)**2+(p[1]-a[1]-dy*t)**2)**.5
+def _segs(pl,c): return list(zip(pl,pl[1:]+([pl[0]] if c else [])))
+def _cross(a,b,c,d):
+    o=lambda p,q,r:(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0])
+    return o(a,b,c)*o(a,b,d)<0 and o(c,d,a)*o(c,d,b)<0
+def _near(A,B,e):
+    for a,b in A:
+        for c,d in B:
+            if _cross(a,b,c,d) or min(_sd(a,c,d),_sd(b,c,d),_sd(c,a,b),_sd(d,a,b))<e: return True
+    return False
+def _inside(p,pl):
+    r=False;n=len(pl)
+    for i in range(n):
+        a,b=pl[i],pl[(i+1)%n]
+        if (a[1]>p[1])!=(b[1]>p[1]) and p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0]: r=not r
+    return r
+def fclusters(items,e):
+    n=len(items);par=list(range(n));S=[_segs(it[1][0],it[1][1]) for it in items]
+    def f(i):
+        while par[i]!=i: par[i]=par[par[i]];i=par[i]
+        return i
+    for i in range(n):
+        for j in range(i+1,n):
+            if not ov(items[i][0],items[j][0],e) or f(i)==f(j): continue
+            (pi,ci,_),(pj,cj,_)=items[i][1],items[j][1]
+            if _near(S[i],S[j],e) or (ci and all(_inside(p,pi) for p in pj)) or (cj and all(_inside(p,pj) for p in pi)): par[f(i)]=f(j)
+    g={}
+    for i in range(n): g.setdefault(f(i),[]).append(items[i])
+    return list(g.values())
 MODEL={};DEFS=[];ENTR=None
 for key in ['v1','v2','v3','contour']:
     items=P[key]
@@ -182,7 +216,7 @@ for key in ['v1','v2','v3','contour']:
     # мебель: кривые, касающиеся друг друга, = один предмет
     fb=[(bbox(pl),(pl,cl,cat)) for pl,cl,cat in furn if len(pl)>1]
     F=[]
-    for gi,cl in enumerate(sorted(clusters(fb,0.6),key=lambda c:min(b[0][0] for b in c))):
+    for gi,cl in enumerate(sorted(fclusters(fb,0.6),key=lambda c:min(b[0][0] for b in c))):
         bx0=min(b[0][0] for b in cl);by0=min(b[0][1] for b in cl);bx1=max(b[0][2] for b in cl);by1=max(b[0][3] for b in cl)
         cx,cy=(bx0+bx1)/2,(by0+by1)/2
         d=''.join('M'+' '.join('%s %s'%(num(x-cx),num(y-cy)) for x,y in pl)+('Z' if c else '') for _,(pl,c,cat) in cl)
