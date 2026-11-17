@@ -594,9 +594,12 @@ function corner(M,B,u,r,t,se,dir,ex){const I0=pa(B,u,se);
  const S2=faceSpan(M,I,d2,[-o2[0],-o2[1]],t2,3,ex);if(!S2)return null;
  return {I,O,d1:[-u[0]*dir,-u[1]*dir],d2,o1,o2,t1:t,t2,m2:S2[1]}}
 function placeFixed(M,p,k,w0,ex,lim){const fe=edgeAt(M,p,inFixed(M,p.x,p.y)?60:lim||10*ED.s);if(!fe)return null;
- const u=[fe.ux,fe.uy],F=[fe.fx,fe.fy];let n=[-u[1],u[0]];if(!pin(M,pa(F,n,1)))n=[-n[0],-n[1]];const t0=thick(M,F,n);if(t0<3||t0>=39)return null;
- let r=[-n[0],-n[1]],B=F;if(regAt(M,...pa(F,n,-2))<0){if(regAt(M,...pa(F,n,t0+2))<0)return null;r=n;B=pa(F,n,t0)}
- return onFace(M,p,k,w0,ex,B,u,r,t0,0)}
+ const u=[fe.ux,fe.uy],F=[fe.fx,fe.fy];let n=[-u[1],u[0]];if(!pin(M,pa(F,n,1)))n=[-n[0],-n[1]];
+ // в самом углу толщина меряется насквозь через обе стены — тогда берём точку грани чуть в стороне от угла
+ for(const k0 of [0,4,-4,8,-8,12,-12,16,-16,24,-24,32,-32]){const S=pa(F,u,k0);if(!pin(M,pa(S,n,.5)))continue;const t0=thick(M,S,n);if(t0<3||t0>=39)continue;
+  let r=[-n[0],-n[1]],B=F;if(regAt(M,...pa(S,n,-2))<0){if(regAt(M,...pa(S,n,t0+2))<0)continue;r=n;B=pa(F,n,t0)}
+  const o=onFace(M,p,k,w0,ex,B,u,r,t0,k0);if(o)return o}
+ return null}
 /* линия стены, по которой едет проём при перетаскивании: внутренняя грань B, направление u, комната r, толщина t */
 function opFrame(M,O){if(O.wall)return null;if(O.cw){const c=O.cw;return {B:c.I,u:c.d1,r:[-c.o1[0],-c.o1[1]],t:c.t1,s:c.L1/2}}
  const [ux,uy]=ang(O.a),m=[-uy,ux],h=O.t/2+3,r=regAt(M,O.x+m[0]*h,O.y+m[1]*h)>=0?m:regAt(M,O.x-m[0]*h,O.y-m[1]*h)>=0?[-m[0],-m[1]]:null;
@@ -795,8 +798,13 @@ $('#plan').addEventListener('pointerdown',e=>{if(e.button==1){const st=$('#stage
    DR.ops=M.ops.filter(o=>DR.skipA.has(o.wall)).map(o=>{const v=M.walls.find(x=>x.id==o.wall);return {id:o.id,s:(o.x-v.x1)*(v.x2-v.x1)/Math.hypot(v.x2-v.x1,v.y2-v.y1)+(o.y-v.y1)*(v.y2-v.y1)/Math.hypot(v.x2-v.x1,v.y2-v.y1)}});return}
   const h=hit(M,p);ED.sel=h;if(h&&h.t=='fixed')toast('Наружный контур из модели на замке — двигать нельзя, проёмы ставятся');
   if(h&&h.t!='fixed'&&h.t!='room'||h&&h.t=='room')DR={k:h.t,id:h.id,i:h.i,p0:p,st:snap(M),mv:0,o:cl(h.t=='wall'?M.walls.find(w=>w.id==h.id):h.t=='op'?M.ops.find(o=>o.id==h.id):h.t=='furn'?M.furn.find(f=>f.id==h.id):h.t=='riser'?M.risers.find(r=>r.id==h.id):null)};
-  if(DR&&DR.k=='wall'){const w=DR.o,G=wgeo(w);DR.con=[];M.walls.forEach(v=>{if(v.id==w.id)return;const H=wgeo(v);if(Math.abs(H.ux*G.ux+H.uy*G.uy)>.5)return;[1,2].forEach(k=>{const [s,q]=loc(v['x'+k],v['y'+k],G.cx,G.cy,G.a);if(Math.abs(q)<=w.t/2+v.t/2+1.5&&Math.abs(s)<=G.len/2+v.t)DR.con.push({id:v.id,k,x:v['x'+k],y:v['y'+k]})})});
-   DR.ops=M.ops.filter(o=>o.wall==w.id).map(o=>({id:o.id,x:o.x,y:o.y}))}
+  if(DR&&DR.k=='wall'){const w=DR.o,G=wgeo(w);DR.con=[];
+   // все стены, что касаются двигаемой (общий конец или примыкание к ней), остаются на ней: их конец скользит вдоль своей линии
+   M.walls.forEach(v=>{if(v.id==w.id)return;[1,2].forEach(k=>{const P=[v['x'+k],v['y'+k]],o=k==1?2:1,j=[1,2].find(j=>Math.hypot(P[0]-w['x'+j],P[1]-w['y'+j])<1),[s,q]=loc(P[0],P[1],G.cx,G.cy,G.a);
+    if(j||Math.abs(q)<=w.t/2+v.t/2+1.5&&Math.abs(s)<=G.len/2+v.t/2+1)DR.con.push({id:v.id,k,j,x:P[0],y:P[1],ox:v['x'+o],oy:v['y'+o]})})});
+   DR.ops=M.ops.filter(o=>o.wall==w.id).map(o=>({id:o.id,x:o.x,y:o.y}));
+   const cs=new Set([w.id,...DR.con.map(c=>c.id)]);DR.mag=[];M.walls.forEach(v=>{if(!cs.has(v.id))DR.mag.push([v.x1,v.y1],[v.x2,v.y2])});fixedPolys(M).forEach(pg=>pg.forEach(a=>DR.mag.push(a)))}
+  if(DR&&DR.k=='furn'&&e.altKey){const c=cl(DR.o);c.id=nid(M,'f');M.furn.push(c);DR.id=c.id;DR.clone=DR.o.id;ED.sel={t:'furn',id:c.id}} // Alt — тянем копию, оригинал остаётся
   if(DR&&DR.k=='room'){const K=calcRooms(M),R=K.regs[h.i];DR.lab=R?R.main:null;DR.o=DR.lab!=null?cl(M.rooms[DR.lab]):null}
   draw();renderProps();return}
  if(t=='wall'){ED.pt=ED.typed?ED.pt:wsnap(M,p,e);addWallPt(M,liveEnd());return}
@@ -812,25 +820,35 @@ window.addEventListener('pointermove',e=>{if(PAN){const st=$('#stage');st.scroll
  if(DR){const dx=p.x-DR.p0.x,dy=p.y-DR.p0.y;if(!DR.mv&&Math.hypot(dx,dy)<2*ED.s)return;if(!DR.mv){ED.hist.push(DR.st);ED.fut=[];DR.mv=1}
   if(DR.k=='furn'||DR.k=='riser'){const a=(DR.k=='furn'?M.furn:M.risers).find(x=>x.id==DR.id);a.x=q2(DR.o.x+dx);a.y=q2(DR.o.y+dy)}
   else if(DR.k=='room'&&DR.o){const l=M.rooms[DR.lab];l.x=q2(DR.o.x+dx);l.y=q2(DR.o.y+dy)}
-  else if(DR.k=='wall'){const w=M.walls.find(x=>x.id==DR.id),G=wgeo(DR.o),nx=-G.uy,ny=G.ux,d=q2(dx*nx+dy*ny);w.x1=DR.o.x1+nx*d;w.y1=DR.o.y1+ny*d;w.x2=DR.o.x2+nx*d;w.y2=DR.o.y2+ny*d;
-   DR.con.forEach(c=>{const v=M.walls.find(x=>x.id==c.id);if(v){v['x'+c.k]=c.x+nx*d;v['y'+c.k]=c.y+ny*d}});DR.ops.forEach(c=>{const o=M.ops.find(x=>x.id==c.id);if(o){o.x=c.x+nx*d;o.y=c.y+ny*d}})}
+  else if(DR.k=='wall'){const w=M.walls.find(x=>x.id==DR.id),O=DR.o,G=wgeo(O),u=[G.ux,G.uy],n=[-G.uy,G.ux];let d=q2(dx*n[0]+dy*n[1]);
+   // магнит: ось стены прилипает к углам других стен и контура
+   if(!e.altKey){let bd=8*ED.s,bv=null;DR.mag.forEach(V=>{const v=(V[0]-O.x1)*n[0]+(V[1]-O.y1)*n[1];if(Math.abs(v-d)<bd){bd=Math.abs(v-d);bv=v}});if(bv!=null)d=r1(bv)}
+   const A=pa([O.x1,O.y1],n,d);w.x1=A[0];w.y1=A[1];const B2=pa([O.x2,O.y2],n,d);w.x2=B2[0];w.y2=B2[1];
+   DR.con.forEach(c=>{const v=M.walls.find(x=>x.id==c.id);if(!v)return;const L=Math.hypot(c.x-c.ox,c.y-c.oy)||1,ev=[(c.x-c.ox)/L,(c.y-c.oy)/L];
+    const P=Math.abs(ev[0]*u[1]-ev[1]*u[0])>.1?xLine([c.ox,c.oy],ev,A,u):pa([c.x,c.y],n,d);if(!P)return;v['x'+c.k]=r1(P[0]);v['y'+c.k]=r1(P[1]);
+    if(c.j){w['x'+c.j]=v['x'+c.k];w['y'+c.j]=v['y'+c.k]}}); // общий угол остаётся общим
+   DR.ops.forEach(c=>{const o=M.ops.find(x=>x.id==c.id);if(o){o.x=c.x+n[0]*d;o.y=c.y+n[1]*d}})}
   else if(DR.k=='end'){const w=M.walls.find(x=>x.id==DR.id),k=DR.end,o2=k==1?2:1,q=smartSnap(M,{x:DR.o['x'+k]+dx,y:DR.o['y'+k]+dy},DR.co.length?null:{x:DR.o['x'+o2],y:DR.o['y'+o2]},{skipV:DR.skipV,skipA:DR.skipA,free:e.altKey,step:e.shiftKey?15:45});
    w['x'+k]=q.x;w['y'+k]=q.y;DR.co.forEach(c=>{const v=M.walls.find(x=>x.id==c.id);if(v){v['x'+c.k]=q.x;v['y'+c.k]=q.y}});ED.pt=q;
    DR.ops.forEach(c=>{const o=M.ops.find(x=>x.id==c.id),v=o&&M.walls.find(x=>x.id==o.wall);if(!v)return;const G=wgeo(v),s=Math.max(o.w/2,Math.min(G.len-o.w/2,c.s));o.x=v.x1+G.ux*s;o.y=v.y1+G.uy*s;o.a=G.a})}
   else if(DR.k=='op'){const o=M.ops.find(x=>x.id==DR.id);if(o)dragOp(M,o,DR.o,p,dx,dy)}
   reDraw();return}
- ED.pt=ED.tool=='wall'?wsnap(M,p,e):p;
+ ED.cur=p;ED.pt=ED.tool=='wall'?wsnap(M,p,e):p;
  if(ED.tool=='door'||ED.tool=='window')ED.prev=placeOp(M,p,ED.tool);
  if(ED.tool=='furn')ED.fg=placeFurn(M,p);
- if(ED.tool=='select'){const h=e.target.closest&&e.target.closest('#plan')?hit(M,p):null,k=h?h.t+(h.id||h.i):'',k0=ED.hover?ED.hover.t+(ED.hover.id||ED.hover.i):'';$('#plan').style.cursor=h&&h.t!='fixed'&&h.t!='room'?'move':h?'pointer':'';if(k==k0)return;ED.hover=h&&h.t!='room'?h:null}
+ if(ED.tool=='select'){const h=e.target.closest&&e.target.closest('#plan')?hit(M,p):null,k=h?h.t+(h.id||h.i):'',k0=ED.hover?ED.hover.t+(ED.hover.id||ED.hover.i):'';$('#plan').style.cursor=h&&h.t=='furn'&&e.altKey?'copy':h&&h.t!='fixed'&&h.t!='room'?'move':h?'pointer':'';if(k==k0)return;ED.hover=h&&h.t!='room'?h:null}
  else $('#plan').style.cursor='crosshair';
  reDraw()});
-window.addEventListener('pointerup',()=>{PAN=null;if(!DR)return;const d=DR;DR=null;if(d.mv)changed(d.k!='furn'&&d.k!='riser'?1:0)});
+window.addEventListener('pointerup',()=>{PAN=null;if(!DR)return;const d=DR;DR=null;
+ if(d.clone&&!d.mv){const M=curM();M.furn=M.furn.filter(f=>f.id!=d.id);ED.sel={t:'furn',id:d.clone};draw();renderProps();return} // Alt-клик без сдвига — копии нет
+ if(d.mv)changed(d.k!='furn'&&d.k!='riser'?1:0)});
 /* ---- клавиши (перехват до общего обработчика) ---- */
 window.addEventListener('keydown',e=>{if(!$('#s-ws').classList.contains('on')||/TEXTAREA|INPUT|SELECT/.test(e.target.tagName))return;const k=e.key.toLowerCase(),M=curM();
  if((e.ctrlKey||e.metaKey)&&(k=='z'||k=='я')){if(ED.on){e.shiftKey?redo():undo();e.preventDefault()}return}
  if((e.ctrlKey||e.metaKey)&&(k=='y'||k=='н')){if(ED.on){redo();e.preventDefault()}return}
  if(!ED.on)return;
+ if((e.ctrlKey||e.metaKey)&&e.code=='KeyC'&&ED.sel&&ED.sel.t=='furn'){const f=M.furn.find(x=>x.id==ED.sel.id);if(f){ED.clip=cl(f);ED.pn=0;toast('Скопировано · Ctrl+V — вставить');e.preventDefault();e.stopImmediatePropagation()}return}
+ if((e.ctrlKey||e.metaKey)&&e.code=='KeyV'&&ED.clip){e.preventDefault();e.stopImmediatePropagation();pasteFurn();return}
  if(ED.tool=='wall'&&ED.chain&&!e.ctrlKey&&!e.metaKey&&(/^[0-9]$/.test(e.key)||e.key=='Backspace'&&ED.typed)){e.stopImmediatePropagation();e.preventDefault();ED.typed=e.key=='Backspace'?ED.typed.slice(0,-1):ED.typed+e.key;reDraw();return}
  if(e.key=='Enter'&&ED.tool=='wall'&&ED.chain){e.stopImmediatePropagation();if(ED.typed)addWallPt(M,liveEnd());else endChain();return}
  if(e.key=='Escape'){e.stopImmediatePropagation();if(ED.chain){endChain();return}if(ED.tool!='select'){_pick('select');ED.tool='select';ED.prev=ED.fg=null;renderProps();reDraw();return}if(ED.sel){ED.sel=null;draw();renderProps();return}edDone();return}
@@ -842,6 +860,9 @@ function delSel(){const M=curM(),s=ED.sel;if(!s)return;if(s.t=='fixed')return to
  mut(M=>{if(s.t=='wall'){M.walls=M.walls.filter(w=>w.id!=s.id);M.ops=M.ops.filter(o=>o.wall!=s.id)}
   if(s.t=='op')M.ops=M.ops.filter(x=>x.id!=s.id);
   if(s.t=='furn')M.furn=M.furn.filter(f=>f.id!=s.id);if(s.t=='riser')M.risers=M.risers.filter(r=>r.id!=s.id)},s.t!='furn'&&s.t!='riser');ED.sel=null;renderProps()}
+/* вставка мебели: под курсор, если он над планом, иначе со сдвигом 200 мм от оригинала */
+function pasteFurn(){let id;mut(M=>{const c=cl(ED.clip);c.id=nid(M,'f');const b=fbox(c),P=ED.cur&&ED.cur.x>=0&&ED.cur.y>=0&&ED.cur.x<=M.W&&ED.cur.y<=M.H?ED.cur:null;ED.pn=(ED.pn||0)+1;
+ const dx=P?P.x-b.cx:10*ED.pn,dy=P?P.y-b.cy:10*ED.pn;c.x=q2(c.x+dx);c.y=q2(c.y+dy);M.furn.push(c);M.furnOn=true;id=c.id},0);ED.sel={t:'furn',id};draw();renderProps()}
 function turnF(d){const M=curM(),f=M.furn.find(x=>x.id==ED.sel.id);if(!f)return;mut(()=>{f.r=((f.r+d)%360+360)%360},0)}
 /* ---- панель «Свойства» справа ---- */
 const fld=(lab,val,on,unit='мм',dis)=>`<label class="fld"><span>${lab}</span><input inputmode="numeric" value="${val}" ${dis?'disabled':''} onchange="${on}"><span>${unit}</span></label>`;
@@ -880,6 +901,7 @@ function renderProps(){if(!ED.on)return;const M=curM(),s=ED.sel,b=$('#props');if
    (c?`<select class="sel" onchange="mut(M=>{const f=M.furn.find(x=>x.id=='${f.id}');f.c=this.value},0)">${FCAT.map(([k,n,w,d])=>`<option value="${k}" ${k==f.c?'selected':''}>${n} · ${w}×${d}</option>`).join('')}</select>`:'')+
    `<div class="row"><span class="lead">Габарит</span><span>${c?c[2]+' × '+c[3]:f.w+' × '+f.d} мм</span></div><div class="row"><span class="lead">Поворот</span><span>${f.r}°${f.m?' · зеркально':''}</span></div>
    <div class="pacts"><button class="btn sm" onclick="turnF(90)"><span class="i">rotate_right</span>90°</button><button class="btn sm" onclick="turnF(-90)"><span class="i">rotate_left</span>90°</button><button class="btn sm ${f.m?'onb':''}" onclick="mut(M=>{const f=M.furn.find(x=>x.id=='${f.id}');f.m=f.m?0:1},0)"><span class="i">flip</span>Зеркало</button></div>
+   <p class="hintp">Копия: Alt + тянуть или Ctrl+C, Ctrl+V.</p>
    ${wcLike(f)||f.c=='wc'||f.c=='bidet'?`<div class="pacts"><button class="btn sm" onclick="swapWc('${f.id}')"><span class="i">swap_horiz</span>${f.c=='bidet'?'Это унитаз':'Это биде'}</button></div>`:''}
    <div class="pacts"><button class="btn sm" onclick="delSel()"><span class="i">delete</span>Удалить</button></div>`)}}
   if(s.t=='riser'){const r=M.risers.find(x=>x.id==s.id);if(r)h+=sec('water_drop','Стояк',`<div class="rooms">${RT.map(t=>pchip(t,r.type==t,`mut(M=>{M.risers.find(x=>x.id=='${r.id}').type='${t}'},0)`)).join('')}</div><p class="hintp">${r.type} · ${RTL[r.type]}</p>${fld('Диаметр',r.d,`mut(M=>{M.risers.find(x=>x.id=='${r.id}').d=+this.value||110},0)`)}
