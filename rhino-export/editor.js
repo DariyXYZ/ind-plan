@@ -139,7 +139,7 @@ function elOutline(M,h,dash){if(!h)return '';const s=ED.s||1;
  if(h.t=='fixed')return `<path d="${M.fixed}" fill="var(--acc)" fill-opacity=".12" stroke="var(--acc)" stroke-width="${dash?1.2:2}" ${dash?'stroke-dasharray="4 3"':''} fill-rule="nonzero" vector-effect="non-scaling-stroke" style="pointer-events:none"/>`;
  return ''}
 function msvg(M,o={}){const K=calcRooms(M),fs=13,ed=o.ed&&ED.on;let s='';
- if(M.lay!='contour')s+=`<use href="#rh-${M.lay}-f"/>`;
+ if(M.lay!='contour')s+=`<use href="#rh-${M.floorOf||M.lay}-f"/>`;
  s+=`<image href="${K.url}" x="0" y="0" width="${K.W}" height="${K.H}" preserveAspectRatio="none"/>`;
  const rs=ed?(ED.sel&&ED.sel.t=='room'?ED.sel.i:null):o.sel;if(rs!=null&&K.regs[rs])s+=`<image href="${selURL(M,rs)}" x="0" y="0" width="${K.W}" height="${K.H}" preserveAspectRatio="none"/>`;
  s+=(M.cut||[]).map(c=>`<path d="M${c[0]} ${c[1]}L${c[2]} ${c[3]}" stroke="#6B7280" stroke-width="1.2" stroke-dasharray="5 4"/>`).join('');
@@ -171,7 +171,7 @@ let ED={on:0,tool:'select',sel:null,hover:null,hist:[],fut:[],chain:null,pt:null
 let CM=null;const curM=()=>refOn?null:sel?sel.M:contour?(CM||(CM=mkModel('contour'))):null;
 const snap=M=>cl({walls:M.walls,ops:M.ops,furn:M.furn,risers:M.risers,rooms:M.rooms,furnOn:M.furnOn});
 function syncR(v){const K=calcRooms(v.M);v.R=K.regs.map(R=>({n:R.n,a:R.a,p:''}));v.R.rh={lay:v.M.lay,furn:v.M.furnOn!==false};v.R.M=v.M;
- v.live=v.R.filter(m=>/Спальн|Гостин/.test(m.n)).reduce((s,m)=>s+m.a,0).toFixed(1)}
+ v.live=v.R.filter(m=>/спальн|гостин|детск|кабинет/i.test(m.n)).reduce((s,m)=>s+m.a,0).toFixed(1)}
 let _rl=0;function changed(geo){const M=curM();if(geo)M.gv++;if(sel){if(!ED.dirty){sel.ver++;ED.dirty=1}syncR(sel);clearTimeout(_rl);_rl=setTimeout(()=>{renderList();if(sel)$('#vinfo .m')&&showVinfo()},250)}saved();draw();renderProps()}
 function mut(fn,geo){const M=curM();ED.hist.push(snap(M));if(ED.hist.length>80)ED.hist.shift();ED.fut=[];fn(M);changed(geo)}
 function restore(st){const M=curM();Object.assign(M,cl(st));M.gv++;M.seq+=50}

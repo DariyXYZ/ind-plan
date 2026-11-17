@@ -27,6 +27,8 @@ CSS='''<style>
 PANEL='''<div id="pedit"><div class="rh"><button class="ib" title="К генерациям" onclick="edDone()"><span class="i">arrow_back</span></button><h2 id="ptitle">Свойства</h2><span class="sp"></span><button class="ib" id="undo" title="Отменить · Ctrl+Z" onclick="undo()"><span class="i">undo</span></button><button class="ib" id="redo" title="Повторить · Ctrl+Shift+Z" onclick="redo()"><span class="i">redo</span></button></div><div class="rsub">Свойства</div><div id="props"></div><div class="cta"><button class="btn pri lg w" onclick="edDone()"><span class="i">check</span>Готово</button></div></div>'''
 msym=open(D+'/rh/msym.html',encoding='utf-8').read()
 model=open(D+'/rh/model.js',encoding='utf-8').read();ed=open(D+'/editor.js',encoding='utf-8').read()
+# v4 — вариант, спроектированный вручную (v4.js); идёт после editor.js: дополняет каталог мебели и COMBO
+ed+=chr(10)+open(D+'/v4.js',encoding='utf-8').read()
 # стили — во второй <head> (первый — обёртка артефакта)
 anc='@media (max-width:1000px)';i=s.index(anc);j=s.index('</style>',i)+len('</style>')
 if '<!--ed-css-->' in s: s=put(s,'ed-css',CSS,'')
