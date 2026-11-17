@@ -267,7 +267,7 @@ textarea.ta{width:100%;min-height:76px;border:1px solid var(--line2);border-radi
    <div class="flt" id="flt"></div>
    <div id="glist" class="gl" style="display:none"></div>
    <div class="rempty" id="gempty"><span class="i">dashboard_customize</span><b style="color:var(--text)">Здесь появятся варианты</b>Нарисуйте контур квартиры и нажмите «Создать планировку»</div>
-<!--ed-panel--><div id="pedit"><div class="rh"><button class="ib" title="К генерациям" onclick="edDone()"><span class="i">arrow_back</span></button><h2 id="ptitle">Правка</h2><span class="sp"></span><button class="ib" id="undo" title="Отменить · Ctrl+Z" onclick="undo()"><span class="i">undo</span></button><button class="ib" id="redo" title="Повторить · Ctrl+Shift+Z" onclick="redo()"><span class="i">redo</span></button></div><div class="rsub">Свойства</div><div id="props"></div><div class="cta"><button class="btn pri lg w" onclick="edDone()"><span class="i">check</span>Готово</button></div></div><!--/ed-panel-->  </aside>
+<!--ed-panel--><div id="pedit"><div class="rh"><button class="ib" title="К генерациям" onclick="edDone()"><span class="i">arrow_back</span></button><h2 id="ptitle">Свойства</h2><span class="sp"></span><button class="ib" id="undo" title="Отменить · Ctrl+Z" onclick="undo()"><span class="i">undo</span></button><button class="ib" id="redo" title="Повторить · Ctrl+Shift+Z" onclick="redo()"><span class="i">redo</span></button></div><div class="rsub">Свойства</div><div id="props"></div><div class="cta"><button class="btn pri lg w" onclick="edDone()"><span class="i">check</span>Готово</button></div></div><!--/ed-panel-->  </aside>
  </div>
 </section>
 
@@ -543,8 +543,62 @@ function doorP(o){const [ux,uy]=ang(o.a),nx=-uy*o.side,ny=ux*o.side,h=o.w/2,k=o.
 function fbox(f){if(f.src)return {cx:f.x,cy:f.y,a:f.r,l:f.w/MM,t:f.d/MM};const c=FC[f.c],[ux,uy]=ang(f.r),h=c[3]/MM/2;return {cx:f.x-uy*h,cy:f.y+ux*h,a:f.r,l:c[2]/MM,t:c[3]/MM}}
 const fixedPolys=M=>M._fx||(M._fx=(M.fixed||'').split('M').filter(Boolean).map(s=>{const n=s.replace(/Z/g,'').trim().split(/[\s,]+/).map(Number),o=[];for(let i=0;i+1<n.length;i+=2)o.push([n[i],n[i+1]]);return o}));
 const HC=document.createElement('canvas').getContext('2d');const fixedPath=M=>M._fp||(M._fp=new Path2D(M.fixed||'M0 0'));
-const inFixed=(M,x,y)=>!!M.fixed&&HC.isPointInPath(fixedPath(M),x,y,'evenodd');
-function mkModel(lay){const M=cl(RHM[lay]);M.lay=lay;M.gv=1;M.seq=500;return M}
+const inFixed=(M,x,y)=>!!M.fixed&&HC.isPointInPath(fixedPath(M),x,y,'nonzero');
+function mkModel(lay){const M=cl(RHM[lay]);M.lay=lay;M.gv=1;M.seq=500;heal(M);return M}
+/* ---- проёмы в наружном контуре ---- */
+const pa=(P,d,k)=>[P[0]+d[0]*k,P[1]+d[1]*k],lerp=(A,B,f)=>[A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f],pin=(M,P)=>inFixed(M,P[0],P[1]);
+function xLine(P,d,Q,e){const den=d[0]*e[1]-d[1]*e[0];if(Math.abs(den)<1e-6)return null;return pa(P,d,((Q[0]-P[0])*e[1]-(Q[1]-P[1])*e[0])/den)}
+const parea=pg=>pg.reduce((s,a,i)=>{const b=pg[(i+1)%pg.length];return s+a[0]*b[1]-b[0]*a[1]},0);
+function boxPts(o){const [ux,uy]=ang(o.a),h=o.w/2,k=o.t/2;return [[-h,-k],[h,-k],[h,k],[-h,k]].map(([s,q])=>[o.x+ux*s-uy*q,o.y+uy*s+ux*q])}
+/* разрывы контура под окна и двери модели заделываем, сами проёмы ставим на всю толщину стены — как новые: тогда их можно возить по стенам */
+function heal(M){if(!M.fixed||M.hd)return;M.hd=1;const add=[],sg=Math.sign(fixedPolys(M).reduce((s,pg)=>s+Math.sign(parea(pg)),0))||-1;
+ M.ops.forEach(o=>{if(o.wall||o.cw)return;const [ux,uy]=ang(o.a),n=[-uy,ux];let lo=1e9,hi=-1e9;
+  [-1,1].forEach(e=>{for(const g of [1.5,3,6]){const P=[o.x+ux*e*(o.w/2+g),o.y+uy*e*(o.w/2+g)];let a=null,best=null;
+   for(let q=-40;q<=40.01;q+=.25){const s=pin(M,pa(P,n,q));if(s&&a==null)a=q;if((!s||q>=40)&&a!=null){const b=s?q:q-.25,d=a>0?a:b<0?-b:0;if(!best||d<best.d)best={a,b,d};a=null}}
+   if(best&&best.d<6){lo=Math.min(lo,best.a);hi=Math.max(hi,best.b);break}}});
+  if(hi-lo<3)return;const m=(lo+hi)/2;o.x+=n[0]*m;o.y+=n[1]*m;o.t=hi-lo+.25;let pg=boxPts({...o,w:o.w+1});if(Math.sign(parea(pg))!=sg)pg.reverse();add.push('M'+pg.map(f2).join(' ')+'Z')});
+ M.fixed+=add.join('');delete M._fx;delete M._fp}
+function inner(M,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,nx=-dy/L*.75,ny=dx/L*.75;return inFixed(M,mx+nx,my+ny)&&inFixed(M,mx-nx,my-ny)}
+function edgeAt(M,p,lim,skip){let fe=null,bd=lim;fixedPolys(M).forEach(pg=>pg.forEach((a,i)=>{const b=pg[(i+1)%pg.length],dx=b[0]-a[0],dy=b[1]-a[1],L2=dx*dx+dy*dy;if(L2<4)return;const L=Math.sqrt(L2),ux=dx/L,uy=dy/L;
+  if(skip&&skip(ux,uy))return;let t=((p.x-a[0])*dx+(p.y-a[1])*dy)/L2;t=Math.max(0,Math.min(1,t));const fx=a[0]+dx*t,fy=a[1]+dy*t,d=Math.hypot(p.x-fx,p.y-fy);if(d>=bd||inner(M,a,b))return;bd=d;fe={fx,fy,ux,uy}}));return fe}
+function thick(M,F,n){let t=0;for(let s=.25;s<40;s+=.25){if(pin(M,pa(F,n,s)))t=s;else if(t)break}return t+.25}
+/* свободный участок внутренней грани: B — точка грани, u — вдоль, r — в комнату; другие проёмы ограничивают участок */
+function faceSpan(M,B,u,r,t,s,ex){const ok=v=>{const X=pa(B,u,v);return !pin(M,pa(X,r,1))&&pin(M,pa(X,r,-1))};
+ if(!ok(s)){let f=null;for(let d=.5;d<=4&&f==null;d+=.5){if(ok(s+d))f=s+d;else if(ok(s-d))f=s-d}if(f==null)return null;s=f}
+ let s0=s,s1=s;while(s1-s<1500&&ok(s1+.5))s1+=.5;while(s-s0<1500&&ok(s0-.5))s0-=.5;
+ M.ops.forEach(o=>{if(o.id==ex||o.wall)return;let lo=1e9,hi=-1e9,n=0;
+  opPts(o).forEach(P=>{const l=(P[0]-B[0])*r[0]+(P[1]-B[1])*r[1];if(l>-t-1.5&&l<1.5){const v=(P[0]-B[0])*u[0]+(P[1]-B[1])*u[1];lo=Math.min(lo,v);hi=Math.max(hi,v);n++}});
+  if(n<2||hi<=s0||lo>=s1)return;if((lo+hi)/2<=s)s0=Math.max(s0,hi);else s1=Math.min(s1,lo)});
+ return s1-s0>1?[s0,s1]:null}
+/* угловое окно: внутренний угол I, наружный O, стороны L1/L2 по внутренним граням от угла */
+function cwPts(c){const A=pa(c.I,c.d1,c.L1),D=pa(c.I,c.d2,c.L2);return {A,B:pa(A,c.o1,c.t1),C:pa(D,c.o2,c.t2),D}}
+const opPts=o=>{if(!o.cw)return boxPts(o);const c=o.cw,{A,B,C,D}=cwPts(c);return [c.I,A,B,c.O,C,D]};
+const opPath=(o,pw=0,pt=0)=>o.cw?'M'+opPts(o).map(f2).join('L')+'Z':obox(o.x,o.y,o.a,o.w+pw,o.t+pt);
+function corner(M,B,u,r,t,se,dir,ex){const I0=pa(B,u,se);
+ if(!pin(M,pa(pa(I0,u,dir*1.5),r,2)))return null;
+ const X=pa(pa(I0,u,dir*(t+3)),r,-(t+3));if(pin(M,X)||regAt(M,X[0],X[1])>=0)return null;
+ const Q=pa(pa(I0,r,12),u,dir);const fe=edgeAt(M,{x:Q[0],y:Q[1]},16,(x,y)=>Math.abs(x*u[0]+y*u[1])>.7);if(!fe)return null;
+ let d2=[fe.ux,fe.uy];if(d2[0]*r[0]+d2[1]*r[1]<0)d2=[-d2[0],-d2[1]];let o2=[-d2[1],d2[0]];const F=[fe.fx,fe.fy];if(!pin(M,pa(F,o2,1)))o2=[-o2[0],-o2[1]];
+ const t2=thick(M,F,o2);if(t2<3)return null;const I=xLine(B,u,F,d2);if(!I)return null;const o1=[-r[0],-r[1]],O=xLine(pa(I,o1,t),u,pa(I,o2,t2),d2);if(!O)return null;
+ const S2=faceSpan(M,I,d2,[-o2[0],-o2[1]],t2,3,ex);if(!S2)return null;
+ return {I,O,d1:[-u[0]*dir,-u[1]*dir],d2,o1,o2,t1:t,t2,m2:S2[1]}}
+function placeFixed(M,p,k,w0,ex,lim){const fe=edgeAt(M,p,inFixed(M,p.x,p.y)?60:lim||10*ED.s);if(!fe)return null;
+ const u=[fe.ux,fe.uy],F=[fe.fx,fe.fy];let n=[-u[1],u[0]];if(!pin(M,pa(F,n,1)))n=[-n[0],-n[1]];const t0=thick(M,F,n);if(t0<3||t0>=39)return null;
+ let r=[-n[0],-n[1]],B=F;if(regAt(M,...pa(F,n,-2))<0){if(regAt(M,...pa(F,n,t0+2))<0)return null;r=n;B=pa(F,n,t0)}
+ return onFace(M,p,k,w0,ex,B,u,r,t0,0)}
+/* линия стены, по которой едет проём при перетаскивании: внутренняя грань B, направление u, комната r, толщина t */
+function opFrame(M,O){if(O.wall)return null;if(O.cw){const c=O.cw;return {B:c.I,u:c.d1,r:[-c.o1[0],-c.o1[1]],t:c.t1,s:c.L1/2}}
+ const [ux,uy]=ang(O.a),m=[-uy,ux],h=O.t/2+3,r=regAt(M,O.x+m[0]*h,O.y+m[1]*h)>=0?m:regAt(M,O.x-m[0]*h,O.y-m[1]*h)>=0?[-m[0],-m[1]]:null;
+ return r?{B:pa([O.x,O.y],r,O.t/2),u:[ux,uy],r,t:O.t,s:0}:null}
+function onFace(M,p,k,w0,ex,B,u,r,t0,s){
+ const sp=(p.x-B[0])*u[0]+(p.y-B[1])*u[1],S=faceSpan(M,B,u,r,t0,s,ex);if(!S)return null;const [s0,s1]=S;
+ let t=thick(M,pa(B,u,(s0+s1)/2),[-r[0],-r[1]]);if(t<3||t>t0+2)t=t0; // толщину меряем в середине участка, не у угла
+ if(k=='win'){const tryC=dir=>{const se=dir>0?s1:s0,ov=dir>0?sp+w0/2-s1:s0-(sp-w0/2);if(ov<12)return null;const c=corner(M,B,u,r,t,se,dir,ex);if(!c)return null;
+   c.L2=Math.min(ov,c.m2,w0-10);c.L1=Math.min(w0-c.L2,s1-s0);delete c.m2;return c.L1>=10&&c.L2>=10?c:null};
+  const c=tryC(1)||tryC(-1);if(c)return {k,cw:c,x:c.I[0],y:c.I[1],a:Math.atan2(c.d1[1],c.d1[0])*180/Math.PI,w:c.L1+c.L2,t}}
+ const w=Math.min(w0,s1-s0);if(w<10)return null;const P=pa(pa(B,r,-t/2),u,Math.max(s0+w/2,Math.min(s1-w/2,sp)));
+ let a=Math.atan2(u[1],u[0])*180/Math.PI;if(a>90)a-=180;if(a<=-90)a+=180;const [ax,ay]=ang(a);
+ return {k,x:P[0],y:P[1],a,w,t,side:-ay*r[0]+ax*r[1]>0?1:-1,h:ED.hg||'s'}}
 /* ---- помещения: растр 1 px = 20 мм, двери и окна закрыты, заливка от подписей ---- */
 function dil(A,W,H,r){const B=new Uint8Array(W*H),C=new Uint8Array(W*H);
  for(let y=0;y<H;y++){let c=0;const o=y*W;for(let x=-r;x<W;x++){const a=x+r;if(a<W&&A[o+a])c++;const m=x-r-1;if(m>=0&&A[o+m])c--;if(x>=0)B[o+x]=c>0?1:0}}
@@ -554,8 +608,8 @@ function flood(L,W,H,s,v){const st=[s];let n=0;L[s]=v;while(st.length){const i=s
  if(x>0&&L[i-1]===0){L[i-1]=v;st.push(i-1)}if(x<W-1&&L[i+1]===0){L[i+1]=v;st.push(i+1)}if(i>=W&&L[i-W]===0){L[i-W]=v;st.push(i-W)}if(i+W<L.length&&L[i+W]===0){L[i+W]=v;st.push(i+W)}}return n}
 const hex=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
 function rasterWalls(M,W,H){const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.fillStyle=g.strokeStyle='#000';
- if(M.fixed)g.fill(fixedPath(M),'evenodd');M.walls.forEach(w=>{const G=wgeo(w);g.fill(new Path2D(obox(G.cx,G.cy,G.a,G.L,w.t)))});
- M.ops.forEach(o=>g.fill(new Path2D(obox(o.x,o.y,o.a,o.w+1,Math.max(o.t,3)))));g.lineWidth=2;(M.cut||[]).forEach(([a,b,c2,d])=>{g.beginPath();g.moveTo(a,b);g.lineTo(c2,d);g.stroke()});return [c,g]}
+ if(M.fixed)g.fill(fixedPath(M),'nonzero');M.walls.forEach(w=>{const G=wgeo(w);g.fill(new Path2D(obox(G.cx,G.cy,G.a,G.L,w.t)))});
+ M.ops.forEach(o=>g.fill(new Path2D(o.cw?opPath(o):obox(o.x,o.y,o.a,o.w+1,Math.max(o.t,3)))));g.lineWidth=2;(M.cut||[]).forEach(([a,b,c2,d])=>{g.beginPath();g.moveTo(a,b);g.lineTo(c2,d);g.stroke()});return [c,g]}
 function calcRooms(M){if(M._K&&M._kv===M.gv)return M._K;const W=Math.ceil(M.W),H=Math.ceil(M.H),N=W*H,[c,g]=rasterWalls(M,W,H),D=g.getImageData(0,0,W,H).data;
  let A=new Uint8Array(N);for(let i=0;i<N;i++)A[i]=D[i*4+3]>90?1:0;A=mclose(A,W,H,3);
  const L=new Int32Array(N);for(let i=0;i<N;i++)if(A[i])L[i]=-1;flood(L,W,H,0,-2);const regs=[],lab2=[];
@@ -570,7 +624,9 @@ function selURL(M,i){const K=calcRooms(M);if(K.sel[i])return K.sel[i];const c=do
  for(let j=0;j<K.L.length;j++)if(K.L[j]===i+1){P[j*4]=61;P[j*4+1]=90;P[j*4+2]=254;P[j*4+3]=46}g.putImageData(img,0,0);return K.sel[i]=c.toDataURL()}
 const regAt=(M,x,y)=>{const K=calcRooms(M),px=Math.round(x),py=Math.round(y);if(px<0||py<0||px>=K.W||py>=K.H)return -1;const v=K.L[py*K.W+px];return v>0?v-1:v};
 /* ---- отрисовка ---- */
-function opG(o){if(o.k=='blank')return `<path d="${obox(o.x,o.y,o.a,o.w,o.t)}" fill="${EC.ext}"/>`;
+function opG(o){if(o.cw){const c=o.cw,{A,D}=cwPts(c),gl=f=>`M${f2(pa(A,c.o1,c.t1*f))}L${f2(lerp(c.I,c.O,f))}L${f2(pa(D,c.o2,c.t2*f))}`;
+  return `<path d="${opPath(o)}" fill="#fff" stroke="${EC.win}" stroke-width=".6" stroke-linejoin="round"/><path d="${gl(1/3)}${gl(2/3)}" fill="none" stroke="${EC.win}" stroke-width=".6" stroke-linejoin="round"/>`}
+ if(o.k=='blank')return `<path d="${obox(o.x,o.y,o.a,o.w,o.t)}" fill="${EC.ext}"/>`;
  if(o.k=='win'){const [ux,uy]=ang(o.a),nx=-uy,ny=ux,h=o.w/2,q=o.t*.17,ln=k=>`M${(o.x-ux*h+nx*k).toFixed(2)} ${(o.y-uy*h+ny*k).toFixed(2)}L${(o.x+ux*h+nx*k).toFixed(2)} ${(o.y+uy*h+ny*k).toFixed(2)}`;
   return `<path d="${obox(o.x,o.y,o.a,o.w,o.t)}${ln(q)}${ln(-q)}" fill="#fff" stroke="${EC.win}" stroke-width=".6" stroke-linejoin="round"/>`}
  let s=`<path d="${obox(o.x,o.y,o.a,o.w,o.t+.6)}" fill="${EC.floor}"/>`;if(o.k=='door')s+=`<path d="${doorP(o)}" fill="none" stroke="${EC.door}" stroke-width=".75" stroke-linecap="round"/>`;return s}
@@ -580,10 +636,10 @@ function riserG(r){const R=Math.max(r.d/MM/2,4),d=R*.7;return `<circle cx="${r.x
 const outl=(d,dash)=>`<path d="${d}" fill="var(--acc)" fill-opacity="${dash?0:.1}" stroke="var(--acc)" stroke-width="${dash?1.2:2}" ${dash?'stroke-dasharray="4 3"':''} vector-effect="non-scaling-stroke" style="pointer-events:none"/>`;
 function elOutline(M,h,dash){if(!h)return '';const s=ED.s||1;
  if(h.t=='wall'){const w=M.walls.find(x=>x.id==h.id);if(!w)return '';const G=wgeo(w);return outl(obox(G.cx,G.cy,G.a,G.L,w.t),dash)+(dash?'':[[w.x1,w.y1],[w.x2,w.y2]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="${4*s}" fill="#fff" stroke="var(--acc)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`).join(''))}
- if(h.t=='op'){const o=M.ops.find(x=>x.id==h.id);return o?outl(obox(o.x,o.y,o.a,o.w,o.t+1),dash):''}
+ if(h.t=='op'){const o=M.ops.find(x=>x.id==h.id);return o?outl(opPath(o,0,1),dash):''}
  if(h.t=='furn'){const f=M.furn.find(x=>x.id==h.id);if(!f)return '';const b=fbox(f);return outl(obox(b.cx,b.cy,b.a,b.l+1,b.t+1),dash)}
  if(h.t=='riser'){const r=M.risers.find(x=>x.id==h.id);return r?`<circle cx="${r.x}" cy="${r.y}" r="${Math.max(r.d/MM/2,4)+2}" fill="none" stroke="var(--acc)" stroke-width="2" ${dash?'stroke-dasharray="4 3"':''} vector-effect="non-scaling-stroke"/>`:''}
- if(h.t=='fixed')return `<path d="${M.fixed}" fill="var(--acc)" fill-opacity=".12" stroke="var(--acc)" stroke-width="${dash?1.2:2}" ${dash?'stroke-dasharray="4 3"':''} fill-rule="evenodd" vector-effect="non-scaling-stroke" style="pointer-events:none"/>`;
+ if(h.t=='fixed')return `<path d="${M.fixed}" fill="var(--acc)" fill-opacity=".12" stroke="var(--acc)" stroke-width="${dash?1.2:2}" ${dash?'stroke-dasharray="4 3"':''} fill-rule="nonzero" vector-effect="non-scaling-stroke" style="pointer-events:none"/>`;
  return ''}
 function msvg(M,o={}){const K=calcRooms(M),fs=13,ed=o.ed&&ED.on;let s='';
  if(M.lay!='contour')s+=`<use href="#rh-${M.lay}-f"/>`;
@@ -591,7 +647,7 @@ function msvg(M,o={}){const K=calcRooms(M),fs=13,ed=o.ed&&ED.on;let s='';
  const rs=ed?(ED.sel&&ED.sel.t=='room'?ED.sel.i:null):o.sel;if(rs!=null&&K.regs[rs])s+=`<image href="${selURL(M,rs)}" x="0" y="0" width="${K.W}" height="${K.H}" preserveAspectRatio="none"/>`;
  s+=(M.cut||[]).map(c=>`<path d="M${c[0]} ${c[1]}L${c[2]} ${c[3]}" stroke="#6B7280" stroke-width="1.2" stroke-dasharray="5 4"/>`).join('');
  if(M.furnOn!==false)s+=M.furn.map(furG).join('');
- if(M.fixed)s+=`<path d="${M.fixed}" fill="${EC.ext}" fill-rule="evenodd"/>`;
+ if(M.fixed)s+=`<path d="${M.fixed}" fill="${EC.ext}" fill-rule="nonzero"/>`;
  s+=M.walls.map(w=>{const G=wgeo(w);return `<path d="${obox(G.cx,G.cy,G.a,G.L,w.t)}" fill="${EC[w.type]||EC.part}"/>`}).join('');
  s+=M.ops.map(opG).join('')+M.risers.map(riserG).join('');
  if(o.label!==false&&(!ed||ED.lbl))M.rooms.forEach((l,i)=>{const r=K.regs[K.lab2[i]],on=r&&K.lab2[i]===rs,bg=on?'#E3E8FD':r?RCOL(r.n):'#fff';
@@ -601,7 +657,7 @@ function msvg(M,o={}){const K=calcRooms(M),fs=13,ed=o.ed&&ED.on;let s='';
 function previewG(M){const t=ED.tool,P=ED.pt;if(!P)return '';let s='';const g='fill="var(--acc)" fill-opacity=".35" stroke="var(--acc)" stroke-width="1.2" vector-effect="non-scaling-stroke"';
  if(t=='wall'){const th=ED.wth/MM;if(ED.chain){const w={x1:ED.chain.x,y1:ED.chain.y,x2:P.x,y2:P.y,t:th,cap:1},G=wgeo(w);if(G.len>.5)s+=`<path d="${obox(G.cx,G.cy,G.a,G.L,th)}" ${g}/><text x="${G.cx}" y="${G.cy-th/2-4}" font-size="${11*ED.s}" text-anchor="middle" font-family="Inter,sans-serif" fill="var(--acc-text)" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="${3*ED.s}">${mmv(G.len).toLocaleString('ru-RU')}</text>`}
   s+=`<circle cx="${P.x}" cy="${P.y}" r="${4*ED.s}" fill="var(--acc)"/>`}
- if((t=='door'||t=='window')&&ED.prev){const o=ED.prev;s+=`<g opacity=".85">${opG(o)}</g>`+outl(obox(o.x,o.y,o.a,o.w,o.t+1))}
+ if((t=='door'||t=='window')&&ED.prev){const o=ED.prev;s+=`<g opacity=".85">${opG(o)}</g>`+outl(opPath(o,0,1))}
  if(t=='furn'&&ED.fg)s+=`<g opacity=".7">${furG(ED.fg)}</g>`;
  if(t=='riser')s+=`<g opacity=".6">${riserG({x:P.x,y:P.y,d:110,type:ED.rt})}</g>`;
  return s}
@@ -620,13 +676,13 @@ const nid=(M,p)=>p+(++M.seq);
 function draw(){const M=curM();if(!M)return;if(ED.on){$('#plan').innerHTML=msvg(M,{ed:1,area:1});return}if(sel)drawSel();else $('#plan').innerHTML=msvg(M,{})}
 function edStart(){const M=curM();if(!M){if(refOn)toast('Эталон бюро не редактируется — выберите вариант');return}
  if(!ED.on){ED.on=1;ED.hist=[];ED.fut=[];ED.dirty=0;ED.sel=null}$('.right').classList.add('ed');$('#insp').style.display='none';rSel=null;
- $('#ptitle').textContent='Правка';$('#pedit .rsub').textContent=sel?`Вариант ${sel.id} · свойства`:'Контур квартиры · свойства';$('#sheettag').innerHTML=`<span class="i" style="font-size:15px">edit</span><b>Правка</b>· ${sel?'Вариант '+sel.id:'контур квартиры'} · клик — выбрать, тянуть — сдвинуть`;draw();renderProps()}
+ $('#ptitle').textContent='Свойства';$('#pedit .rsub').textContent=sel?`Вариант ${sel.id}`:'Контур квартиры';$('#sheettag').innerHTML=`<span class="i" style="font-size:15px">edit</span><b>Правка</b>· ${sel?'Вариант '+sel.id:'контур квартиры'} · клик — выбрать, тянуть — сдвинуть`;draw();renderProps()}
 function edDone(){if(!ED.on)return;const was=ED.dirty;ED.on=0;ED.sel=null;ED.chain=null;ED.prev=null;ED.fg=null;tool='select';renderTb();hint('');$('.right').classList.remove('ed');
  if(sel){showVar(sel.id);if(was)toast(`Правки сохранены · вариант ${sel.id} v${sel.ver}`)}else if(contour){$('#sheettag').innerHTML=CT;draw();if(was)toast('Контур сохранён')}ED.dirty=0}
 /* ---- поиск под курсором ---- */
 function hit(M,p){const e=5*ED.s;
  for(const r of M.risers)if(Math.hypot(p.x-r.x,p.y-r.y)<=Math.max(r.d/MM/2,4)+e)return {t:'riser',id:r.id};
- for(const o of M.ops)if(inBox(p.x,p.y,o.x,o.y,o.a,o.w,o.t,e*.6))return {t:'op',id:o.id};
+ for(const o of M.ops)if(o.cw?HC.isPointInPath(new Path2D(opPath(o)),p.x,p.y):inBox(p.x,p.y,o.x,o.y,o.a,o.w,o.t,e*.6))return {t:'op',id:o.id};
  for(const w of M.walls){const G=wgeo(w);if(inBox(p.x,p.y,G.cx,G.cy,G.a,G.L,w.t,e*.6))return {t:'wall',id:w.id}}
  if(inFixed(M,p.x,p.y))return {t:'fixed'};
  if(M.furnOn!==false)for(let i=M.furn.length-1;i>=0;i--){const f=M.furn[i],b=fbox(f);if(inBox(p.x,p.y,b.cx,b.cy,b.a,b.l,b.t,0))return {t:'furn',id:f.id}}
@@ -639,15 +695,19 @@ function snapPt(M,p,from){let x=p.x,y=p.y,best=10*ED.s;
   if(bw==8*ED.s){x=q2(x);y=q2(y)}}
  return {x,y}}
 /* проём под курсором: перегородка (по оси) или наружная стена из модели (по ближайшей грани) */
-function placeOp(M,p,k){const w0=(k=='door'?ED.dw:ED.ww)/MM;let best=null,bd=1e9;
+function placeOp(M,p,k,w0,ex,fr){if(k=='window')k='win';w0=w0||(k=='door'?ED.dw:ED.ww)/MM;let best=null,bd=1e9;
+ if(fr){const l=(p.x-fr.B[0])*fr.r[0]+(p.y-fr.B[1])*fr.r[1];if(l>-fr.t-30&&l<30){const o=onFace(M,p,k,w0,ex,fr.B,fr.u,fr.r,fr.t,fr.s);if(o)return o}}
  M.walls.forEach(w=>{const G=wgeo(w),[s,q]=loc(p.x,p.y,G.cx,G.cy,G.a);if(Math.abs(s)>G.len/2+2||Math.abs(q)>w.t/2+8*ED.s)return;if(Math.abs(q)<bd){bd=Math.abs(q);const ww=Math.min(w0,G.len-1),c=Math.max(-G.len/2+ww/2,Math.min(G.len/2-ww/2,s));
-  best={k:k=='door'?'door':'win',x:G.cx+G.ux*c,y:G.cy+G.uy*c,a:G.a,w:ww,t:w.t,side:q<0?-1:1,h:ED.hg||'s',wall:w.id}}});
- if(best)return best;if(!M.fixed)return null;
- let fe=null;fixedPolys(M).forEach(pg=>pg.forEach((a,i)=>{const b=pg[(i+1)%pg.length],dx=b[0]-a[0],dy=b[1]-a[1],L2=dx*dx+dy*dy;if(L2<4)return;let t=((p.x-a[0])*dx+(p.y-a[1])*dy)/L2;t=Math.max(0,Math.min(1,t));const fx=a[0]+dx*t,fy=a[1]+dy*t,d=Math.hypot(p.x-fx,p.y-fy);if(d<bd){bd=d;fe={fx,fy,dx,dy,L:Math.sqrt(L2)}}}));
- if(!fe||(bd>10*ED.s&&!inFixed(M,p.x,p.y)))return null;const ux=fe.dx/fe.L,uy=fe.dy/fe.L;let nx=-uy,ny=ux;if(!inFixed(M,fe.fx+nx*1,fe.fy+ny*1)){nx=-nx;ny=-ny}
- let t=0;for(let s=.5;s<40;s+=.5){if(inFixed(M,fe.fx+nx*s,fe.fy+ny*s))t=s;else if(t)break}if(t<3)return null;
- const cx=fe.fx+nx*t/2,cy=fe.fy+ny*t/2;let a=Math.atan2(uy,ux)*180/Math.PI;if(a>90)a-=180;if(a<=-90)a+=180;const [ax,ay]=ang(a),mx=-ay,my=ax;
- const side=regAt(M,cx+mx*(t/2+4),cy+my*(t/2+4))>=0?1:-1;return {k:k=='door'?'door':'win',x:cx,y:cy,a,w:w0,t,side,h:ED.hg||'s'}}
+  best={k,x:G.cx+G.ux*c,y:G.cy+G.uy*c,a:G.a,w:ww,t:w.t,side:q<0?-1:1,h:ED.hg||'s',wall:w.id}}});
+ if(best)return best;if(!M.fixed)return null;return placeFixed(M,p,k,w0,ex,fr?40:0)}
+/* перетаскивание проёма: едет по стене, переходит на соседние, окно у наружного угла заворачивает за угол */
+function dragOp(M,o,O,p,dx,dy){if(DR.fr===undefined)DR.fr=opFrame(M,O);const n=placeOp(M,O.cw?p:{x:O.x+dx,y:O.y+dy},O.k,O.w,O.id,DR.fr);if(!n)return;
+ let side=n.side,h=O.h;if(!n.cw&&!O.cw&&n.wall==O.wall){const d=(n.a-O.a)*Math.PI/180;if(Math.abs(Math.sin(d))<.02){const fl=Math.cos(d)<0;side=fl?-O.side:O.side;h=fl?(O.h=='s'?'e':'s'):O.h}}
+ for(const k in o)if(k!='id')delete o[k];Object.assign(o,n,{k:O.k,h,side});if(!n.wall)delete o.wall}
+function setCw(id,k,v){const n=+v;if(!(n>0))return renderProps();mut(M=>{const o=M.ops.find(x=>x.id==id),c=o.cw,L=Math.max(10,n/MM);
+ const S=k=='L1'?faceSpan(M,c.I,c.d1,c.o1.map(x=>-x),c.t1,3,id):faceSpan(M,c.I,c.d2,c.o2.map(x=>-x),c.t2,3,id);c[k]=S?Math.min(L,S[1]):L;o.w=c.L1+c.L2},1)}
+function cwStraight(id){mut(M=>{const o=M.ops.find(x=>x.id==id),c=o.cw,P=pa(pa(c.I,c.d1,c.L1/2),c.o1,c.t1/2);let a=Math.atan2(c.d1[1],c.d1[0])*180/Math.PI;if(a>90)a-=180;if(a<=-90)a+=180;
+ delete o.cw;Object.assign(o,{x:P[0],y:P[1],a,w:c.L1,t:c.t1,side:1,h:'s'})},1)}
 /* мебель «спинкой к стене» */
 function placeFurn(M,p){const c=FC[ED.ft];let best=null,bd=(c[3]/MM)*.75+6;
  const face=(fx,fy,nx,ny)=>{const d=(p.x-fx)*nx+(p.y-fy)*ny;if(d>0&&d<bd){bd=d;best={x:p.x-nx*d,y:p.y-ny*d,r:Math.round(Math.atan2(-nx,ny)*180/Math.PI)}}};
@@ -688,9 +748,7 @@ window.addEventListener('pointermove',e=>{if(PAN){const st=$('#stage');st.scroll
   else if(DR.k=='wall'){const w=M.walls.find(x=>x.id==DR.id),G=wgeo(DR.o),nx=-G.uy,ny=G.ux,d=q2(dx*nx+dy*ny);w.x1=DR.o.x1+nx*d;w.y1=DR.o.y1+ny*d;w.x2=DR.o.x2+nx*d;w.y2=DR.o.y2+ny*d;
    DR.con.forEach(c=>{const v=M.walls.find(x=>x.id==c.id);if(v){v['x'+c.k]=c.x+nx*d;v['y'+c.k]=c.y+ny*d}});DR.ops.forEach(c=>{const o=M.ops.find(x=>x.id==c.id);if(o){o.x=c.x+nx*d;o.y=c.y+ny*d}})}
   else if(DR.k=='end'){const w=M.walls.find(x=>x.id==DR.id),k=DR.end,o2=k==1?2:1,q=snapPt(M,{x:DR.o['x'+k]+dx,y:DR.o['y'+k]+dy},{x:DR.o['x'+o2],y:DR.o['y'+o2]});w['x'+k]=q2(q.x);w['y'+k]=q2(q.y)}
-  else if(DR.k=='op'){const o=M.ops.find(x=>x.id==DR.id),w=o.wall&&M.walls.find(x=>x.id==o.wall);
-   if(w){const G=wgeo(w),[s]=loc(p.x,p.y,G.cx,G.cy,G.a),c=Math.max(-G.len/2+o.w/2,Math.min(G.len/2-o.w/2,q2(s)));o.x=G.cx+G.ux*c;o.y=G.cy+G.uy*c}
-   else{const [ux,uy]=ang(DR.o.a),s=q2(dx*ux+dy*uy);o.x=DR.o.x+ux*s;o.y=DR.o.y+uy*s}}
+  else if(DR.k=='op'){const o=M.ops.find(x=>x.id==DR.id);if(o)dragOp(M,o,DR.o,p,dx,dy)}
   reDraw();return}
  ED.pt=ED.tool=='wall'?snapPt(M,p,ED.chain):p;
  if(ED.tool=='door'||ED.tool=='window')ED.prev=placeOp(M,p,ED.tool);
@@ -712,13 +770,15 @@ window.addEventListener('keydown',e=>{if(!$('#s-ws').classList.contains('on')||/
 function delSel(){const M=curM(),s=ED.sel;if(!s)return;if(s.t=='fixed')return toast('Наружный контур из модели на замке');
  if(s.t=='room'){const R=calcRooms(M).regs[s.i];if(!R)return;mut(M=>{M.rooms=M.rooms.filter((l,i)=>!R.labs.includes(i))},1);ED.sel=null;renderProps();return}
  mut(M=>{if(s.t=='wall'){M.walls=M.walls.filter(w=>w.id!=s.id);M.ops=M.ops.filter(o=>o.wall!=s.id)}
-  if(s.t=='op'){const o=M.ops.find(x=>x.id==s.id);if(!o.wall&&o.k!='blank'&&o.k!='pass'){o.was=o.k;o.k='blank'}else M.ops=M.ops.filter(x=>x.id!=s.id)}
+  if(s.t=='op')M.ops=M.ops.filter(x=>x.id!=s.id);
   if(s.t=='furn')M.furn=M.furn.filter(f=>f.id!=s.id);if(s.t=='riser')M.risers=M.risers.filter(r=>r.id!=s.id)},s.t!='furn'&&s.t!='riser');ED.sel=null;renderProps()}
 function turnF(d){const M=curM(),f=M.furn.find(x=>x.id==ED.sel.id);if(!f)return;mut(()=>{f.r=((f.r+d)%360+360)%360},0)}
 /* ---- панель «Свойства» справа ---- */
 const fld=(lab,val,on,unit='мм',dis)=>`<label class="fld"><span>${lab}</span><input inputmode="numeric" value="${val}" ${dis?'disabled':''} onchange="${on}"><span>${unit}</span></label>`;
 const pchip=(t,on,js,dis)=>`<button class="chip ${on?'on':''}" ${dis?'disabled':''} onclick="${js}">${t}</button>`;
-const SW=[['s',-1,'Петли слева · вверх','M5 12 L5 3 A9 9 0 0 1 14 12'],['e',-1,'Петли справа · вверх','M19 12 L19 3 A9 9 0 0 0 10 12'],['s',1,'Петли слева · вниз','M5 12 L5 21 A9 9 0 0 0 14 12'],['e',1,'Петли справа · вниз','M19 12 L19 21 A9 9 0 0 1 10 12']];
+const SW=[['s',-1,'Петли слева · вверх',1,1],['e',-1,'Петли справа · вверх',-1,1],['s',1,'Петли слева · вниз',1,-1],['e',1,'Петли справа · вниз',-1,-1]];
+/* значок открывания: стена с проёмом, полотно, дуга хода и лёгкая заливка зоны открывания */
+const swIco=(sx,sy)=>`<svg viewBox="0 0 28 24" width="30" height="26" fill="none" stroke="currentColor" stroke-linecap="round"><g transform="translate(14 12) scale(${sx} ${sy}) translate(-14 -12)"><path d="M4.5 20V3.5A16.5 16.5 0 0 1 21 20Z" fill="currentColor" fill-opacity=".08" stroke="none"/><path d="M1 20h3.5M21 20h6" stroke-width="3" stroke-linecap="butt" stroke-opacity=".5"/><path d="M4.5 3.5A16.5 16.5 0 0 1 21 20" stroke-width="1" stroke-dasharray="2 2"/><path d="M4.5 20V3.5" stroke-width="2.2"/><circle cx="4.5" cy="20" r="1.6" fill="currentColor" stroke="none"/></g></svg>`;
 const sec=(ic,t,b)=>`<div class="blk"><p class="lbl"><span class="i" style="font-size:16px">${ic}</span>${t}</p>${b}</div>`;
 function opOff(M,o){const w=M.walls.find(x=>x.id==o.wall);if(!w)return null;const G=wgeo(w),[s]=loc(o.x,o.y,G.cx,G.cy,G.a);return mmv(s+G.len/2-o.w/2)}
 function opsList(M,w){const os=M.ops.filter(o=>o.wall==w.id);if(!os.length)return '';return `<p class="lbl" style="margin:14px 0 6px">Проёмы</p>`+os.map(o=>`<button class="orow" onclick="ED.sel={t:'op',id:'${o.id}'};draw();renderProps()"><span class="i">${o.k=='door'?'door_front':o.k=='win'?'window':'crop_free'}</span>${o.k=='door'?'Дверь':o.k=='win'?'Окно':'Проход'}<span class="sp"></span><span class="lead">${mmv(o.w)} мм</span></button>`).join('')}
@@ -738,9 +798,11 @@ function renderProps(){if(!ED.on)return;const M=curM(),s=ED.sel,b=$('#props');if
    <div class="chk ${w.fixed?'on':''}" onclick="mut(M=>{const w=M.walls.find(x=>x.id=='${w.id}');w.fixed=w.fixed?0:1},0)"><span class="bx"><span class="i">check</span></span>Зафиксирована при генерации</div>${opsList(M,w)}
    <div class="pacts"><button class="btn sm" onclick="delSel()"><span class="i">delete</span>Удалить стену</button></div>`)}}
   if(s.t=='fixed')h+=sec('lock','Наружные стены',`<p class="hintp" style="margin-top:0">Контур квартиры из модели Rhino — на замке, как основа из Revit. Двигать нельзя; двери и окна в нём ставятся инструментами «Дверь» и «Окно», лишний проём можно заложить.</p><div class="row"><span class="lead">Толщина</span><span>по модели</span></div>`);
-  if(s.t=='op'){const o=M.ops.find(x=>x.id==s.id);if(o){const off=opOff(M,o),nm={door:'Дверь',win:'Окно',pass:'Проход без полотна',blank:'Заложенный проём'}[o.k],up=`mut(M=>{const o=M.ops.find(x=>x.id=='${o.id}');`;
+  if(s.t=='op'){const o=M.ops.find(x=>x.id==s.id);if(o&&o.cw)h+=sec('window','Угловое окно',fld('Сторона 1',mmv(o.cw.L1),`setCw('${o.id}','L1',this.value)`)+fld('Сторона 2',mmv(o.cw.L2),`setCw('${o.id}','L2',this.value)`)+
+    `<p class="hintp">Стороны — по внутренним граням от угла. Потяните окно вдоль стены — станет прямым, к углу — снова угловым.</p><div class="pacts"><button class="btn sm" onclick="cwStraight('${o.id}')"><span class="i">straighten</span>Сделать прямым</button><button class="btn sm" onclick="delSel()"><span class="i">delete</span>Удалить окно</button></div>`);
+   else if(o){const off=opOff(M,o),nm={door:'Дверь',win:'Окно',pass:'Проход без полотна',blank:'Заложенный проём'}[o.k],up=`mut(M=>{const o=M.ops.find(x=>x.id=='${o.id}');`;
    h+=sec(o.k=='door'?'door_front':o.k=='win'?'window':'crop_free',nm+(o.wall?'':' · в наружной стене'),
-   (o.k=='door'?`<p class="lbl" style="margin:0 0 6px">Открывание</p><div class="swg">${SW.map(([hg,sd,t,d])=>`<button title="${t}" class="${o.h==hg&&o.side==sd?'on':''}" onclick="${up}o.h='${hg}';o.side=${sd}},0)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="2" y1="12" x2="22" y2="12" stroke-width="3" stroke-opacity=".35"/><path d="${d}"/></svg></button>`).join('')}</div>
+   (o.k=='door'?`<p class="lbl" style="margin:0 0 6px">Открывание</p><div class="swg">${SW.map(([hg,sd,t,sx,sy])=>`<button title="${t}" class="${o.h==hg&&o.side==sd?'on':''}" onclick="${up}o.h='${hg}';o.side=${sd}},0)">${swIco(sx,sy)}</button>`).join('')}</div>
     <div class="pacts" style="margin-top:8px"><button class="btn sm" onclick="${up}o.h=o.h=='s'?'e':'s'},0)"><span class="i">swap_horiz</span>Петли</button><button class="btn sm" onclick="${up}o.side=-o.side},0)"><span class="i">swap_vert</span>Внутрь / наружу</button></div>`:'')+
    (o.k!='blank'?fld('Ширина',mmv(o.w),`setOp('${o.id}','w',this.value)`)+(off!=null?fld('От угла',off,`setOp('${o.id}','off',this.value)`):''):'')+
    `<div class="pacts">${o.k=='pass'?`<button class="btn sm" onclick="${up}o.k='door';o.side=1;o.h='s'},1)"><span class="i">door_front</span>Поставить дверь</button>`:''}${o.k=='blank'?`<button class="btn sm" onclick="${up}o.k=o.was||'win'},1)"><span class="i">undo</span>Вернуть ${o.was=='door'?'дверь':'окно'}</button>`:`<button class="btn sm" onclick="delSel()"><span class="i">${o.wall?'delete':'select'}</span>${o.wall?'Удалить проём':'Заложить проём'}</button>`}</div>`)}}
@@ -759,7 +821,7 @@ function renderProps(){if(!ED.on)return;const M=curM(),s=ED.sel,b=$('#props');if
   h+=sec('dashboard','Помещения',K.regs.length?K.regs.map((R,i)=>`<button class="orow" onclick="ED.sel={t:'room',i:${i}};draw();renderProps()"><i class="sw" style="background:${RCOL(R.n)}"></i>${R.n}<span class="sp"></span><span class="lead">${R.a.toFixed(1)} м²</span></button>`).join('')+`<div class="row" style="margin-top:10px"><span class="lead">Итого по внутренним граням</span><b>${tot.toFixed(1)} м²</b></div>`:'<p class="hintp" style="margin-top:0">Пока нет помещений. Инструмент «Помещение» (R) — клик внутри контура стен.</p>');
   h+=sec('layers','Слои',`<div class="chk ${M.furnOn!==false?'on':''}" onclick="mut(M=>{M.furnOn=M.furnOn===false},0)"><span class="bx"><span class="i">check</span></span>Мебель<small>${M.furn.length}</small></div><div class="chk ${ED.lbl?'on':''}" onclick="ED.lbl=ED.lbl?0:1;draw();renderProps()"><span class="bx"><span class="i">check</span></span>Подписи и площади</div>
    <div class="row"><span class="lead">Стен</span><span>${M.walls.length}${M.fixed?' + наружный контур':''}</span></div><div class="row"><span class="lead">Дверей · окон</span><span>${M.ops.filter(o=>o.k=='door').length} · ${M.ops.filter(o=>o.k=='win').length}</span></div>`);
-  h+=sec('keyboard','Клавиши',`<div class="keys">${[['V','Выбор'],['W','Стена'],['D','Дверь'],['O','Окно'],['S','Стояк'],['R','Помещение · поворот'],['F','Мебель'],['Del','Удалить'],['Ctrl Z','Отменить'],['Esc','Снять выбор']].map(([k,t])=>`<span><kbd>${k}</kbd>${t}</span>`).join('')}</div><p class="hintp">Колесо мыши — средняя кнопка двигает поле, Ctrl + колесо — масштаб.</p>`)}
+  }
  b.innerHTML=h}
 function setW(id,k,v){const n=+v;if(!(n>0))return renderProps();mut(M=>{const w=M.walls.find(x=>x.id==id);if(k=='t'){w.t=n/MM;M.ops.forEach(o=>{if(o.wall==id)o.t=w.t})}else{const G=wgeo(w),L=n/MM;w.x2=w.x1+G.ux*L;w.y2=w.y1+G.uy*L}},1)}
 function setOp(id,k,v){const n=+v;if(!(n>=0))return renderProps();mut(M=>{const o=M.ops.find(x=>x.id==id),w=o.wall&&M.walls.find(x=>x.id==o.wall);
