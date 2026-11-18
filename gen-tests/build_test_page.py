@@ -38,6 +38,8 @@ const _od=ipOpenDemo;ipOpenDemo=function(k){const D=EXD[k];IP.tst=D.V?D:null;_od
 renderList=(_r=>function(){_r();if(!IP.tst)return;$$('#glist .runh').forEach(h=>{if(/Эталон/.test(h.textContent)){const n=h.nextElementSibling;h.outerHTML='';if(n)n.outerHTML=''}});
  $$('#glist .gi').forEach(g=>{const m=(g.getAttribute('onclick')||'').match(/showVar\((\d+)\)/);if(!m)return;const v=V.find(x=>x.id==+m[1]);const b=g.querySelector('.tt b');if(v&&v.nm&&b)b.textContent=v.nm})})(renderList);
 for(const o of [IPTH,IPA])for(const k in o)delete o[k];
+/* обложка квартиры с планировками — вариант А, а не пустая оболочка */
+EXD.forEach((D,k)=>{if(D.V)try{IPTH[k]=ipThumb(vM(D.src,D.V[0]))}catch(e){}});
 document.title='IND PLAN · тестовые контуры';
 if($('#s-projects').classList.contains('on'))ipGrid()})();
 </script>""".replace('__T__', json.dumps(T, ensure_ascii=False))
