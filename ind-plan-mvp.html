@@ -1647,6 +1647,50 @@ const _ipCh3=changed;changed=function(geo){const M=curM();if(geo&&M&&M.user&&!se
 const _ipAddPt2=addWallPt;addWallPt=function(M,q){const n0=M.walls.length;_ipAddPt2(M,q);if(!M.user||!ED.chain||M.walls.length==n0)return;
  let b=null,bd=16;M.walls.forEach(w=>[1,2].forEach(k=>{const d=ipD(ipWE(w,k),[ED.chain.x,ED.chain.y]);if(d<bd){bd=d;b=ipWE(w,k)}}));if(!b)return;ED.chain.x=b[0];ED.chain.y=b[1];
  const legs=M.walls.filter(w=>[1,2].some(k=>ipD(ipWE(w,k),b)<.5)).length;if(legs>=2){endChain();if(!ipCheck(M).closed)toast('Стены соединены',{icon:'check'})}};
+/* ---------- выделение рамкой: тянуть по пустому месту — всё, что задела рамка; Shift — добавить; Delete — удалить; Esc — снять ---------- */
+ED.msel=[];
+const ipKey=x=>x.t+':'+(x.id??x.i);
+function ipInRect(M,R){const [x0,y0,x1,y1]=R,inR=(x,y)=>x>=x0&&x<=x1&&y>=y0&&y<=y1,out=[];
+ const segHit=(a,b)=>{if(inR(a[0],a[1])||inR(b[0],b[1]))return true;let t0=0,t1=1;const dx=b[0]-a[0],dy=b[1]-a[1];
+  for(const [p,q] of [[-dx,a[0]-x0],[dx,x1-a[0]],[-dy,a[1]-y0],[dy,y1-a[1]]]){if(p==0){if(q<0)return false;continue}const r=q/p;if(p<0){if(r>t1)return false;if(r>t0)t0=r}else{if(r<t0)return false;if(r<t1)t1=r}}return true};
+ const boxHit=P=>{let a=1e9,b=1e9,c=-1e9,d=-1e9;P.forEach(([x,y])=>{a=Math.min(a,x);b=Math.min(b,y);c=Math.max(c,x);d=Math.max(d,y)});return a<=x1&&c>=x0&&b<=y1&&d>=y0};
+ M.walls.forEach(w=>{if(segHit([w.x1,w.y1],[w.x2,w.y2]))out.push({t:'wall',id:w.id})});
+ M.ops.forEach(o=>{if(boxHit(opPts(o)))out.push({t:'op',id:o.id})});
+ M.risers.forEach(r=>{if(inR(r.x,r.y))out.push({t:'riser',id:r.id})});
+ if(M.furnOn!==false)M.furn.forEach(f=>{const b=fbox(f);if(inR(b.cx,b.cy))out.push({t:'furn',id:f.id})});
+ return out}
+function ipMselSet(list,add){const m=new Map((add?[...ED.msel,...(ED.sel&&ED.sel.t!='room'&&ED.sel.t!='fixed'?[ED.sel]:[])]:[]).map(x=>[ipKey(x),x]));list.forEach(x=>m.set(ipKey(x),x));const L=[...m.values()];
+ if(L.length==1){ED.sel=L[0];ED.msel=[]}else{ED.sel=null;ED.msel=L}draw();renderProps()}
+function ipMselDel(){const M=curM(),L=ED.msel;if(!M||!L.length)return;const ids=t=>new Set(L.filter(x=>x.t==t).map(x=>x.id)),W=ids('wall'),O=ids('op'),F=ids('furn'),R=ids('riser');
+ const n=L.length;mut(M=>{M.walls=M.walls.filter(w=>!W.has(w.id));M.ops=M.ops.filter(o=>!O.has(o.id)&&!W.has(o.wall));M.furn=M.furn.filter(f=>!F.has(f.id));M.risers=M.risers.filter(r=>!R.has(r.id))},1);
+ ED.msel=[];ED.sel=null;draw();renderProps();toast(`Удалено: ${n} ${n%10==1&&n%100!=11?'элемент':n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'элемента':'элементов'}`,{icon:'delete',act:'Отменить',fn:undo})}
+/* старт рамки: левая кнопка по пустому месту в режиме выбора (вне правки — тоже, правка включится сама) */
+$('#plan').addEventListener('pointerdown',e=>{if(e.button!==0)return;const M=curM();if(!M||sel&&!ED.on||refOn)return;if(ED.on&&ED.tool!='select')return;const p=evP(e);if(!p)return;
+ const h=hit(M,p);if(h&&h.t!='room'&&!(h.t=='fixed'&&e.shiftKey)){if(ED.msel.length&&!e.shiftKey){ED.msel=[];draw()}
+  if(e.shiftKey&&ED.on){const prev=ED.sel;setTimeout(()=>{ED.sel=prev;ipMselSet([h],true)},0)}return}
+ if(!ED.on)edStart();IP.mq={a:{x:p.x,y:p.y},b:{x:p.x,y:p.y},add:e.shiftKey,mv:0};if(DR&&DR.k=='room')DR=null},true);
+window.addEventListener('pointermove',e=>{if(!IP.mq)return;if(DR&&DR.k=='room')DR=null;const p=evP(e);if(!p)return;IP.mq.b={x:p.x,y:p.y};if(Math.hypot(p.x-IP.mq.a.x,p.y-IP.mq.a.y)>3*ED.s)IP.mq.mv=1;if(IP.mq.mv){DR=null;reDraw()}},true);
+window.addEventListener('pointerup',()=>{const q=IP.mq;if(!q)return;IP.mq=null;const M=curM();if(!M)return;if(!q.mv){if(!q.add&&ED.msel.length){ED.msel=[];draw();renderProps()}return}
+ const R=[Math.min(q.a.x,q.b.x),Math.min(q.a.y,q.b.y),Math.max(q.a.x,q.b.x),Math.max(q.a.y,q.b.y)];ipMselSet(ipInRect(M,R),q.add)},true);
+/* отрисовка: подсветка группы и сама рамка */
+const _ipMsv2=msvg;msvg=function(M,o={}){let s=_ipMsv2(M,o);if(!(o.ed&&ED.on))return s;let add='';
+ if(ED.msel.length)add+=ED.msel.map(x=>elOutline(M,x)).join('');
+ if(IP.mq&&IP.mq.mv){const q=IP.mq,x=Math.min(q.a.x,q.b.x),y=Math.min(q.a.y,q.b.y),w=Math.abs(q.b.x-q.a.x),h=Math.abs(q.b.y-q.a.y);
+  add+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--acc)" fill-opacity=".07" stroke="var(--acc)" stroke-width="1" stroke-dasharray="4 3" vector-effect="non-scaling-stroke" style="pointer-events:none"/>`}
+ return add?s.replace(/<\/svg>$/,add+'</svg>'):s};
+/* панель свойств для группы */
+const _ipRP2=renderProps;renderProps=function(){if(!(ED.on&&ED.msel.length>1))return _ipRP2();const M=curM(),c={wall:0,door:0,win:0,op:0,furn:0,riser:0};
+ ED.msel.forEach(x=>{if(x.t=='op'){const o=M.ops.find(y=>y.id==x.id);if(o)c[o.k=='door'?'door':o.k=='win'?'win':'op']++}else c[x.t]++});
+ const row=(n,l)=>n?`<div class="row"><span class="lead">${l}</span><span>${n}</span></div>`:'';
+ $('#props').innerHTML=sec('select_all',`Выбрано: ${ED.msel.length}`,row(c.wall,'Стен')+row(c.door,'Дверей')+row(c.win,'Окон')+row(c.op,'Проходов')+row(c.riser,'Стояков')+row(c.furn,'Мебели')+
+  `<p class="hintp">Shift + рамка — добавить к выбору · Esc — снять выбор</p><div class="pacts"><button class="btn sm" onclick="ipMselDel()"><span class="i">delete</span>Удалить выбранное</button></div>`);
+ $('#undo').disabled=!ED.hist.length;$('#redo').disabled=!ED.fut.length};
+document.addEventListener('keydown',e=>{if(!ED.on||!ED.msel.length||/TEXTAREA|INPUT|SELECT/.test(e.target.tagName)||IP.modal)return;
+ if(e.key=='Delete'||e.key=='Backspace'){e.preventDefault();e.stopImmediatePropagation();ipMselDel()}
+ else if(e.key=='Escape'){e.preventDefault();e.stopImmediatePropagation();ED.msel=[];draw();renderProps()}},true);
+/* смена файла, инструмента или выход из правки — выбор группы сбрасывается */
+{const _r=reset;reset=function(){ED.msel=[];IP.mq=null;return _r.apply(this,arguments)};const _d=edDone;edDone=function(){ED.msel=[];return _d.apply(this,arguments)};
+ const _p=pickTool;pickTool=function(t){if(t!='select')ED.msel=[];return _p.apply(this,arguments)}}
 if($('#s-projects').classList.contains('on'))ipGrid();
 
 /*/js:editor*/</script></body></html>
