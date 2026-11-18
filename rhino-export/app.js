@@ -564,3 +564,55 @@ const _ipCh2=changed;changed=function(geo){const M=curM();let g=null,R=null,S0=n
 $('#stage').addEventListener('pointerdown',e=>{if(e.button!==0||!ED.on||ED.tool!='wall'||e.target.closest('#plan,button,input,a,.tag,.ipsteps,.zoom'))return;const M=curM(),p=evP(e);if(!M||!p)return;
  e.preventDefault();ED.pt=ED.typed?ED.pt:wsnap(M,p,e);addWallPt(M,liveEnd())});
 $('#stage').addEventListener('dblclick',e=>{if(!e.target.closest('#plan')&&ED.on&&ED.tool=='wall')endChain()});
+
+/* ---------- список файлов: примеры в общей сетке, карточка «Новый файл» принимает план перетаскиванием ---------- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.pnew{position:relative;text-align:center;padding:20px 16px;gap:6px}
+.pnew>.i{font-size:32px;color:var(--acc)}.pnew b{font-size:15px;color:var(--text);font-weight:600}
+.pnew .pn-sub{font-size:13px;font-weight:400;line-height:1.45}
+.pnew .pn-fmt{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin:4px 0 6px}
+.pnew .pn-fmt span{font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;background:var(--sub);color:var(--muted)}
+.pnew .btn .i{font-size:18px;color:inherit}
+.pnew .pn-drop{position:absolute;inset:-1.5px;border:2px dashed var(--acc);border-radius:inherit;background:var(--acc-soft);color:var(--acc-text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .15s}
+.pnew .pn-drop .i{font-size:36px;color:var(--acc);animation:ipBob 1s ease-in-out infinite alternate}.pnew .pn-drop small{font-weight:400;font-size:12px;color:var(--muted);max-width:240px}
+.pnew.drag .pn-drop{opacity:1}.pnew.drag{transform:scale(1.02)}
+@keyframes ipBob{to{transform:translateY(4px)}}
+.pcard .ex{color:var(--acc-text)}
+@media (prefers-reduced-motion:reduce){.pnew .pn-drop .i{animation:none}.pnew.drag{transform:none}}
+</style>`);
+
+/* примеры: 0 — простой прямоугольник, 1 — кв. 28 из Rhino с вариантами, 2 — Г-образная с угловыми окнами */
+function ipDemoM(pts,ops,ris){const M=ipBlank();pts.forEach((p,i)=>{const q=pts[(i+1)%pts.length];M.walls.push({id:nid(M,'w'),x1:p[0]/MM,y1:p[1]/MM,x2:q[0]/MM,y2:q[1]/MM,t:300/MM,type:'ext',fixed:1})});
+ ipFit(M);ipGrow(M);const o0=M.off,s0=ED.s;ED.s=1;
+ ops.forEach(([k,x,y,w])=>{const o=placeOp(M,{x:x/MM+o0[0],y:y/MM+o0[1]},k,w/MM);if(o){o.id=nid(M,'o');if(k=='door'){o.h='s'}M.ops.push(o);M.gv++}});
+ ris.forEach(([x,y,t])=>M.risers.push({id:nid(M,'r'),x:x/MM+o0[0],y:y/MM+o0[1],d:110,type:t,fixed:1}));ED.s=s0;M.gv++;return M}
+const EXD=[
+ {n:'Пример · прямоугольник',d:'9 × 6 м · вход и 3 окна',M:()=>ipDemoM([[0,0],[9000,0],[9000,6000],[0,6000]],
+  [['door',1600,5900,900],['win',2600,0,1500],['win',6600,0,1500],['win',9000,3200,1500]],[[8300,5300,'К1']])},
+ {n:'Пример · кв. 28',d:'3к · 106,21 м² · 4 варианта',rh:1},
+ {n:'Пример · Г-образная',d:'79 м² · 2 угловых окна',M:()=>ipDemoM([[0,0],[11400,0],[11400,5400],[6600,5400],[6600,9000],[0,9000]],
+  [['door',9200,5300,900],['win',400,0,1800],['win',8600,0,1800],['win',11400,2700,1500],['win',6600,8600,1800],['win',0,5600,1500]],[[6950,5000,'К1'],[7300,5000,'В1']])}];
+function ipOpenDemo(k){const D=EXD[k];if(D.rh)return openWs(false,D.n);openWs(true);IP.ro=1;$('#fn').textContent=D.n;ipStartWith(D.M());ipSaveSt('ro');renderList();ipGate();
+ toast('Пример открыт для просмотра. Чтобы править и сохранять — сделайте копию',{act:'Сделать копию',fn:ipSaveCopy,ms:6000})}
+const ipDemoThumb=k=>{try{return EXD[k].rh?svg(rhPlan('v3'),{label:false}):ipThumb(EXD[k].M())}catch{return ''}};
+const IPTH={};
+ipGrid=function(){const P=ipLS.get().projects.sort((a,b)=>b.upd-a.upd),w=$('#s-projects .wrap');
+ const card=p=>{let th='';try{th=ipHas(p.M)?(p.V&&p.V[0]?msvg(Object.assign(p.V[0].M,{gv:1}),{label:false,thumb:1}):ipThumb(p.M)):''}catch{th=''}
+  const n=(p.V||[]).length;return `<div class="card pcard" onclick="ipOpen('${p.id}')"><div class="th">${th||'<div class="ph"><span class="i">draft</span>Контур не начат</div>'}</div><div class="bd"><b>${esc(p.name)}</b><div class="meta"><span>${n?(n+' '+(n%10==1&&n%100!=11?'вариант':n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'варианта':'вариантов')):'без вариантов'}</span><span>${ago(p.upd)}</span></div></div><button class="ib more" title="Ещё" onclick="event.stopPropagation();ipCardMenu(event,'${p.id}')"><span class="i">more_horiz</span></button></div>`};
+ const ex=(D,k)=>`<div class="card pcard" onclick="ipOpenDemo(${k})" title="Открывается только для просмотра"><div class="th">${IPTH[k]||(IPTH[k]=ipDemoThumb(k))}</div><div class="bd"><b>${esc(D.n)}</b><div class="meta"><span>${D.d}</span><span class="ex">пример</span></div></div></div>`;
+ w.innerHTML=`<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><h1>Мои планировки</h1><p class="lead">Один файл — одна квартира и все варианты её планировки. Файлы хранятся в этом браузере</p></div><button class="btn pri lg" onclick="openWs(true)"><span class="i">add</span>Новый файл</button></div>
+ <div class="grid" id="pgrid"><div class="card pnew" id="pnew" role="button" tabindex="0" onclick="openWs(true)" onkeydown="if(event.key=='Enter'||event.key==' '){event.preventDefault();openWs(true)}">
+  <span class="i">add_circle</span><b>Новый файл</b><span class="pn-sub">Нарисуйте контур с нуля<br>или перетащите сюда план</span>
+  <span class="pn-fmt"><span>Revit .json</span><span>.dxf</span><span>PDF</span><span>PNG · JPG</span></span>
+  <button class="btn sm" onclick="event.stopPropagation();ipPickNew()"><span class="i">upload_file</span>Выбрать файл</button>
+  <div class="pn-drop"><span class="i">download</span>Отпустите — создадим файл<small>JSON и DXF станут стенами, PDF и картинка — подложкой</small></div></div>
+  ${P.map(card).join('')}${EXD.map(ex).join('')}</div>`};
+function ipNewFrom(f){openWs(true);setTimeout(()=>ipFile(f),60)}
+function ipPickNew(){const i=$('#ipfile');i.value='';i.accept=[ACC.json,ACC.dxf,ACC.under].join(',');i.onchange=()=>i.files[0]&&ipNewFrom(i.files[0]);i.click()}
+/* перетаскивание на экран списка: подсвечиваем карточку «Новый файл», бросить можно куда угодно */
+{let n=0;const sp=$('#s-projects'),hasF=e=>e.dataTransfer&&[...e.dataTransfer.types].includes('Files'),pn=on=>{const c=$('#pnew');c&&c.classList.toggle('drag',on)};
+ sp.addEventListener('dragenter',e=>{if(!hasF(e))return;e.preventDefault();n++;pn(true)});
+ sp.addEventListener('dragover',e=>{if(hasF(e)){e.preventDefault();e.dataTransfer.dropEffect='copy'}});
+ sp.addEventListener('dragleave',()=>{if(--n<=0){n=0;pn(false)}});
+ sp.addEventListener('drop',e=>{e.preventDefault();n=0;pn(false);const f=e.dataTransfer.files;if(!f.length)return;if(f.length>1)toast('Беру первый файл — по одному за раз',{k:'warn'});ipNewFrom(f[0])})}
+if($('#s-projects').classList.contains('on'))ipGrid();
