@@ -1,6 +1,6 @@
 # IND PLAN — кликабельный MVP генератора планировок
 
-Сайт: https://dariyxyz.github.io/ind-plan-mvp/ (GitHub Pages, `index.html`).
+Сайт: https://dariyxyz.github.io/ind-plan/ (GitHub Pages, `index.html`).
 Исходник — `ind-plan-mvp.html` (он же артефакт https://claude.ai/artifact/NdT8oJCUDSJch1sD9veZyh); `index.html` собирается из него.
 
 Флоу: вход → мои планировки → рабочее поле (контур → нормы и ТЗ → варианты) → правка → экспорт.
