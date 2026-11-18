@@ -1565,7 +1565,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .pnew .pn-sub{font-size:13px;font-weight:400;line-height:1.45}
 .pnew .pn-fmt{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin:4px 0 6px}
 .pnew .pn-fmt span{font-size:11px;font-weight:500;padding:2px 7px;border-radius:99px;background:var(--sub);color:var(--muted)}
-.pnew .btn .i{font-size:18px;color:inherit}
+.pnew .pn-sub u{color:var(--acc-text);text-underline-offset:3px}.pnew .pn-lim{font-size:11px;font-weight:400;color:var(--faint)}
 .pnew .pn-drop{position:absolute;inset:-1.5px;border:2px dashed var(--acc);border-radius:inherit;background:var(--acc-soft);color:var(--acc-text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .15s}
 .pnew .pn-drop .i{font-size:36px;color:var(--acc);animation:ipBob 1s ease-in-out infinite alternate}.pnew .pn-drop small{font-weight:400;font-size:12px;color:var(--muted);max-width:240px}
 .pnew.drag .pn-drop{opacity:1}.pnew.drag{transform:scale(1.02)}
@@ -1596,10 +1596,9 @@ ipGrid=function(){const P=ipLS.get().projects.sort((a,b)=>b.upd-a.upd),w=$('#s-p
   const n=(p.V||[]).length;return `<div class="card pcard" onclick="ipOpen('${p.id}')"><div class="th">${th||'<div class="ph"><span class="i">draft</span>Контур не начат</div>'}</div><div class="bd"><b>${esc(p.name)}</b><div class="meta"><span>${n?(n+' '+(n%10==1&&n%100!=11?'вариант':n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'варианта':'вариантов')):'без вариантов'}</span><span>${ago(p.upd)}</span></div></div><button class="ib more" title="Ещё" onclick="event.stopPropagation();ipCardMenu(event,'${p.id}')"><span class="i">more_horiz</span></button></div>`};
  const ex=(D,k)=>`<div class="card pcard" onclick="ipOpenDemo(${k})" title="Открывается только для просмотра"><div class="th">${IPTH[k]||(IPTH[k]=ipDemoThumb(k))}</div><div class="bd"><b>${esc(D.n)}</b><div class="meta"><span>${D.d}</span><span class="ex">пример</span></div></div></div>`;
  w.innerHTML=`<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><h1>Мои планировки</h1><p class="lead">Один файл — одна квартира и все варианты её планировки. Файлы хранятся в этом браузере</p></div><button class="btn pri lg" onclick="openWs(true)"><span class="i">add</span>Новый файл</button></div>
- <div class="grid" id="pgrid"><div class="card pnew" id="pnew" role="button" tabindex="0" onclick="openWs(true)" onkeydown="if(event.key=='Enter'||event.key==' '){event.preventDefault();openWs(true)}">
-  <span class="i">add_circle</span><b>Новый файл</b><span class="pn-sub">Нарисуйте контур с нуля<br>или перетащите сюда план</span>
-  <span class="pn-fmt"><span>Revit .json</span><span>.dxf</span><span>PDF</span><span>PNG · JPG</span></span>
-  <button class="btn sm" onclick="event.stopPropagation();ipPickNew()"><span class="i">upload_file</span>Выбрать файл</button>
+ <div class="grid" id="pgrid"><div class="card pnew" id="pnew" role="button" tabindex="0" title="Выбрать файл на компьютере" onclick="ipPickNew()" onkeydown="if(event.key=='Enter'||event.key==' '){event.preventDefault();ipPickNew()}">
+  <span class="i">upload_file</span><b>Добавьте файл</b><span class="pn-sub">Перетащите план сюда<br>или <u>выберите на компьютере</u></span>
+  <span class="pn-fmt"><span>Revit .json</span><span>.dxf</span><span>PDF</span><span>PNG · JPG</span></span><span class="pn-lim">до 25 МБ</span>
   <div class="pn-drop"><span class="i">download</span>Отпустите — создадим файл<small>JSON и DXF станут стенами, PDF и картинка — подложкой</small></div></div>
   ${P.map(card).join('')}${EXD.map(ex).join('')}</div>`};
 function ipNewFrom(f){openWs(true);setTimeout(()=>ipFile(f),60)}
