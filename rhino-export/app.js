@@ -400,7 +400,7 @@ function ipGrid(){const P=ipLS.get().projects.sort((a,b)=>b.upd-a.upd),w=$('#s-p
  ${P.length?'':'<p class="lead" style="margin-top:14px;font-size:13px">Своих файлов пока нет. Начните с нового или посмотрите пример ниже.</p>'}
  <div class="sec-h"><h2>Примеры бюро</h2><span>Открываются только для просмотра — изменения не сохраняются</span></div>
  <div class="grid" style="margin-top:16px">${EXM.map(([n,m,l])=>`<div class="card pcard" onclick="openWs(false,'${n}')"><div class="th">${svg(rhPlan(l),{label:false})}</div><div class="bd"><b>${n}</b><div class="meta"><span>${m}</span><span>пример</span></div></div></div>`).join('')}</div>`}
-function ipThumb(M){M.gv=1;let s=msvg(M,{label:false,thumb:1,exp:1});if(!M.walls.length)return s;let a=1e9,b=1e9,c=-1e9,d=-1e9;M.walls.forEach(w=>{a=Math.min(a,w.x1,w.x2);b=Math.min(b,w.y1,w.y2);c=Math.max(c,w.x1,w.x2);d=Math.max(d,w.y1,w.y2)});const m=30;
+function ipThumb(M){M.gv=1;let s=msvg(M,{label:false,thumb:1,exp:1});if(!M.walls.length)return s;let a=1e9,b=1e9,c=-1e9,d=-1e9;M.walls.forEach(w=>{a=Math.min(a,w.x1,w.x2);b=Math.min(b,w.y1,w.y2);c=Math.max(c,w.x1,w.x2);d=Math.max(d,w.y1,w.y2)});const m=55;
  return s.replace(/viewBox="[^"]*"/,`viewBox="${a-m} ${b-m} ${c-a+2*m} ${d-b+2*m}"`)}
 function ipMenuClose(){if(IP.menu){IP.menu.remove();IP.menu=null}}
 function ipMenu(e,items){ipMenuClose();const m=document.createElement('div');m.className='ipmenu';m.innerHTML=items.map((it,i)=>it.who?`<div class="who">${it.who}</div>`:`<button data-i="${i}" class="${it.dng?'dng':''}"><span class="i">${it.ic}</span>${it.t}</button>`).join('');
@@ -617,4 +617,8 @@ function ipPickNew(){const i=$('#ipfile');i.value='';i.accept=[ACC.json,ACC.dxf,
  sp.addEventListener('dragover',e=>{if(hasF(e)){e.preventDefault();e.dataTransfer.dropEffect='copy'}});
  sp.addEventListener('dragleave',()=>{if(--n<=0){n=0;pn(false)}});
  sp.addEventListener('drop',e=>{e.preventDefault();n=0;pn(false);const f=e.dataTransfer.files;if(!f.length)return;if(f.length>1)toast('Беру первый файл — по одному за раз',{k:'warn'});ipNewFrom(f[0])})}
+/* входная дверь открывается наружу из квартиры: створка — в сторону, где нет помещения */
+function ipDoorOut(M,o){const [ux,uy]=ang(o.a),d=[-uy*o.side,ux*o.side],P=pa([o.x,o.y],d,o.t/2+4),Q=pa([o.x,o.y],d,-(o.t/2+4));if(regAt(M,P[0],P[1])>=0&&regAt(M,Q[0],Q[1])<0)o.side=-o.side;return o}
+const _ipMk=mkModel;mkModel=function(l){const M=_ipMk(l);M.ops.forEach(o=>{if(o.k=='door'&&!o.wall&&!o.cw)ipDoorOut(M,o)});return M};
+const _ipPWO=ipPlaceWallOp;ipPlaceWallOp=function(M,p,k,w0,ex){const o=_ipPWO(M,p,k,w0,ex);if(o&&k=='door'&&!o.cw){const w=M.walls.find(x=>x.id==o.wall);if(w&&w.type!='part')ipDoorOut(M,o)}return o};
 if($('#s-projects').classList.contains('on'))ipGrid();
