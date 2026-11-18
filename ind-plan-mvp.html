@@ -1034,7 +1034,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .tok small{color:var(--warn);font-weight:500}
 .fname b{cursor:text;border-radius:6px;padding:2px 4px;margin:-2px -4px}.fname b:hover{background:var(--sub)}.fname input{font:inherit;font-weight:600;color:var(--text);border:1px solid var(--acc);border-radius:6px;padding:2px 6px;width:260px;background:var(--panel);outline:none}
 .fname .crumb{cursor:pointer}.fname .crumb:hover{color:var(--text)}
-#save.err{background:var(--err-soft);color:var(--err);cursor:pointer}#save.ro{background:var(--warn-soft);color:var(--warn)}
+#save.err{background:var(--err-soft);color:var(--err);cursor:pointer}#save.ro,#save.b-n{background:none;padding:0;height:auto;font-size:12px;font-weight:500}#save.ro{color:var(--err)}#save.b-n{color:var(--muted)}#save.ro b{font-weight:600}#save.ro:hover b{text-decoration:underline;text-underline-offset:3px}
 .ferr{font-size:12px;color:var(--err);min-height:16px;margin-top:4px}.inp.bad{border-color:var(--err)}
 .sec-h{display:flex;align-items:baseline;gap:10px;margin:36px 0 0}.sec-h h2{font-size:17px}.sec-h span{color:var(--muted);font-size:13px}
 .pcard{position:relative}.pcard .more{position:absolute;right:8px;top:8px;background:var(--panel);box-shadow:0 1px 3px #0002;opacity:0;transition:.12s}.pcard:hover .more,.pcard .more:focus{opacity:1}
@@ -1366,8 +1366,8 @@ async function ipUnder2(f,isPdf){let url,iw,ih;try{
 
 /* ---------- сохранение в браузере ---------- */
 function ipSaveSt(s,t){const b=$('#save');IP.saveSt=s;b.className='badge '+(s=='err'?'err':s=='ro'?'ro':'b-n');b.style.display='';
- b.innerHTML=s=='ing'?'<span class="i spin">progress_activity</span>Сохранение…':s=='ok'?'<span class="i">cloud_done</span>Сохранено в браузере':s=='ro'?'<span class="i">visibility</span>Пример · не сохраняется':s=='err'?`<span class="i">error</span>${t||'Не сохранено'}`:'';
- b.title=s=='ok'?'Файл хранится в этом браузере на этом компьютере':s=='err'?'Нажмите, чтобы попробовать ещё раз':'';b.onclick=s=='err'?ipSaveNow:s=='ro'?ipSaveCopy:null;if(s=='ro')b.innerHTML+=' · <u>сохранить копию</u>';b.style.cursor=s=='err'||s=='ro'?'pointer':''}
+ b.innerHTML=s=='ing'?'<span class="i spin">progress_activity</span>Сохранение…':s=='ok'?'<span class="i">cloud_done</span>Сохранено в браузере':s=='ro'?'<span class="i">visibility</span>Пример: правки не сохранятся':s=='err'?`<span class="i">error</span>${t||'Не сохранено'}`:'';
+ b.title=s=='ok'?'Файл хранится в этом браузере на этом компьютере':s=='err'?'Нажмите, чтобы попробовать ещё раз':'';b.onclick=s=='err'?ipSaveNow:s=='ro'?ipSaveCopy:null;if(s=='ro')b.innerHTML+=' · <b>Сохранить копию</b>';b.style.cursor=s=='err'||s=='ro'?'pointer':''}
 saved=function(){if(!$('#s-ws').classList.contains('on'))return;if(IP.ro){ipSaveSt('ro');return}if(!IP.pid&&!ipHas(CM))return;ipSaveSt('ing');clearTimeout(IP.saveT);IP.saveT=setTimeout(ipSaveNow,500)};
 function ipRec(){return {id:IP.pid,name:$('#fn').textContent.trim()||'Без названия',upd:Date.now(),M:cl(CM),run,cv:IP.cv,tz:$('#tz').value,type:curType,cls,
  V:V.map(v=>({id:v.id,run:v.run,q:v.q,seed:v.seed,type:v.type,err:v.err,warn:v.warn,vote:v.vote,ver:v.ver,from:v.from,cv:v.cv,M:cl(v.M)}))}}
@@ -1796,6 +1796,8 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .chip.on{border-color:transparent}
 .seg{border-color:transparent}
 </style>`);
+/* градация акцентов: залита только главная кнопка экрана — «Создать планировку»; экспорт в шапке вторичный */
+{const b=$('#expbtn');if(b)b.classList.remove('pri')}
 if($('#s-projects').classList.contains('on'))ipGrid();
 
 /*/js:editor*/</script></body></html>
