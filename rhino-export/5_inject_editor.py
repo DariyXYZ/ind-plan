@@ -29,6 +29,8 @@ msym=open(D+'/rh/msym.html',encoding='utf-8').read()
 model=open(D+'/rh/model.js',encoding='utf-8').read();ed=open(D+'/editor.js',encoding='utf-8').read()
 # v4 — вариант, спроектированный вручную (v4.js); идёт после editor.js: дополняет каталог мебели и COMBO
 ed+=chr(10)+open(D+'/v4.js',encoding='utf-8').read()
+# финальный интерфейс (контур с нуля, импорт, сохранение, состояния запуска, экспорт) — после v4.js
+ed+=chr(10)+open(D+'/app.js',encoding='utf-8').read()
 # стили — во второй <head> (первый — обёртка артефакта)
 anc='@media (max-width:1000px)';i=s.index(anc);j=s.index('</style>',i)+len('</style>')
 if '<!--ed-css-->' in s: s=put(s,'ed-css',CSS,'')
