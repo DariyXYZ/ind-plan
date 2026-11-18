@@ -191,7 +191,10 @@ function ipAfter(){if(!contour||!CM)return;ipTag();ipSteps();ipGate();if(sel)ret
  if(cl0&&!IP.wasClosed&&CM.user){const c=ipCheck(CM);toast(`Контур замкнут · ${nf(c.area)} м². Теперь вход — дверь в наружную стену`);setTimeout(()=>{if(ED.on&&ED.tool=='wall'){ED.chain=null;pickTool(c.entr?c.wins?'riser':'window':'door')}},0)}
  else if(ED.on&&ED.tool=='door'&&CM.user&&!IP.hadEntr&&ipCheck(CM).entr){setTimeout(()=>{if(ED.on&&ED.tool=='door'){pickTool(ipCheck(CM).wins?'riser':'window');toast(ipCheck(CM).wins?'Вход есть. Осталось отметить стояк':'Вход есть. Теперь окна — кликайте по наружным стенам')}},0)}
  else if(!cl0&&IP.wasClosed&&CM.user)toast('Контур разомкнулся — генератору нужен замкнутый контур',{k:'warn'});IP.wasClosed=cl0;IP.hadEntr=ipCheck(CM).entr;if(cl0&&$('#fn').textContent=='Без названия'&&!IP.ro)$('#fn').textContent=`Квартира · ${nf(ipCheck(CM).area,0)} м²`}
-const _ipAddPt=addWallPt;addWallPt=function(M,q){if(q&&M.user&&(q.x<4||q.y<4||q.x>M.W-4||q.y>M.H-4)){toast(`За краем листа — лист ${nf(M.W*MM/1000,0)} × ${nf(M.H*MM/1000,0)} м`,{k:'warn'});return}_ipAddPt(M,q)};
+/* за краем листа рисовать можно — лист сам растёт (ipGrow); держим только предел 50 м */
+const _ipAddPt=addWallPt;addWallPt=function(M,q){if(q&&M.user){let a=q.x,b=q.y,c=q.x,d=q.y;const add=(x,y)=>{a=Math.min(a,x);b=Math.min(b,y);c=Math.max(c,x);d=Math.max(d,y)};M.walls.forEach(w=>{add(w.x1,w.y1);add(w.x2,w.y2)});if(ED.chain)add(ED.chain.x,ED.chain.y);
+ if(c-a>2500||d-b>2500){toast('Квартира выходит больше 50 м — проверьте длину стены',{k:'warn'});return}}
+ IP.q=q&&{x:q.x,y:q.y,kind:q.kind,guides:[]};try{_ipAddPt(M,IP.q)}finally{IP.q=null}}; // копия точки: если лист вырастет, ipGrow сдвинет и её
 const _ipEdStart=edStart;edStart=function(){_ipEdStart();ipTag();ipSteps()};
 const _ipEdDone=edDone;edDone=function(){_ipEdDone();IP.r1=null;ipTag();ipSteps();ipGate()};
 const _ipShowC=showContour;showContour=function(){_ipShowC();ipTag();ipSteps()};
@@ -218,7 +221,7 @@ const _ipOpenSim=openSim;openSim=function(){if(IP.busy)return toast('Дожди�
 function ipRun(R){if(IP.busy){run--;return toast('Дождитесь текущего запуска или остановите его',{k:'warn'})}
  if(R.cost>TOK-IP.res){run--;return ipNoTok(R)}
  if(!navigator.onLine){run--;return toast('Нет сети — запуск не отправлен. Проверьте подключение',{k:'err'})}
- Object.assign(R,{st:'queue',got:0,tm:[]});IP.runs[R.r]=R;IP.busy=R.r;IP.res+=R.cost;
+ R.nm=R.nm||$('#fn').textContent.trim();Object.assign(R,{st:'queue',got:0,tm:[]});IP.runs[R.r]=R;IP.busy=R.r;IP.res+=R.cost;
  $('#gempty').style.display='none';$('#glist').style.display='block';setGen('progress_activity','Создаём…',0);ipGate();renderList();$('#glist').scrollTop=0;hint('');
  const T=(f,ms)=>R.tm.push(setTimeout(f,ms)),demo=!!(CM&&CM.fixed);
  T(()=>{R.st='run';renderList()},900);
@@ -239,11 +242,11 @@ window.addEventListener('online',()=>toast('Сеть снова есть'));
 const ipItem=v=>`<div class="gi ${sel&&sel.id==v.id?'on':''} ${IP.fresh.has(v.id)?'new':''}" onclick="showVar(${v.id})"><div class="th">${svg(v.R,{label:false})}</div><div class="tt"><b>Вариант ${v.id}${v.ver>1?` <span class="badge b-n">v${v.ver}</span>`:''}</b><small>${v.type} · жилая ${nf(v.live)} м²</small><div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${st(v)}${v.cv&&v.cv!=IP.cv?'<span class="badge b-n" title="Контур изменился после этого запуска">старый контур</span>':''}</div></div><div class="vb"><button class="ib ${v.vote>0?'up':''}" title="Нравится" onclick="event.stopPropagation();vote(1,${v.id})"><span class="i ${v.vote>0?'f':''}">thumb_up</span></button><button class="ib ${v.vote<0?'dn':''}" title="Мимо — учтём в следующих запусках" onclick="event.stopPropagation();vote(-1,${v.id})"><span class="i ${v.vote<0?'f':''}">thumb_down</span></button></div></div>`;
 renderList=function(){renderFlt();let h='';const fl=FL.beds||FL.like||FL.ok;
  for(let r=run;r>=1;r--){const R=IP.runs[r],vs=V.filter(v=>v.run==r&&pass(v)),q=R?R.q:(V.find(v=>v.run==r)||{}).q,ty=R?R.type:(V.find(v=>v.run==r)||{}).type;
-  if(!R||R.st=='done'){if(vs.length)h+=`<div class="runh"><span class="i">auto_awesome</span>Запуск ${r} · ${ty}${q?' · '+esc(q):''}</div>`+vs.map(ipItem).join('');continue}
+  if(!R||R.st=='done'){if(vs.length)h+=`<div class="runh"><span class="i">auto_awesome</span>${R&&R.nm?esc(R.nm)+' · з':'З'}апуск ${r} · ${ty}${q?' · '+esc(q):''}</div>`+vs.map(ipItem).join('');continue}
   if(fl&&!vs.length&&R.st!='run'&&R.st!='queue')continue;
   const pct=R.st=='queue'?6:Math.max(12,R.got/R.n*100),stl=R.st=='queue'?'<span class="i spin">progress_activity</span>В очереди…':R.st=='run'?`<span class="i spin">progress_activity</span>${R.got?`Готово ${R.got} из ${R.n}`:'Собираем зоны и стены…'}`:
    R.st=='cancel'?`<span class="i">block</span>${R.got?`Остановлено · готово ${R.got} из ${R.n} · списано ${R.paid}`:'Отменено · токены не списаны'}`:'';
-  h+=`<div class="iprun"><div class="runh"><span class="i">auto_awesome</span>Запуск ${r} · ${ty}${q?' · '+esc(q):''}<span class="sp"></span>${R.st=='queue'||R.st=='run'?`<button onclick="ipStop(${r})">${R.got?'Остановить':'Отменить'}</button>`:''}</div>`+
+  h+=`<div class="iprun"><div class="runh"><span class="i">auto_awesome</span>${R&&R.nm?esc(R.nm)+' · з':'З'}апуск ${r} · ${ty}${q?' · '+esc(q):''}<span class="sp"></span>${R.st=='queue'||R.st=='run'?`<button onclick="ipStop(${r})">${R.got?'Остановить':'Отменить'}</button>`:''}</div>`+
    (stl?`<div class="ipst">${stl}</div>`:'')+(R.st=='queue'||R.st=='run'?`<div class="ipbar"><i style="width:${pct}%"></i></div>`:'')+vs.map(ipItem).join('')+
    (R.st=='queue'||R.st=='run'?'<div class="sk"></div>'.repeat(R.n-R.got):'')+
    (R.st=='fail'?(R.why=='nogen'?`<div class="ipfail"><b><span class="i" style="color:var(--acc)">hourglass_top</span>Генератор пока не подключён</b>Контур сохранён — варианты для него появятся здесь, когда генератор заработает. Токены не списаны. Как выглядят варианты, можно посмотреть на примере кв. 28.<div class="acts"><button class="btn sm" onclick="ipOpenEx()"><span class="i">apartment</span>Открыть пример</button></div></div>`:
@@ -440,7 +443,9 @@ $('#s-projects .top .ib').onclick=ipHelp;
 /* ---------- экспорт: JSON для Revit, SVG, PNG, PDF через печать ---------- */
 function ipToJson(M){const o0=M.off||[0,0],X2=x=>Math.round((x-o0[0])*MM),Y2=y=>-Math.round((y-o0[1])*MM);
  const walls=M.walls.map(w=>{const G=wgeo(w);return {id:w.id,type:{ext:'exterior',bear:'bearing',part:'partition'}[w.type]||'partition',thickness:Math.round(w.t*MM),axis:[[X2(w.x1),Y2(w.y1)],[X2(w.x2),Y2(w.y2)]],closed:false,
-  openings:M.ops.filter(o=>o.wall==w.id&&(o.k=='door'||o.k=='win')).map(o=>({id:o.id,kind:o.k=='door'?'door':'window',seg:0,at:Math.round(((o.x-w.x1)*G.ux+(o.y-w.y1)*G.uy)*MM),width:Math.round(o.w*MM),...(o.k=='door'?{hinge:o.h=='e'?'end':'start',side:o.side}:{})}))}});
+  openings:M.ops.filter(o=>(o.wall==w.id||o.cw&&o.cw.w2==w.id)&&(o.k=='door'||o.k=='win')).map(o=>{const at=P=>Math.round(((P[0]-w.x1)*G.ux+(P[1]-w.y1)*G.uy)*MM);
+   if(o.cw){const c=o.cw,on1=o.wall==w.id,L=on1?c.L1:c.L2;return {id:o.id+(on1?'':'-2'),kind:'window',corner:o.id,seg:0,at:at(pa(c.I,on1?c.d1:c.d2,L/2)),width:Math.round(L*MM)}} // угловое окно — две части, по одной на каждой стене
+   return {id:o.id,kind:o.k=='door'?'door':'window',seg:0,at:at([o.x,o.y]),width:Math.round(o.w*MM),...(o.k=='door'?{hinge:o.h=='e'?'end':'start',side:o.side}:{})}})}});
  const K2=calcRooms(M);return {format:'ind-plan',version:2,units:'mm',source:'ind-plan-mvp',walls,risers:M.risers.map(r=>({type:r.type,d:r.d,at:[X2(r.x),Y2(r.y)]})),
   rooms:K2.regs.map(R=>{const l=M.rooms[R.main];return {name:l.n,seed:[X2(l.x),Y2(l.y)],area:R.a}}),...(M.fixed?{note:'Наружный контур — из модели Rhino, в JSON не входит'}:{})}}
 function ipSvgDoc(M){let s=msvg(M,{area:1,exp:1,label:true});const css=getComputedStyle(document.documentElement);s=s.replace(/var\((--[\w-]+)\)/g,(m,n)=>css.getPropertyValue(n).trim()||'#000');
@@ -472,3 +477,90 @@ $('#expbtn').setAttribute('onclick','openExp()');
 $('#gempty').innerHTML='<span class="i">dashboard_customize</span><b style="color:var(--text)">Здесь появятся варианты</b>Нарисуйте контур квартиры и нажмите «Создать планировку». Один запуск — до 8 вариантов';
 document.title='IND PLAN';ipAva();ipTok();
 try{if(localStorage.getItem(LSU))go('projects')}catch{}
+
+/* ---------- 2026-11-18: выделение стены заливкой, имя проекта над листом, угловые окна на стенах, лист растёт под стены ---------- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.sheet .tag{white-space:nowrap;top:-30px}
+.ipname{display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:3px 6px;margin:-3px -2px -3px -6px;border-radius:6px;font:inherit;font-size:13px;font-weight:600;color:var(--text);cursor:text;max-width:420px;transition:background .15s}
+.ipname .t{overflow:hidden;text-overflow:ellipsis}.ipname .i{font-size:14px;color:var(--faint);opacity:0;transition:opacity .15s}
+.ipname:hover,.ipname:focus-visible{background:var(--sub);outline:0}.ipname:hover .i,.ipname:focus-visible .i{opacity:1}
+.ipname-in{font:inherit;font-size:13px;font-weight:600;color:var(--text);border:1px solid var(--acc);border-radius:6px;padding:2px 6px;margin:-3px -2px -3px -7px;outline:0;background:var(--panel);width:280px;box-shadow:0 0 0 3px var(--acc-soft)}
+.stage.ipwall{cursor:crosshair}
+</style>`);
+
+/* имя проекта над листом: оно же в шапке, в заголовках запусков и в именах файлов экспорта */
+ipTag=function(){if(!contour||sel||refOn||!CM)return;const c=ipCheck(CM),n=$('#fn').textContent.trim()||'Без названия';
+ $('#sheettag').innerHTML=`<button class="ipname" onclick="ipNameEdit()" title="${IP.ro?'Пример — чтобы переименовать, сохраните копию':'Название проекта — им подписаны запуски и файлы экспорта'}"><span class="t">${esc(n)}</span><span class="i">edit</span></button><span>·</span><span>${c.closed?`${ipDims(CM)} · ${nf(c.area,CM.fixed?2:1)} м²`:ipHas(CM)?'контур не замкнут':'контур не нарисован'}${IP.ro?' · пример':''}</span>`};
+function ipNameEdit(){if(IP.ro)return toast('Пример не переименовать — сохраните копию',{k:'warn',act:'Сохранить копию',fn:ipSaveCopy});const b=$('#sheettag .ipname');if(!b)return;
+ const old=$('#fn').textContent.trim(),i=document.createElement('input');i.className='ipname-in';i.value=old=='Без названия'?'':old;i.placeholder='Например, ЖК Сад · кв. 14';i.maxLength=80;b.replaceWith(i);i.focus();i.select();
+ let fin=0;const done=ok=>{if(fin||!i.isConnected)return;fin=1;const v=i.value.trim();i.remove();if(ok&&v&&v!=old){$('#fn').textContent=v;saved();toast('Проект переименован',{icon:'check'})}ipTag()};
+ i.addEventListener('keydown',e=>{e.stopPropagation();if(e.key=='Enter')done(1);if(e.key=='Escape')done(0)});i.addEventListener('blur',()=>done(1))}
+new MutationObserver(()=>ipTag()).observe($('#fn'),{childList:true,characterData:true,subtree:true});
+
+/* выделение: стена целиком синяя, без обводки (обводка с non-scaling-stroke кривила углы); проём — перекрашен в акцент */
+const ipOpSel=(o,f)=>`<g style="pointer-events:none"${f<1?` opacity="${f}"`:''}>${opG(o).split(EC.win).join('var(--acc)').split(EC.door).join('var(--acc)').replace(/fill="#fff"/g,'fill="var(--acc-soft)"').split(`fill="${EC.floor}"`).join('fill="var(--acc-soft)"')}</g>`;
+const _ipOutl=elOutline;elOutline=function(M,h,dash){if(!h)return '';
+ if(h.t=='wall'){const w=M.walls.find(x=>x.id==h.id);if(!w)return '';const wp=wallPolys(M).filter(x=>x.w===w).pop();if(!wp)return '';const s=ED.s||1;
+  return `<path d="${polyD(wp.pts)}" fill="var(--acc)" ${dash?'fill-opacity=".45"':'stroke="var(--acc)" stroke-width=".25" stroke-linejoin="round"'} style="pointer-events:none"/>`+
+   M.ops.filter(o=>o.wall==w.id||o.cw&&o.cw.w2==w.id).map(o=>`<g style="pointer-events:none">${opG(o)}</g>`).join('')+
+   (dash?'':[[w.x1,w.y1],[w.x2,w.y2]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="${4*s}" fill="#fff" stroke="var(--acc)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`).join(''))}
+ if(h.t=='op'){const o=M.ops.find(x=>x.id==h.id);return o?ipOpSel(o,dash?.6:1):''}
+ return _ipOutl(M,h,dash)};
+
+/* ---- проёмы в нарисованных стенах: только в свободной части грани (не заезжают в угол), окно у угла заворачивает на соседнюю стену ---- */
+function ipWG(M,w){const G=wgeo(w),u=[G.ux,G.uy],n=[-u[1],u[0]],wp=wallPolys(M).filter(x=>x.w===w).pop(),P=wp&&wp.pts.length==4?wp.pts:null;
+ if(!P)return {G,u,n,P:null,a:0,b:G.len};const s=Q=>(Q[0]-w.x1)*u[0]+(Q[1]-w.y1)*u[1];return {G,u,n,P,a:Math.max(s(P[0]),s(P[3])),b:Math.min(s(P[1]),s(P[2]))}}
+/* сколько свободно вдоль стены x от точки I в сторону d: до ближайшего другого проёма */
+function ipFree(M,x,I,d,ex){let m=1e9;M.ops.forEach(o=>{if(o.id==ex||!(o.wall==x.id||o.cw&&o.cw.w2==x.id))return;let t=1e9;opPts(o).forEach(P=>{t=Math.min(t,(P[0]-I[0])*d[0]+(P[1]-I[1])*d[1])});m=Math.min(m,Math.max(0,t))});return m}
+/* угол на конце end стены w: ровно одна соседняя наружная стена, комната внутри угла */
+function ipCorner(M,w,end,ex){if(w.type=='part')return null;const N=end==1?[w.x1,w.y1]:[w.x2,w.y2],vs=M.walls.filter(v=>v!==w&&[1,2].some(j=>Math.hypot(v['x'+j]-N[0],v['y'+j]-N[1])<1));
+ if(vs.length!=1||vs[0].type=='part')return null;const v=vs[0],j=Math.hypot(v.x1-N[0],v.y1-N[1])<1?1:2,F=j==1?[v.x2,v.y2]:[v.x1,v.y1],Lv=Math.hypot(F[0]-N[0],F[1]-N[1]);if(Lv<1)return null;
+ const d2=[(F[0]-N[0])/Lv,(F[1]-N[1])/Lv],A=ipWG(M,w),B=ipWG(M,v);if(!A.P||!B.P)return null;
+ const cr=d2[0]*A.n[0]+d2[1]*A.n[1];if(Math.abs(cr)<.2)return null;const si=cr>0?1:-1; // внутренняя сторона угла — куда уходит соседняя стена
+ const mid=[(w.x1+w.x2)/2,(w.y1+w.y2)/2],h=w.t/2+2;if(regAt(M,...pa(mid,A.n,-si*h))>=0&&regAt(M,...pa(mid,A.n,si*h))<0)return null; // комната снаружи угла — окно не завернуть
+ const P=A.P,I=si>0?P[end==1?0:1]:P[end==1?3:2],O=si>0?P[end==1?3:2]:P[end==1?0:1],far1=si>0?P[end==1?1:0]:P[end==1?2:3],d1=end==1?A.u:[-A.u[0],-A.u[1]],o1=[-si*A.n[0],-si*A.n[1]];
+ const sv=(I[0]-N[0])*B.n[0]+(I[1]-N[1])*B.n[1]>0?1:-1,o2=[-sv*B.n[0],-sv*B.n[1]],k2=j==1?2:1,far2=sv>0?B.P[k2==1?0:1]:B.P[k2==1?3:2];
+ const m1=Math.min((far1[0]-I[0])*d1[0]+(far1[1]-I[1])*d1[1],ipFree(M,w,I,d1,ex)),m2=Math.min((far2[0]-I[0])*d2[0]+(far2[1]-I[1])*d2[1],ipFree(M,v,I,d2,ex));
+ return {I,O,d1,d2,o1,o2,t1:w.t,t2:v.t,end,w2:v.id,m1,m2}}
+const ipCw=(c,L1,L2,w,k)=>({k,cw:{I:c.I,O:c.O,d1:c.d1,d2:c.d2,o1:c.o1,o2:c.o2,t1:c.t1,t2:c.t2,L1,L2,end:c.end,w2:c.w2},x:c.I[0],y:c.I[1],a:Math.atan2(c.d1[1],c.d1[0])*180/Math.PI,w:L1+L2,t:c.t1,wall:w.id});
+function ipPlaceWallOp(M,p,k,w0,ex){let best=null,bd=1e9;
+ M.walls.forEach(w=>{const G=wgeo(w),[s0,q]=loc(p.x,p.y,G.cx,G.cy,G.a);if(Math.abs(s0)>G.len/2+2||Math.abs(q)>w.t/2+8*ED.s||Math.abs(q)>=bd)return;
+  const A=ipWG(M,w),s=s0+G.len/2;if(A.b-A.a<10)return;bd=Math.abs(q);
+  if(k=='win')for(const end of [2,1]){const ov=end==2?s+w0/2-A.b:A.a-(s-w0/2);if(ov<12)continue;const c=ipCorner(M,w,end,ex);if(!c)continue;
+   const L2=Math.min(ov,c.m2,w0-10),L1=Math.min(w0-L2,c.m1);if(L1<10||L2<10)continue;best=ipCw(c,L1,L2,w,k);return}
+  const ww=Math.min(w0,A.b-A.a-1),c=Math.max(A.a+ww/2,Math.min(A.b-ww/2,s));
+  best={k,x:w.x1+G.ux*c,y:w.y1+G.uy*c,a:G.a,w:ww,t:w.t,side:q<0?-1:1,h:ED.hg||'s',wall:w.id}});
+ return best}
+const _ipPlaceOp=placeOp;placeOp=function(M,p,k,w0,ex,fr){if(!M.user)return _ipPlaceOp(M,p,k,w0,ex,fr);if(k=='window')k='win';return ipPlaceWallOp(M,p,k,w0||(k=='door'?ED.dw:ED.ww)/MM,ex)};
+/* после правки стен проёмы догоняют геометрию: угловое пересобирается, прямое не выходит за свободную часть */
+function ipRefit(M){if(!M||!M.user)return;M.ops.forEach(o=>{const w=M.walls.find(x=>x.id==o.wall);if(!w)return;const G=wgeo(w),A=ipWG(M,w);
+ if(o.cw){const c=ipCorner(M,w,o.cw.end,o.id);if(c&&c.w2==o.cw.w2){const L1=Math.min(o.cw.L1,c.m1),L2=Math.min(o.cw.L2,c.m2);if(L1>=10&&L2>=10){Object.assign(o,ipCw(c,L1,L2,w,o.k));return}}
+  const ww=Math.max(10,Math.min(o.w,A.b-A.a-1)),s=o.cw.end==2?A.b-ww/2:A.a+ww/2;delete o.cw;Object.assign(o,{x:w.x1+G.ux*s,y:w.y1+G.uy*s,a:G.a,w:ww,t:w.t,side:1,h:'s'});return} // угла больше нет — окно прямое
+ if(A.b-A.a<10)return;const s=(o.x-w.x1)*G.ux+(o.y-w.y1)*G.uy,ww=Math.min(o.w,A.b-A.a-1),c=Math.max(A.a+ww/2,Math.min(A.b-ww/2,s));
+ if(Math.abs(c-s)>.05||ww<o.w-.05){o.x=w.x1+G.ux*c;o.y=w.y1+G.uy*c;o.w=ww}})}
+
+/* ---- лист растёт: ось любой стены не ближе IPPAD к краю; влево/вверх — сдвигом всей модели (off помнит сдвиг для экспорта) ---- */
+const IPPAD=50,IPK=.712;
+const _ipShift=ipShift;ipShift=function(M,dx,dy){_ipShift(M,dx,dy);M.ops.forEach(o=>{if(o.cw){o.cw.I=[o.cw.I[0]+dx,o.cw.I[1]+dy];o.cw.O=[o.cw.O[0]+dx,o.cw.O[1]+dy]}})};
+function ipShiftSnap(st,dx,dy){const P=o=>{o.x+=dx;o.y+=dy;if(o.cw){o.cw.I=[o.cw.I[0]+dx,o.cw.I[1]+dy];o.cw.O=[o.cw.O[0]+dx,o.cw.O[1]+dy]}};
+ (st.walls||[]).forEach(w=>{w.x1+=dx;w.x2+=dx;w.y1+=dy;w.y2+=dy});['ops','furn','risers','rooms'].forEach(k=>(st[k]||[]).forEach(P))}
+function ipGrow(M){if(!M||!M.user||M.fixed)return null;let a=1e9,b=1e9,c=-1e9,d=-1e9;const add=(x,y)=>{a=Math.min(a,x);b=Math.min(b,y);c=Math.max(c,x);d=Math.max(d,y)};
+ M.walls.forEach(w=>{add(w.x1,w.y1);add(w.x2,w.y2)});M.risers.forEach(r=>add(r.x,r.y));if(a>c)return null;
+ const dx=a<IPPAD?Math.ceil(IPPAD-a):0,dy=b<IPPAD?Math.ceil(IPPAD-b):0,W=Math.max(M.W+dx,Math.ceil(c+dx+IPPAD)),H=Math.max(M.H+dy,Math.ceil(d+dy+IPPAD));
+ if(!dx&&!dy&&W==M.W&&H==M.H)return null;
+ if(dx||dy){ipShift(M,dx,dy);ED.hist.forEach(s=>ipShiftSnap(s,dx,dy));ED.fut.forEach(s=>ipShiftSnap(s,dx,dy));new Set([ED.chain,ED.start,ED.pt,ED.cur,IP.r1,IP.r2,IP.q].filter(Boolean)).forEach(p=>{p.x+=dx;p.y+=dy})}
+ M.W=W;M.H=H;M.vb=`0 0 ${W} ${H}`;M.gv++;return {dx,dy}}
+function ipSheetW(){const sh=$('.sheet');if(!sh)return;const M=curM(),w=M&&M.user?Math.round(M.W*IPK*ZM+48)+'px':ZM==1?'':Math.round(760*ZM)+'px';if(sh.style.width!=w)sh.style.width=w}
+const _ipZoom=zoom;zoom=function(d){_ipZoom(d);ipSheetW()};
+const _ipSS=ipShowStage;ipShowStage=function(){_ipSS();ipSheetW()};
+const _ipDraw2=draw;draw=function(){const M=curM();if(DR&&DR.mv&&M&&M.user&&(DR.k=='wall'||DR.k=='end'))ipRefit(M);_ipDraw2();ipSheetW();$('#stage').classList.toggle('ipwall',!!(ED.on&&ED.tool=='wall'))};
+/* экранная точка модели — чтобы после роста листа план не прыгал */
+const ipScr=P=>{const sv=$('#plan svg[data-m]'),m=sv&&sv.getScreenCTM();return m?new DOMPoint(P[0],P[1]).matrixTransform(m):null};
+const _ipCh2=changed;changed=function(geo){const M=curM();let g=null,R=null,S0=null;
+ if(geo&&M&&M.user){ipRefit(M);const w=M.walls[0];if(w){R=[w.x1,w.y1];S0=ipScr(R)}g=ipGrow(M)}
+ _ipCh2(geo);
+ if(g&&S0){const S1=ipScr([R[0]+g.dx,R[1]+g.dy]),st=$('#stage');if(S1){st.scrollLeft+=S1.x-S0.x;st.scrollTop+=S1.y-S0.y}}};
+/* стены можно рисовать и по серому полю вокруг листа */
+$('#stage').addEventListener('pointerdown',e=>{if(e.button!==0||!ED.on||ED.tool!='wall'||e.target.closest('#plan,button,input,a,.tag,.ipsteps,.zoom'))return;const M=curM(),p=evP(e);if(!M||!p)return;
+ e.preventDefault();ED.pt=ED.typed?ED.pt:wsnap(M,p,e);addWallPt(M,liveEnd())});
+$('#stage').addEventListener('dblclick',e=>{if(!e.target.closest('#plan')&&ED.on&&ED.tool=='wall')endChain()});
