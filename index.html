@@ -1435,7 +1435,7 @@ $('#s-projects .top .ib').onclick=ipHelp;
 
 /* ---------- экспорт: JSON для Revit, SVG, PNG, PDF через печать ---------- */
 function ipToJson(M){const o0=M.off||[0,0],X2=x=>Math.round((x-o0[0])*MM),Y2=y=>-Math.round((y-o0[1])*MM);
- const walls=M.walls.map(w=>{const G=wgeo(w);return {id:w.id,type:{ext:'exterior',bear:'bearing',part:'partition'}[w.type]||'partition',thickness:Math.round(w.t*MM),axis:[[X2(w.x1),Y2(w.y1)],[X2(w.x2),Y2(w.y2)]],closed:false,
+ const walls=M.walls.map(w=>{const G=wgeo(w);return {id:w.id,type:{ext:'exterior',bear:'bearing',part:'partition',zone:'divider'}[w.type]||'partition',thickness:Math.round(w.t*MM),axis:[[X2(w.x1),Y2(w.y1)],[X2(w.x2),Y2(w.y2)]],closed:false,
   openings:M.ops.filter(o=>(o.wall==w.id||o.cw&&o.cw.w2==w.id)&&(o.k=='door'||o.k=='win')).map(o=>{const at=P=>Math.round(((P[0]-w.x1)*G.ux+(P[1]-w.y1)*G.uy)*MM);
    if(o.cw){const c=o.cw,on1=o.wall==w.id,L=on1?c.L1:c.L2;return {id:o.id+(on1?'':'-2'),kind:'window',corner:o.id,seg:0,at:at(pa(c.I,on1?c.d1:c.d2,L/2)),width:Math.round(L*MM)}} // угловое окно — две части, по одной на каждой стене
    return {id:o.id,kind:o.k=='door'?'door':'window',seg:0,at:at([o.x,o.y]),width:Math.round(o.w*MM),...(o.k=='door'?{hinge:o.h=='e'?'end':'start',side:o.side,...(o.dbl?{double:true,leaf2:Math.round((o.w2||o.w/2)*MM)}:{})}:{})}})}});
@@ -1827,6 +1827,19 @@ function ipCenterAuto(M){const K=calcRooms(M),{W,H,L}=K,S={};K.regs.forEach((R,r
  if(moved)M.gv++}
 ipAutoRooms=(_a=>function(M){_a(M);if(M&&M.user)ipCenterAuto(M)})(ipAutoRooms);
 window.addEventListener('pointerup',()=>{if(DR&&DR.k=='room'&&DR.mv&&DR.lab!=null){const M=curM(),l=M&&M.rooms[DR.lab];if(l)l.auto=0}},true);
+/* ---------- разделитель зон: пунктир внутри помещения (кухня | гостиная) — делит площадь, но это не стена ---------- */
+WT.zone=['Разделитель',40];EC.zone='transparent';
+wallPolys=(_w=>function(M){if(!M.user)return _w(M);const Z=M.walls.filter(w=>w.type=='zone');if(!Z.length)return _w(M);
+ // разделители — отдельным слоем снизу: ни с чем не стыкуются, кончаются на оси стены
+ return [..._ipWP({walls:Z}),..._w({...M,walls:M.walls.filter(w=>w.type!='zone')})]})(wallPolys);
+msvg=(_m=>function(M,o={}){let s=_m(M,o);if(!M.user)return s;const Z=M.walls.filter(w=>w.type=='zone');if(!Z.length)return s;
+ const d=Z.map(w=>`M${f2([w.x1,w.y1])}L${f2([w.x2,w.y2])}`).join('');
+ const g=`<path d="${d}" fill="none" stroke="${EC.part}" stroke-width="${o.thumb||o.exp?1.2:1.5}" stroke-dasharray="${o.thumb||o.exp?'5 4':'6 5'}" stroke-linecap="round" ${o.thumb||o.exp?'':'vector-effect="non-scaling-stroke"'} style="pointer-events:none"/>`;
+ // пунктир — под стенами: концы прячутся в них
+ const im=s.indexOf('<image href="data:image/png'),i=im>=0?s.indexOf('/>',im)+2:-1;return i>1?s.slice(0,i)+g+s.slice(i):s.replace(/<\/svg>$/,g+'</svg>')})(msvg); // пунктир — сразу над заливкой помещений, под стенами
+/* в разделитель нельзя поставить дверь или окно */
+ipPlaceWallOp=(_p=>function(M,p,k,w0,ex){if(!M.user||!M.walls.some(w=>w.type=='zone'))return _p(M,p,k,w0,ex);const Z=M.walls.filter(w=>w.type=='zone');M.walls=M.walls.filter(w=>w.type!='zone');
+ try{return _p(M,p,k,w0,ex)}finally{M.walls=M.walls.concat(Z)}})(ipPlaceWallOp);
 if($('#s-projects').classList.contains('on'))ipGrid();
 
 /*/js:editor*/</script></body></html>
