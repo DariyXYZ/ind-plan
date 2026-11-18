@@ -25,9 +25,9 @@ function tM(c){const M=ipBlank(),P=c.P;
 /* планировки: перегородки 100, двери, подписи помещений, мебель — поверх контура */
 function vM(c,L){const M=tM(c),o0=M.off,s0=ED.s,P=(x,y)=>({x:x/MM+o0[0],y:y/MM+o0[1]});ED.s=1;M.rooms=[];
  L.walls.forEach(([x1,y1,x2,y2])=>{const a=P(x1,y1),b=P(x2,y2);M.walls.push({id:nid(M,'w'),x1:a.x,y1:a.y,x2:b.x,y2:b.y,t:100/MM,type:'part',fixed:0})});
- L.doors.forEach(([x,y,w,sx,sy,h])=>{const o=placeOp(M,P(x+sx*20,y+sy*20),'door',w/MM);if(o){o.id=nid(M,'o');o.h=h||'s';M.ops.push(o)}});
+ L.doors.forEach(([x,y,w,sx,sy,h,sl])=>{const o=placeOp(M,P(x+sx*20,y+sy*20),'door',w/MM);if(o){o.id=nid(M,'o');o.h=h||'s';if(sl)o.sl=1;M.ops.push(o)}});
  L.rooms.forEach(([n,x,y])=>{const p=P(x,y);M.rooms.push({n,x:p.x,y:p.y})});
- L.furn.forEach(([k,x,y,r])=>{const p=P(x,y);M.furn.push({id:nid(M,'f'),c:k,x:p.x,y:p.y,r,m:0})});
+ L.furn.forEach(([k,x,y,r,w,d])=>{const p=P(x,y),f={id:nid(M,'f'),c:k,x:p.x,y:p.y,r,m:0};if(w)f.w=w;if(d)f.d=d;M.furn.push(f)});
  M.furnOn=true;ED.s=s0;M.gv++;return M}
 EXD.length=0;T.forEach(c=>EXD.push({n:c.n,t:c.t,c:c.c,M:()=>tM(c),V:c.V,src:c,nv:c.V?c.V.length:0}));
 const _od=ipOpenDemo;ipOpenDemo=function(k){const D=EXD[k];IP.tst=D.V?D:null;_od(k);if(!D.V)return;

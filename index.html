@@ -1438,7 +1438,7 @@ function ipToJson(M){const o0=M.off||[0,0],X2=x=>Math.round((x-o0[0])*MM),Y2=y=>
  const walls=M.walls.map(w=>{const G=wgeo(w);return {id:w.id,type:{ext:'exterior',bear:'bearing',part:'partition',zone:'divider'}[w.type]||'partition',thickness:Math.round(w.t*MM),axis:[[X2(w.x1),Y2(w.y1)],[X2(w.x2),Y2(w.y2)]],closed:false,
   openings:M.ops.filter(o=>(o.wall==w.id||o.cw&&o.cw.w2==w.id)&&(o.k=='door'||o.k=='win')).map(o=>{const at=P=>Math.round(((P[0]-w.x1)*G.ux+(P[1]-w.y1)*G.uy)*MM);
    if(o.cw){const c=o.cw,on1=o.wall==w.id,L=on1?c.L1:c.L2;return {id:o.id+(on1?'':'-2'),kind:'window',corner:o.id,seg:0,at:at(pa(c.I,on1?c.d1:c.d2,L/2)),width:Math.round(L*MM)}} // угловое окно — две части, по одной на каждой стене
-   return {id:o.id,kind:o.k=='door'?'door':'window',seg:0,at:at([o.x,o.y]),width:Math.round(o.w*MM),...(o.k=='door'?{hinge:o.h=='e'?'end':'start',side:o.side,...(o.dbl?{double:true,leaf2:Math.round((o.w2||o.w/2)*MM)}:{})}:{})}})}});
+   return {id:o.id,kind:o.k=='door'?'door':'window',seg:0,at:at([o.x,o.y]),width:Math.round(o.w*MM),...(o.k=='door'?{hinge:o.h=='e'?'end':'start',side:o.side,...(o.dbl?{double:true,leaf2:Math.round((o.w2||o.w/2)*MM)}:{}),...(o.sl?{sliding:true}:{})}:{})}})}});
  const K2=calcRooms(M);return {format:'ind-plan',version:2,units:'mm',source:'ind-plan-mvp',walls,risers:M.risers.map(r=>({type:r.type,d:r.d,at:[X2(r.x),Y2(r.y)]})),
   rooms:K2.regs.map(R=>{const l=M.rooms[R.main];return {name:l.n,seed:[X2(l.x),Y2(l.y)],area:R.a}}),...(M.fixed?{note:'Наружный контур — из модели Rhino, в JSON не входит'}:{})}}
 function ipSvgDoc(M){let s=msvg(M,{area:1,exp:1,label:true});const css=getComputedStyle(document.documentElement);s=s.replace(/var\((--[\w-]+)\)/g,(m,n)=>css.getPropertyValue(n).trim()||'#000');
@@ -1904,6 +1904,25 @@ renderProps=(_r=>function(){_r();$$('#props .seg').forEach(g=>{if([...g.children
 function ipRoomMoves(M,W){const hit=(P,d)=>{let best=null,bt=1e9;M.walls.forEach(w=>{const ex=w.x2-w.x1,ey=w.y2-w.y1,den=d[0]*ey-d[1]*ex;if(Math.abs(den)<1e-9)return;const wx=w.x1-P[0],wy=w.y1-P[1],t=(wx*ey-wy*ex)/den,u=(wx*d[1]-wy*d[0])/den;if(t>0&&u>=-.02&&u<=1.02&&t<bt){bt=t;best=w}});return best};
  return M.rooms.map(r=>[[1,0],[-1,0],[0,1],[0,-1]].every(d=>{const w=hit([r.x,r.y],d);return w&&W.has(w.id)}))}
 ipTranslate=(_t=>function(M,L,dx,dy){const W=new Set(L.filter(x=>x.t=='wall').map(x=>x.id)),mv=W.size?ipRoomMoves(M,W):[];_t(M,L,dx,dy);M.rooms.forEach((r,i)=>{if(mv[i]){r.x+=dx;r.y+=dy}})})(ipTranslate);
+/* ---------- параметрическая мебель: у экземпляра свои длина f.w и глубина f.d (мм). Шкаф перерисовывается по длине — во всю стену, угловой из двух ---------- */
+const ipFD=f=>{const c=FC[f.c];return [f.w||c[2],f.d||c[3]]};
+const ipWardP=(L,D)=>{let s=pr(-L/2,0,L/2,D)+pl(-L/2,D-40,L/2,D-40)+pl(-L/2+40,D/2,L/2-40,D/2);const n=Math.max(1,Math.round((L-160)/240));for(let i=0;i<=n;i++){const x=-L/2+80+i*(L-160)/n;s+=pl(x,130,x,D-130)}return s};
+fbox=(_f=>function(f){if(f.src||!f.c||!(f.w||f.d))return _f(f);const [w,d]=ipFD(f),[ux,uy]=ang(f.r),h=d/MM/2;return {cx:f.x-uy*h,cy:f.y+ux*h,a:f.r,l:w/MM,t:d/MM}})(fbox);
+furG=(_g=>function(f){if(f.src||!f.c||!(f.w||f.d))return _g(f);const [w,d]=ipFD(f),c=FC[f.c],wr=f.c=='wardrobe',sx=wr?1:w/c[2],sy=wr?1:d/c[3];
+ return `<path d="${wr?ipWardP(w,d):fup(f.c)}" transform="translate(${f.x} ${f.y}) rotate(${f.r}) scale(${(f.m?-1:1)*sx*.05} ${sy*.05})" fill="#fff" stroke="${EC.furn}" stroke-width="${14/Math.max(sx,sy)}" stroke-linejoin="round" stroke-linecap="round"/>`})(furG);
+function ipFW(id,k,v){const n=Math.round(+String(v).replace(/\s/g,'').replace(',','.'));const [a,b]=k=='w'?[300,6000]:[300,900];
+ if(!(n>=a&&n<=b)){toast(`${k=='w'?'Длина':'Глубина'} — от ${a} до ${nf(b,0)} мм`,{k:'warn'});return renderProps()}mut(M=>{const f=M.furn.find(x=>x.id==id);if(f)f[k]=n},0);renderProps()}
+renderProps=(_rp=>function(){_rp();const M=curM(),s=ED.sel;if(!ED.on||!M||!s||s.t!='furn')return;const f=M.furn.find(x=>x.id==s.id);if(!f||!f.c||!['wardrobe','base'].includes(f.c))return;
+ const row=[...$$('#props .row')].find(r=>/Габарит/.test(r.textContent));if(!row)return;const [w,d]=ipFD(f);
+ row.outerHTML=fld('Длина',w,`ipFW('${f.id}','w',this.value)`)+fld('Глубина',d,`ipFW('${f.id}','d',this.value)`)+`<p class="hintp" style="margin:0 0 6px">Шкаф тянется во всю стену или собирается углом из двух — без щелей у стен.</p>`})(renderProps);
+/* ---------- раздвижная дверь: полотно уезжает вдоль стены, распашки нет — для гардеробных, санузлов и узких коридоров ---------- */
+opG=(_o=>function(o){if(o.k!='door'||!o.sl||o.cw)return _o(o);const [ux,uy]=ang(o.a),nx=-uy*o.side,ny=ux*o.side,h=o.w/2,k=o.t/2+.6,sg=o.h=='e'?1:-1,c0=sg*h*.55,
+ P=(a,q)=>`${(o.x+ux*a+nx*q).toFixed(2)} ${(o.y+uy*a+ny*q).toFixed(2)}`;
+ return `<path d="${obox(o.x,o.y,o.a,o.w,o.t+.6)}" fill="${EC.floor}"/><path d="M${P(-h,k+.7)}L${P(h,k+.7)}" stroke="${EC.door}" stroke-width=".4" stroke-dasharray="1.4 1.1"/><path d="M${P(c0-h,k)}L${P(c0+h,k)}L${P(c0+h,k+1.5)}L${P(c0-h,k+1.5)}Z" fill="#fff" stroke="${EC.door}" stroke-width=".6" stroke-linejoin="round"/>`})(opG);
+function ipSl(id){mut(M=>{const o=M.ops.find(x=>x.id==id);if(o){o.sl=o.sl?0:1;if(o.sl)o.dbl=0}},0);renderProps()}
+renderProps=(_rp=>function(){_rp();const M=curM(),s=ED.sel;if(!ED.on||!M||!s||s.t!='op'||ED.msel.length)return;const o=M.ops.find(x=>x.id==s.id);if(!o||o.k!='door'||o.cw)return;
+ const d=[...$$('#props .chk')].find(c=>/Двойная дверь/.test(c.textContent));if(!d)return;if(o.sl)d.style.display='none';
+ d.insertAdjacentHTML('beforebegin',`<div class="chk ${o.sl?'on':''}" style="margin-top:6px" role="checkbox" tabindex="0" aria-checked="${!!o.sl}" onclick="ipSl('${o.id}')" onkeydown="if(event.key==' '||event.key=='Enter'){event.preventDefault();ipSl('${o.id}')}"><span class="bx"><span class="i">check</span></span>Раздвижная</div>`)})(renderProps);
 if($('#s-projects').classList.contains('on'))ipGrid();
 
 /*/js:editor*/</script></body></html>
