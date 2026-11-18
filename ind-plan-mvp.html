@@ -1557,9 +1557,10 @@ const _ipCh2=changed;changed=function(geo){const M=curM();let g=null,R=null,S0=n
  _ipCh2(geo);
  if(g&&S0){const S1=ipScr([R[0]+g.dx,R[1]+g.dy]),st=$('#stage');if(S1){st.scrollLeft+=S1.x-S0.x;st.scrollTop+=S1.y-S0.y}}};
 /* стены можно рисовать и по серому полю вокруг листа */
-$('#stage').addEventListener('pointerdown',e=>{if(e.button!==0||!ED.on||ED.tool!='wall'||e.target.closest('#plan,button,input,a,.tag,.ipsteps,.zoom'))return;const M=curM(),p=evP(e);if(!M||!p)return;
+const ipVia=(e,sel)=>e.composedPath().some(n=>n.matches&&n.matches(sel));
+$('#stage').addEventListener('pointerdown',e=>{if(e.button!==0||!ED.on||ED.tool!='wall'||ipVia(e,'#plan,button,input,a,.tag,.ipsteps,.zoom'))return;const M=curM(),p=evP(e);if(!M||!p)return;
  e.preventDefault();ED.pt=ED.typed?ED.pt:wsnap(M,p,e);addWallPt(M,liveEnd())});
-$('#stage').addEventListener('dblclick',e=>{if(!e.target.closest('#plan')&&ED.on&&ED.tool=='wall')endChain()});
+$('#stage').addEventListener('dblclick',e=>{if(!ipVia(e,'#plan')&&ED.on&&ED.tool=='wall')endChain()});
 
 /* ---------- список файлов: примеры в общей сетке, карточка «Новый файл» принимает план перетаскиванием ---------- */
 document.head.insertAdjacentHTML('beforeend',`<style>
@@ -1666,7 +1667,7 @@ function ipMselDel(){const M=curM(),L=ED.msel;if(!M||!L.length)return;const ids=
  ED.msel=[];ED.sel=null;draw();renderProps();toast(`Удалено: ${n} ${n%10==1&&n%100!=11?'элемент':n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'элемента':'элементов'}`,{icon:'delete',act:'Отменить',fn:undo})}
 /* старт рамки: левая кнопка по пустому месту в режиме выбора (вне правки — тоже, правка включится сама) */
 $('#plan').addEventListener('pointerdown',e=>{if(e.button!==0)return;const M=curM();if(!M||sel&&!ED.on||refOn)return;if(ED.on&&ED.tool!='select')return;const p=evP(e);if(!p)return;
- const h=hit(M,p);if(h&&h.t!='room'&&!(h.t=='fixed'&&e.shiftKey)){if(ED.msel.length&&!e.shiftKey){ED.msel=[];draw()}
+ const h=hit(M,p);if(h&&h.t!='room'&&!(h.t=='fixed'&&e.shiftKey)){if(ED.msel.length&&!e.shiftKey&&!ED.msel.some(x=>ipKey(x)==ipKey(h))){ED.msel=[];draw()}
   if(e.shiftKey&&ED.on){const prev=ED.sel;setTimeout(()=>{ED.sel=prev;ipMselSet([h],true)},0)}return}
  if(!ED.on)edStart();IP.mq={a:{x:p.x,y:p.y},b:{x:p.x,y:p.y},add:e.shiftKey,mv:0};if(DR&&DR.k=='room')DR=null},true);
 window.addEventListener('pointermove',e=>{if(!IP.mq)return;if(DR&&DR.k=='room')DR=null;const p=evP(e);if(!p)return;IP.mq.b={x:p.x,y:p.y};if(Math.hypot(p.x-IP.mq.a.x,p.y-IP.mq.a.y)>3*ED.s)IP.mq.mv=1;if(IP.mq.mv){DR=null;reDraw()}},true);
@@ -1691,6 +1692,52 @@ document.addEventListener('keydown',e=>{if(!ED.on||!ED.msel.length||/TEXTAREA|IN
 /* смена файла, инструмента или выход из правки — выбор группы сбрасывается */
 {const _r=reset;reset=function(){ED.msel=[];IP.mq=null;return _r.apply(this,arguments)};const _d=edDone;edDone=function(){ED.msel=[];return _d.apply(this,arguments)};
  const _p=pickTool;pickTool=function(t){if(t!='select')ED.msel=[];return _p.apply(this,arguments)}}
+/* ---------- группа как в Figma: тянуть выбранное, стрелки, Ctrl+A, общие свойства (тип и толщина стен, ширина проёмов) ---------- */
+const ipSets=L=>{const s=t=>new Set(L.filter(x=>x.t==t).map(x=>x.id));return {W:s('wall'),O:s('op'),F:s('furn'),R:s('riser')}};
+/* сдвиг группы: стены целиком, концы соседних стен в тех же узлах тянутся за ними, проёмы едут со своими стенами */
+function ipTranslate(M,L,dx,dy){const {W,O,F,R}=ipSets(L),key=(x,y)=>x.toFixed(2)+','+y.toFixed(2),nodes=new Set();
+ M.walls.forEach(w=>{if(W.has(w.id)){nodes.add(key(w.x1,w.y1));nodes.add(key(w.x2,w.y2))}});
+ M.walls.forEach(w=>{[1,2].forEach(k=>{if(W.has(w.id)||nodes.has(key(w['x'+k],w['y'+k]))){w['x'+k]+=dx;w['y'+k]+=dy}})});
+ const mv=P=>[P[0]+dx,P[1]+dy];M.ops.forEach(o=>{if(W.has(o.wall)||O.has(o.id)&&!o.wall){o.x+=dx;o.y+=dy;if(o.cw){o.cw.I=mv(o.cw.I);o.cw.O=mv(o.cw.O)}}});
+ M.furn.forEach(f=>{if(F.has(f.id)){f.x+=dx;f.y+=dy}});M.risers.forEach(r=>{if(R.has(r.id)){r.x+=dx;r.y+=dy}})}
+const ipSelList=()=>ED.msel.length?ED.msel:ED.sel&&['wall','furn','riser'].includes(ED.sel.t)?[ED.sel]:[];
+/* перетаскивание группы: захват за любой выбранный элемент */
+$('#plan').addEventListener('pointerdown',e=>{if(e.button!==0||!ED.on||ED.tool!='select'||ED.msel.length<2||e.shiftKey)return;const M=curM(),p=evP(e);if(!M||!p)return;const h=hit(M,p);
+ if(!h||!ED.msel.some(x=>ipKey(x)==ipKey(h)))return;e.stopPropagation();e.preventDefault();
+ IP.gd={p0:{x:p.x,y:p.y},h,st:snap(M),orig:cl({walls:M.walls,ops:M.ops,furn:M.furn,risers:M.risers}),mv:0}},true);
+window.addEventListener('pointermove',e=>{const g=IP.gd;if(!g)return;const p=evP(e);if(!p)return;const M=curM();let dx=p.x-g.p0.x,dy=p.y-g.p0.y;
+ if(!g.mv&&Math.hypot(dx,dy)<2*ED.s)return;g.mv=1;if(e.shiftKey){if(Math.abs(dx)>Math.abs(dy))dy=0;else dx=0} // Shift — только по оси
+ dx=Math.round(dx*2)/2;dy=Math.round(dy*2)/2;Object.assign(M,cl(g.orig));ipTranslate(M,ED.msel,dx,dy);$('#plan').style.cursor='move';reDraw()},true);
+window.addEventListener('pointerup',()=>{const g=IP.gd;if(!g)return;IP.gd=null;const M=curM();
+ if(!g.mv){ipMselSet([g.h]);return} // клик без сдвига по элементу группы — выбрать только его
+ ED.hist.push(g.st);if(ED.hist.length>80)ED.hist.shift();ED.fut=[];M.gv++;changed(1)},true);
+/* стрелки — сдвиг на 10 мм, с Shift — на 100 мм; Ctrl+A — выбрать всё */
+document.addEventListener('keydown',e=>{if(!ED.on||IP.modal||/TEXTAREA|INPUT|SELECT/.test(e.target.tagName)||!$('#s-ws').classList.contains('on'))return;const M=curM();if(!M)return;
+ if((e.ctrlKey||e.metaKey)&&(e.code=='KeyA')){e.preventDefault();e.stopImmediatePropagation();if(ED.tool!='select')pickTool('select');ipMselSet(ipInRect(M,[-1e9,-1e9,1e9,1e9]));return}
+ const A={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!A||ED.tool!='select')return;const L=ipSelList();if(!L.length)return;
+ e.preventDefault();e.stopImmediatePropagation();const st=(e.shiftKey?100:10)/MM;mut(M=>ipTranslate(M,L,A[0]*st,A[1]*st),1)},true);
+/* общие свойства группы */
+function ipGrp(){const M=curM(),L=ED.msel,{W,O}=ipSets(L);return {M,Ws:M.walls.filter(w=>W.has(w.id)),Os:M.ops.filter(o=>O.has(o.id))}}
+function ipGrpType(k){const {Ws}=ipGrp(),ids=new Set(Ws.map(w=>w.id)),t=WT[k][1]/MM;mut(M=>{M.walls.forEach(w=>{if(!ids.has(w.id))return;w.type=k;w.t=t;w.fixed=k!='part'?1:0});M.ops.forEach(o=>{if(ids.has(o.wall)){o.t=t;if(o.cw)o.cw.t1=t}})},1);
+ toast(`${Ws.length} ${Ws.length%10==1&&Ws.length%100!=11?'стена':Ws.length%10>=2&&Ws.length%10<=4&&(Ws.length%100<10||Ws.length%100>=20)?'стены':'стен'} → ${WT[k][0].toLowerCase()}`,{icon:'check'})}
+function ipGrpT(v){const n=+String(v).replace(/\s/g,'').replace(',','.');if(!(n>=50&&n<=1000)){toast('Толщина — от 50 до 1000 мм',{k:'warn'});return renderProps()}const {Ws}=ipGrp(),ids=new Set(Ws.map(w=>w.id));
+ mut(M=>{M.walls.forEach(w=>{if(ids.has(w.id))w.t=n/MM});M.ops.forEach(o=>{if(ids.has(o.wall))o.t=n/MM})},1)}
+function ipGrpFix(){const {Ws}=ipGrp(),ids=new Set(Ws.map(w=>w.id)),on=!Ws.every(w=>w.fixed);mut(M=>M.walls.forEach(w=>{if(ids.has(w.id))w.fixed=on?1:0}),0)}
+function ipGrpW(k,v){const n=+String(v).replace(/\s/g,'').replace(',','.');if(!(n>=300&&n<=6000)){toast('Ширина — от 300 до 6000 мм',{k:'warn'});return renderProps()}const {Os}=ipGrp(),ids=new Set(Os.filter(o=>o.k==k&&!o.cw).map(o=>o.id));
+ mut(M=>M.ops.forEach(o=>{if(ids.has(o.id))o.w=n/MM}),1)}
+const ipFldM=(lab,vals,on)=>{const one=vals.size==1?[...vals][0]:'';return `<label class="fld"><span>${lab}</span><input inputmode="numeric" value="${one}" placeholder="${vals.size>1?'разные':''}" onchange="${on}"><span>мм</span></label>`};
+renderProps=(_rp=>function(){const M0=curM();if(M0&&ED.msel.length){const has=x=>x.t=='wall'?M0.walls.some(w=>w.id==x.id):x.t=='op'?M0.ops.some(o=>o.id==x.id):x.t=='furn'?M0.furn.some(f=>f.id==x.id):M0.risers.some(r=>r.id==x.id);ED.msel=ED.msel.filter(has);if(ED.msel.length==1){ED.sel=ED.msel[0];ED.msel=[]}}
+ if(!(ED.on&&ED.msel.length>1))return _rp();const {M,Ws,Os}=ipGrp(),L=ED.msel,n=L.length;
+ const D=Os.filter(o=>o.k=='door'),Wn=Os.filter(o=>o.k=='win'),R=L.filter(x=>x.t=='riser').length,F=L.filter(x=>x.t=='furn').length;
+ const pl=(n,a,b,c)=>n%10==1&&n%100!=11?a:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?b:c,parts=[[Ws.length,'стена','стены','стен'],[D.length,'дверь','двери','дверей'],[Wn.length,'окно','окна','окон'],[R,'стояк','стояка','стояков'],[F,'предмет мебели','предмета мебели','предметов мебели']].filter(x=>x[0]).map(x=>x[0]+' '+pl(x[0],x[1],x[2],x[3])).join(' · ');
+ let h=sec('select_all',`Выбрано: ${n}`,`<p class="hintp" style="margin:0">${parts}</p>`);
+ if(Ws.length){const ty=new Set(Ws.map(w=>w.type)),allFix=Ws.every(w=>w.fixed);
+  h+=sec('view_agenda',Ws.length==1?'Стена':`Стены · ${Ws.length}`,`<div class="seg" style="margin-bottom:6px">${Object.entries(WT).map(([k,[nm]])=>`<button class="${ty.size==1&&ty.has(k)?'on':''}" onclick="ipGrpType('${k}')">${nm}</button>`).join('')}</div>${ty.size>1?'<p class="hintp" style="margin:0 0 6px">Типы разные — клик задаст один для всех</p>':''}
+   ${ipFldM('Толщина',new Set(Ws.map(w=>Math.round(w.t*MM))),'ipGrpT(this.value)')}<div class="chk ${allFix?'on':''}" onclick="ipGrpFix()"><span class="bx"><span class="i">check</span></span>Зафиксированы при генерации</div>`)}
+ const opSec=(arr,k,ic,nm)=>{const st=arr.filter(o=>!o.cw);if(!arr.length)return '';return sec(ic,`${nm} · ${arr.length}`,st.length?ipFldM('Ширина',new Set(st.map(o=>Math.round(o.w*MM))),`ipGrpW('${k}',this.value)`)+(st.length<arr.length?'<p class="hintp">Угловые окна не меняются — у них две стороны</p>':''):'<p class="hintp">Угловые окна правятся по одному</p>')};
+ h+=opSec(D,'door','door_front','Двери')+opSec(Wn,'win','window','Окна');
+ h+=`<p class="hintp">Тяните любой выбранный элемент — сдвинется вся группа · стрелки — на 10 мм, с Shift — на 100 мм · Shift + рамка — добавить · Esc — снять</p><div class="pacts"><button class="btn sm" onclick="ipMselDel()"><span class="i">delete</span>Удалить выбранное</button></div>`;
+ $('#props').innerHTML=h;$('#undo').disabled=!ED.hist.length;$('#redo').disabled=!ED.fut.length})(renderProps);
 if($('#s-projects').classList.contains('on'))ipGrid();
 
 /*/js:editor*/</script></body></html>
