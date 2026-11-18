@@ -1889,6 +1889,14 @@ $('#genbtn').addEventListener('click',e=>{const g=e.currentTarget;if(!g.classLis
 /* предупреждения (не мешают запуску) — значком на своём этапе, текст в подсказке */
 ipSteps=(_s=>function(){_s();const el=$('#ipsteps');if(!el||!contour||!CM||sel||refOn)return;const c=ipCheck(CM);
  [...c.E,...c.W].forEach(x=>{const b=el.querySelector(`button[onclick="pickTool('${x.tool}')"]`);if(!b)return;b.title=x.t;if(c.W.includes(x)&&!c.E.some(y=>y.tool==x.tool)){b.classList.add('warn');const i=b.querySelector('.i');if(i){i.textContent='error';i.classList.add('f')}}})})(ipSteps);
+/* статус сохранения — значок фиксированной ширины слева от токенов: строка не дёргается; текст — в подсказке */
+{const sv=$('#save'),tk=$('.wtop .tok');if(sv&&tk)tk.before(sv)}
+document.head.insertAdjacentHTML('beforeend',`<style>#save.ipico{width:24px;padding:0;justify-content:center;background:none;margin-right:-4px}#save.ipico .i{font-size:18px}
+#save.ipico.okc{color:var(--ok)}#save.ipico.ingc{color:var(--faint)}#save.ipico.errc{color:var(--err);cursor:pointer}</style>`);
+ipSaveSt=(_s=>function(st,t){_s(st,t);const b=$('#save');if(!b||st=='ro')return;
+ const ic=st=='ing'?'<span class="i spin">progress_activity</span>':st=='ok'?'<span class="i f">cloud_done</span>':st=='err'?'<span class="i f">cloud_off</span>':'';if(!ic)return;
+ b.title=st=='ing'?'Сохраняем…':st=='ok'?'Сохранено в этом браузере':(t||'Не сохранено')+' — нажмите, чтобы повторить';b.setAttribute('aria-label',b.title);
+ b.innerHTML=ic;b.className='badge ipico '+(st=='ing'?'ingc':st=='ok'?'okc':'errc')})(ipSaveSt);
 if($('#s-projects').classList.contains('on'))ipGrid();
 
 /*/js:editor*/</script></body></html>
