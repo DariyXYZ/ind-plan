@@ -107,7 +107,7 @@ function ipFit(M){if(M.fixed)return true;let a=1e9,b=1e9,c=-1e9,d=-1e9;const add
 const _ipMsvg=msvg;msvg=function(M,o={}){let s=_ipMsvg(M,o);if(!M.user)return s;let pre='';
  if(!o.exp)pre+=`<rect x="0" y="0" width="${M.W}" height="${M.H}" fill="url(#ipg)"/>`;
  if(M.ul&&!o.exp&&!o.thumb)pre+=`<image href="${M.ul.url}" x="${M.ul.x}" y="${M.ul.y}" width="${M.ul.w}" height="${M.ul.h}" opacity="${M.ul.op}" preserveAspectRatio="none" style="pointer-events:none"/>`;
- s=s.replace('data-m="1">','data-m="1">'+pre);
+ s=s.replace('data-m="1">','data-m="1">'+pre);s=s.replace(/stroke-width="\.25" stroke-linejoin="round"/g,'stroke-width=".9" stroke-linejoin="round"');
  if(o.ed&&ED.on&&ED.tool=='ruler'&&IP.r1){const P=ED.pt||IP.r1,z=ED.s||1,L=Math.hypot(P.x-IP.r1.x,P.y-IP.r1.y);
   s=s.replace(/<\/svg>$/,`<path d="M${IP.r1.x} ${IP.r1.y}L${P.x} ${P.y}" stroke="#E5484D" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="${IP.r1.x}" cy="${IP.r1.y}" r="${4*z}" fill="#E5484D"/><text x="${(IP.r1.x+P.x)/2}" y="${(IP.r1.y+P.y)/2-8*z}" font-size="${12*z}" text-anchor="middle" font-family="Inter,sans-serif" fill="#E5484D" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="${3*z}">${M.ul&&M.ul.cal?Math.round(L*MM).toLocaleString('ru-RU')+' мм':'кликните во вторую точку'}</text></svg>`)}
  return s};
@@ -534,7 +534,7 @@ function ipPlaceWallOp(M,p,k,w0,ex){let best=null,bd=1e9;
 const _ipPlaceOp=placeOp;placeOp=function(M,p,k,w0,ex,fr){if(!M.user)return _ipPlaceOp(M,p,k,w0,ex,fr);if(k=='window')k='win';return ipPlaceWallOp(M,p,k,w0||(k=='door'?ED.dw:ED.ww)/MM,ex)};
 /* после правки стен проёмы догоняют геометрию: угловое пересобирается, прямое не выходит за свободную часть */
 function ipRefit(M){if(!M||!M.user)return;M.ops.forEach(o=>{const w=M.walls.find(x=>x.id==o.wall);if(!w)return;const G=wgeo(w),A=ipWG(M,w);
- if(o.cw){const c=ipCorner(M,w,o.cw.end,o.id);if(c&&c.w2==o.cw.w2){const L1=Math.min(o.cw.L1,c.m1),L2=Math.min(o.cw.L2,c.m2);if(L1>=10&&L2>=10){Object.assign(o,ipCw(c,L1,L2,w,o.k));return}}
+ if(o.cw){const c=ipCorner(M,w,o.cw.end,o.id);if(c){const L1=Math.min(o.cw.L1,c.m1),L2=Math.min(o.cw.L2,c.m2);if(L1>=10&&L2>=10){Object.assign(o,ipCw(c,L1,L2,w,o.k));return}}
   const ww=Math.max(10,Math.min(o.w,A.b-A.a-1)),s=o.cw.end==2?A.b-ww/2:A.a+ww/2;delete o.cw;Object.assign(o,{x:w.x1+G.ux*s,y:w.y1+G.uy*s,a:G.a,w:ww,t:w.t,side:1,h:'s'});return} // угла больше нет — окно прямое
  if(A.b-A.a<10)return;const s=(o.x-w.x1)*G.ux+(o.y-w.y1)*G.uy,ww=Math.min(o.w,A.b-A.a-1),c=Math.max(A.a+ww/2,Math.min(A.b-ww/2,s));
  if(Math.abs(c-s)>.05||ww<o.w-.05){o.x=w.x1+G.ux*c;o.y=w.y1+G.uy*c;o.w=ww}})}
@@ -622,4 +622,33 @@ function ipPickNew(){const i=$('#ipfile');i.value='';i.accept=[ACC.json,ACC.dxf,
 function ipDoorOut(M,o){const [ux,uy]=ang(o.a),d=[-uy*o.side,ux*o.side],P=pa([o.x,o.y],d,o.t/2+4),Q=pa([o.x,o.y],d,-(o.t/2+4));if(regAt(M,P[0],P[1])>=0&&regAt(M,Q[0],Q[1])<0)o.side=-o.side;return o}
 const _ipMk=mkModel;mkModel=function(l){const M=_ipMk(l);M.ops.forEach(o=>{if(o.k=='door'&&!o.wall&&!o.cw)ipDoorOut(M,o)});return M};
 const _ipPWO=ipPlaceWallOp;ipPlaceWallOp=function(M,p,k,w0,ex){const o=_ipPWO(M,p,k,w0,ex);if(o&&k=='door'&&!o.cw){const w=M.walls.find(x=>x.id==o.wall);if(w&&w.type!='part')ipDoorOut(M,o)}return o};
+/* ---------- сварка стен: близкие концы — в один узел, конец на стене — Т-узел, продолжение по прямой — одна стена ---------- */
+const ipD=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]),ipWE=(w,k)=>[w['x'+k],w['y'+k]];
+function ipSplit(M,v,X){const G=wgeo(v),sX=(X[0]-v.x1)*G.ux+(X[1]-v.y1)*G.uy,v2={...cl(v),id:nid(M,'w'),x1:X[0],y1:X[1]};v.x2=X[0];v.y2=X[1];M.walls.splice(M.walls.indexOf(v)+1,0,v2);
+ M.ops.forEach(o=>{if(o.wall!=v.id||o.cw)return;const s=(o.x-G.cx+G.ux*G.len/2)*G.ux+(o.y-G.cy+G.uy*G.len/2)*G.uy;if(s>sX)o.wall=v2.id});
+ M.ops.forEach(o=>{if(o.cw&&o.wall==v.id&&o.cw.end==2){o.wall=v2.id}})}
+function ipWeld(M){if(!M||!M.user||M.fixed)return;
+ // 1) концы ближе толщины стены — в одну точку (старые стены главнее)
+ const nodes=[];M.walls.forEach(w=>[1,2].forEach(k=>{const P=ipWE(w,k),n=nodes.find(n=>ipD(n.P,P)<=Math.max(w.t,n.t)*.9);if(n){w['x'+k]=n.P[0];w['y'+k]=n.P[1]}else nodes.push({P,t:w.t})}));
+ const dead=new Set(M.walls.filter(w=>Math.hypot(w.x2-w.x1,w.y2-w.y1)<1).map(w=>w.id));if(dead.size){M.walls=M.walls.filter(w=>!dead.has(w.id));M.ops=M.ops.filter(o=>!dead.has(o.wall))}
+ // 2) свободный конец у оси другой стены — на ось, стену делим: получается Т-узел
+ for(const w of [...M.walls])for(const k of [1,2]){const P=ipWE(w,k);if(M.walls.some(v=>v!==w&&[1,2].some(j=>ipD(ipWE(v,j),P)<.5)))continue;
+  for(const v of M.walls){if(v===w)continue;const G=wgeo(v),[s,q]=loc(P[0],P[1],G.cx,G.cy,G.a),tol=Math.max(w.t,v.t)*.9;if(Math.abs(q)>tol||Math.abs(s)>G.len/2-tol)continue;
+   const X=[G.cx+G.ux*s,G.cy+G.uy*s];w['x'+k]=X[0];w['y'+k]=X[1];ipSplit(M,v,X);break}}
+ // 3) две стены в узле, одна продолжает другую по прямой — одна стена
+ for(let guard=0,again=true;again&&guard<200;guard++){again=false;
+  for(const w of M.walls){for(const k of [1,2]){const P=ipWE(w,k),legs=M.walls.filter(v=>[1,2].some(j=>ipD(ipWE(v,j),P)<.5));if(legs.length!=2)continue;const v=legs.find(x=>x!==w);
+    if(v.type!=w.type||Math.abs(v.t-w.t)>.01)continue;const a=wgeo(w),b=wgeo(v);if(Math.abs(a.ux*b.uy-a.uy*b.ux)>.01)continue;
+    const j=ipD(ipWE(v,1),P)<.5?1:2,F=ipWE(v,j==1?2:1),O=ipWE(w,k==1?2:1);if((F[0]-P[0])*(P[0]-O[0])+(F[1]-P[1])*(P[1]-O[1])<=0)continue; // не назад по себе
+    w['x'+k]=F[0];w['y'+k]=F[1];M.ops.forEach(o=>{if(o.wall==v.id)o.wall=w.id;if(o.cw&&o.cw.w2==v.id)o.cw.w2=w.id});M.walls=M.walls.filter(x=>x!==v);again=true;break}if(again)break}}
+ // угловые окна: какой конец своей стены — по ближайшему к углу
+ M.ops.forEach(o=>{if(!o.cw)return;const w=M.walls.find(x=>x.id==o.wall);if(w)o.cw.end=ipD(ipWE(w,1),o.cw.I)<=ipD(ipWE(w,2),o.cw.I)?1:2});
+ // цепочка рисования держится за свой узел
+ [ED.chain,ED.start].forEach(c=>{if(!c)return;let b=null,bd=16;M.walls.forEach(w=>[1,2].forEach(k=>{const d=ipD(ipWE(w,k),[c.x,c.y]);if(d<bd){bd=d;b=ipWE(w,k)}}));if(b){c.x=b[0];c.y=b[1]}});
+ if(ED.sel&&ED.sel.t=='wall'&&!M.walls.some(w=>w.id==ED.sel.id))ED.sel=null}
+const _ipCh3=changed;changed=function(geo){const M=curM();if(geo&&M&&M.user&&!sel)ipWeld(M);_ipCh3(geo)};
+/* цепочка, пришедшая в существующий узел, приклеивается к нему и заканчивается — как замыкание контура */
+const _ipAddPt2=addWallPt;addWallPt=function(M,q){const n0=M.walls.length;_ipAddPt2(M,q);if(!M.user||!ED.chain||M.walls.length==n0)return;
+ let b=null,bd=16;M.walls.forEach(w=>[1,2].forEach(k=>{const d=ipD(ipWE(w,k),[ED.chain.x,ED.chain.y]);if(d<bd){bd=d;b=ipWE(w,k)}}));if(!b)return;ED.chain.x=b[0];ED.chain.y=b[1];
+ const legs=M.walls.filter(w=>[1,2].some(k=>ipD(ipWE(w,k),b)<.5)).length;if(legs>=2){endChain();if(!ipCheck(M).closed)toast('Стены соединены',{icon:'check'})}};
 if($('#s-projects').classList.contains('on'))ipGrid();
