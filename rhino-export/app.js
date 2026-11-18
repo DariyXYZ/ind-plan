@@ -594,10 +594,12 @@ const EXD=[
   [['door',9200,5300,900],['win',400,0,1800],['win',8600,0,1800],['win',11400,2700,1500],['win',6600,8600,1800],['win',0,5600,1500]],[[6950,5000,'К1'],[7300,5000,'В1']])}];
 function ipOpenDemo(k){const D=EXD[k];if(D.rh)return openWs(false,D.n);openWs(true);IP.ro=1;$('#fn').textContent=D.n;ipStartWith(D.M());ipSaveSt('ro');renderList();ipGate();
  toast('Пример открыт для просмотра. Чтобы править и сохранять — сделайте копию',{act:'Сделать копию',fn:ipSaveCopy,ms:6000})}
-const ipDemoThumb=k=>{try{return EXD[k].rh?svg(rhPlan('v3'),{label:false}):ipThumb(EXD[k].M())}catch{return ''}};
+/* превью в списке — пустая оболочка: стены, окна, двери; без комнат, мебели и стояков */
+const ipShell=M=>{const C=Object.assign(cl(M),{risers:[],rooms:[],furn:[],furnOn:false,gv:1});C._K=null;return M.user?ipThumb(C):msvg(C,{label:false,thumb:1,exp:1}).replace(/<image href="data:image\/png[^>]*>/g,'')};
+const ipDemoThumb=k=>{try{return ipShell(EXD[k].rh?(M=>Object.assign(M,{lay:'contour',walls:[],cut:[],ops:M.ops.filter(o=>!o.wall)}))(mkModel('v3')):EXD[k].M())}catch{return ''}};
 const IPTH={};
 ipGrid=function(){const P=ipLS.get().projects.sort((a,b)=>b.upd-a.upd),w=$('#s-projects .wrap');
- const card=p=>{let th='';try{th=ipHas(p.M)?(p.V&&p.V[0]?msvg(Object.assign(p.V[0].M,{gv:1}),{label:false,thumb:1}):ipThumb(p.M)):''}catch{th=''}
+ const card=p=>{let th='';try{th=ipHas(p.M)?ipShell(p.M):''}catch{th=''}
   const n=(p.V||[]).length;return `<div class="card pcard" onclick="ipOpen('${p.id}')"><div class="th">${th||'<div class="ph"><span class="i">draft</span>Контур не начат</div>'}</div><div class="bd"><b>${esc(p.name)}</b><div class="meta"><span>${n?(n+' '+(n%10==1&&n%100!=11?'вариант':n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'варианта':'вариантов')):'без вариантов'}</span><span>${ago(p.upd)}</span></div></div><button class="ib more" title="Ещё" onclick="event.stopPropagation();ipCardMenu(event,'${p.id}')"><span class="i">more_horiz</span></button></div>`};
  const ex=(D,k)=>`<div class="card pcard" onclick="ipOpenDemo(${k})" title="Открывается только для просмотра"><div class="th">${IPTH[k]||(IPTH[k]=ipDemoThumb(k))}</div><div class="bd"><b>${esc(D.n)}</b><div class="meta"><span>${D.d}</span><span class="ex">пример</span></div></div></div>`;
  w.innerHTML=`<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><h1>Мои планировки</h1><p class="lead">Один файл — одна квартира и все варианты её планировки. Файлы хранятся в этом браузере</p></div><button class="btn pri lg" onclick="openWs(true)"><span class="i">add</span>Новый файл</button></div>
