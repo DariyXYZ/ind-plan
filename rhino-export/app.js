@@ -708,7 +708,7 @@ const ipSelList=()=>ED.msel.length?ED.msel:ED.sel&&['wall','furn','riser'].inclu
 /* перетаскивание группы: захват за любой выбранный элемент */
 $('#plan').addEventListener('pointerdown',e=>{if(e.button!==0||!ED.on||ED.tool!='select'||ED.msel.length<2||e.shiftKey)return;const M=curM(),p=evP(e);if(!M||!p)return;const h=hit(M,p);
  if(!h||!ED.msel.some(x=>ipKey(x)==ipKey(h)))return;e.stopPropagation();e.preventDefault();
- IP.gd={p0:{x:p.x,y:p.y},h,st:snap(M),orig:cl({walls:M.walls,ops:M.ops,furn:M.furn,risers:M.risers}),mv:0}},true);
+ IP.gd={p0:{x:p.x,y:p.y},h,st:snap(M),orig:cl({walls:M.walls,ops:M.ops,furn:M.furn,risers:M.risers,rooms:M.rooms}),mv:0}},true);
 window.addEventListener('pointermove',e=>{const g=IP.gd;if(!g)return;const p=evP(e);if(!p)return;const M=curM();let dx=p.x-g.p0.x,dy=p.y-g.p0.y;
  if(!g.mv&&Math.hypot(dx,dy)<2*ED.s)return;g.mv=1;if(e.shiftKey){if(Math.abs(dx)>Math.abs(dy))dy=0;else dx=0} // Shift — только по оси
  dx=Math.round(dx*2)/2;dy=Math.round(dy*2)/2;Object.assign(M,cl(g.orig));ipTranslate(M,ED.msel,dx,dy);$('#plan').style.cursor='move';reDraw()},true);
@@ -907,4 +907,8 @@ ipSaveSt=(_s=>function(st,t){_s(st,t);const b=$('#save');if(!b||st=='ro')return;
 /* типы стен — сеткой 2×2: Наружная · Несущая / Перегородка · Разделитель */
 document.head.insertAdjacentHTML('beforeend','<style>.seg.ipseg2{display:grid;grid-template-columns:1fr 1fr;gap:2px}.seg.ipseg2 button{white-space:nowrap}</style>');
 renderProps=(_r=>function(){_r();$$('#props .seg').forEach(g=>{if([...g.children].some(b=>b.textContent.trim()==WT.zone[0]))g.classList.add('ipseg2')})})(renderProps);
+/* подпись помещения едет вместе с группой, если все стены вокруг неё (лучи в 4 стороны) входят в сдвиг */
+function ipRoomMoves(M,W){const hit=(P,d)=>{let best=null,bt=1e9;M.walls.forEach(w=>{const ex=w.x2-w.x1,ey=w.y2-w.y1,den=d[0]*ey-d[1]*ex;if(Math.abs(den)<1e-9)return;const wx=w.x1-P[0],wy=w.y1-P[1],t=(wx*ey-wy*ex)/den,u=(wx*d[1]-wy*d[0])/den;if(t>0&&u>=-.02&&u<=1.02&&t<bt){bt=t;best=w}});return best};
+ return M.rooms.map(r=>[[1,0],[-1,0],[0,1],[0,-1]].every(d=>{const w=hit([r.x,r.y],d);return w&&W.has(w.id)}))}
+ipTranslate=(_t=>function(M,L,dx,dy){const W=new Set(L.filter(x=>x.t=='wall').map(x=>x.id)),mv=W.size?ipRoomMoves(M,W):[];_t(M,L,dx,dy);M.rooms.forEach((r,i)=>{if(mv[i]){r.x+=dx;r.y+=dy}})})(ipTranslate);
 if($('#s-projects').classList.contains('on'))ipGrid();
