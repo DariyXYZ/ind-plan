@@ -190,7 +190,7 @@ const _ipChanged=changed;changed=function(geo){if(geo&&!sel&&contour)IP.cv++;_ip
 function ipAfter(){if(!contour||!CM)return;ipTag();ipSteps();ipGate();if(sel)return;const cl0=ipCheck(CM).closed;
  if(cl0&&!IP.wasClosed&&CM.user){const c=ipCheck(CM);toast(`Контур замкнут · ${nf(c.area)} м². Теперь вход — дверь в наружную стену`);setTimeout(()=>{if(ED.on&&ED.tool=='wall'){ED.chain=null;pickTool(c.entr?c.wins?'riser':'window':'door')}},0)}
  else if(ED.on&&ED.tool=='door'&&CM.user&&!IP.hadEntr&&ipCheck(CM).entr){setTimeout(()=>{if(ED.on&&ED.tool=='door'){pickTool(ipCheck(CM).wins?'riser':'window');toast(ipCheck(CM).wins?'Вход есть. Осталось отметить стояк':'Вход есть. Теперь окна — кликайте по наружным стенам')}},0)}
- else if(!cl0&&IP.wasClosed&&CM.user)toast('Контур разомкнулся — генератору нужен замкнутый контур',{k:'warn'});IP.wasClosed=cl0;IP.hadEntr=ipCheck(CM).entr;if(cl0&&$('#fn').textContent=='Без названия'&&!IP.ro)$('#fn').textContent=`Квартира · ${nf(ipCheck(CM).area,0)} м²`}
+ else if(!cl0&&IP.wasClosed&&CM.user){}IP.wasClosed=cl0;IP.hadEntr=ipCheck(CM).entr;if(cl0&&$('#fn').textContent=='Без названия'&&!IP.ro)$('#fn').textContent=`Квартира · ${nf(ipCheck(CM).area,0)} м²`}
 /* за краем листа рисовать можно — лист сам растёт (ipGrow); держим только предел 50 м */
 const _ipAddPt=addWallPt;addWallPt=function(M,q){if(q&&M.user){let a=q.x,b=q.y,c=q.x,d=q.y;const add=(x,y)=>{a=Math.min(a,x);b=Math.min(b,y);c=Math.max(c,x);d=Math.max(d,y)};M.walls.forEach(w=>{add(w.x1,w.y1);add(w.x2,w.y2)});if(ED.chain)add(ED.chain.x,ED.chain.y);
  if(c-a>2500||d-b>2500){toast('Квартира выходит больше 50 м — проверьте длину стены',{k:'warn'});return}}
@@ -206,7 +206,7 @@ const _ipReset=reset;reset=function(){_ipReset();clearTimeout(IP.noteT);Object.v
 const _ipAddVar=addVar;addVar=function(r,q,b,f){_ipAddVar(r,q,b,f);const v=V[V.length-1];v.cv=IP.cv;IP.fresh.add(v.id)};
 const _ipRenderProps=renderProps;renderProps=function(){_ipRenderProps();if(!ED.on||sel||!CM||ED.sel)return;const c=ipCheck(CM);let h='';
  if(!(ED.tool!='select'&&ED.tool!='ruler')){const L=[...c.E.map(x=>['error','var(--err)',x]),...c.W.map(x=>['warning','var(--warn)',x])];
-  h+=sec('fact_check','Контур',(L.length?L.map(([i,cl2,x])=>`<button class="orow" onclick="pickTool('${x.tool}')"><span class="i f" style="color:${cl2}">${i}</span><span style="white-space:normal">${esc(x.t)}</span></button>`).join(''):`<div class="row" style="margin:0"><span><span class="i f" style="color:var(--ok);font-size:17px">check_circle</span> Всё на месте</span><b>${nf(c.area,CM.fixed?2:1)} м²</b></div>`)+'<p class="hintp">Наружные стены, вход и окна генератор не двигает. Перегородки можно не рисовать.</p>')}
+  /* список проблем контура убран — они на плашке этапов и в тосте серой кнопки */}
  if(CM.ul)h+=sec('image','Подложка',`<label class="fld" style="grid-template-columns:96px 1fr 36px"><span>Прозрачность</span><input type="range" min="10" max="90" value="${Math.round(CM.ul.op*100)}" oninput="CM.ul.op=this.value/100;this.nextElementSibling.textContent=this.value+'%';reDraw()" onchange="saved()"><span>${Math.round(CM.ul.op*100)}%</span></label>
   <div class="row"><span class="lead">Масштаб</span><span>${CM.ul.cal?'задан':'<span style="color:var(--warn)">не задан</span>'}</span></div><div class="pacts"><button class="btn sm" onclick="pickTool('ruler')"><span class="i">straighten</span>${CM.ul.cal?'Задать заново':'Задать масштаб'}</button><button class="btn sm" onclick="ipPick('under')"><span class="i">swap_horiz</span>Заменить</button><button class="btn sm" onclick="mut(M=>{delete M.ul},0);toast('Подложка убрана')"><span class="i">delete</span>Убрать</button></div>`);
  if(h)$('#props').insertAdjacentHTML('afterbegin',h)};
@@ -882,4 +882,18 @@ renderProps=(_r=>function(){_r();const r=$('#props input[type=range]');if(!r||!C
  const sec=r.closest('.blk');if(sec&&!sec.querySelector('.ulv')){const h=sec.querySelector('.lbl');h&&h.insertAdjacentHTML('beforeend',`<span class="sp" style="flex:1"></span><button class="ib ulv" style="width:26px;height:26px" title="${CM.ul.hid?'Показать':'Скрыть'}" onclick="$('#ipulh').click()"><span class="i" style="font-size:17px">${CM.ul.hid?'visibility_off':'visibility'}</span></button>`)}
  if(CM.ul.hid){r.disabled=true;r.closest('.fld').style.opacity=.45}})(renderProps);
 $('#ipulh').onclick=(_h=>function(){_h();renderProps()})($('#ipulh').onclick);
+/* ---------- одно место для проблем: этапы сверху; серая кнопка по клику объясняет, чего не хватает ---------- */
+document.head.insertAdjacentHTML('beforeend',`<style>#ctast{display:none!important}
+#genbtn.ipdis{opacity:.45;filter:none;cursor:pointer}#genbtn.ipdis:hover{filter:none}
+.ipsteps .warn .i{color:var(--warn)}</style>`);
+const IPNEED={wall:c=>c.closed?null:'замкните контур',door:()=>'поставьте вход',window:()=>'добавьте окно'};
+ipGate=(_g=>function(){_g();const g=$('#genbtn');if(!g)return;const dis=g.disabled;g.disabled=false;g.classList.toggle('ipdis',dis);g.setAttribute('aria-disabled',dis?'true':'false')})(ipGate);
+$('#genbtn').addEventListener('click',e=>{const g=e.currentTarget;if(!g.classList.contains('ipdis'))return;e.preventDefault();e.stopImmediatePropagation();
+ if(IP.busy)return toast('Идёт запуск — дождитесь его или остановите',{icon:'progress_activity'});
+ const c=contour&&CM?ipCheck(CM):null;if(!c)return toast('Сначала нарисуйте контур квартиры или загрузите план',{icon:'draw',act:'Рисовать',fn:()=>pickTool('wall')});
+ const L=c.E.map(x=>(IPNEED[x.tool]&&IPNEED[x.tool](c))||x.t.charAt(0).toLowerCase()+x.t.slice(1));const t0=c.E[0]&&c.E[0].tool;
+ toast('Чтобы создать планировку: '+L.join(', '),{icon:'info',act:'Показать',fn:()=>{if(!ED.on)edStart();pickTool(t0)},ms:6000})},true);
+/* предупреждения (не мешают запуску) — значком на своём этапе, текст в подсказке */
+ipSteps=(_s=>function(){_s();const el=$('#ipsteps');if(!el||!contour||!CM||sel||refOn)return;const c=ipCheck(CM);
+ [...c.E,...c.W].forEach(x=>{const b=el.querySelector(`button[onclick="pickTool('${x.tool}')"]`);if(!b)return;b.title=x.t;if(c.W.includes(x)&&!c.E.some(y=>y.tool==x.tool)){b.classList.add('warn');const i=b.querySelector('.i');if(i){i.textContent='error';i.classList.add('f')}}})})(ipSteps);
 if($('#s-projects').classList.contains('on'))ipGrid();
