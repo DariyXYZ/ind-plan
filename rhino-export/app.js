@@ -766,9 +766,9 @@ input[type=range]:hover::-webkit-slider-thumb{box-shadow:0 0 0 4px color-mix(in 
 /* чекбокс: та же логика состояний, что у кнопок */
 .chk .bx{transition:background .15s,border-color .15s}.chk:hover .bx{border-color:var(--acc)}
 /* кнопки-иконки на цветном фоне (выбранная карточка) — белые с рамкой; включённая — синяя линия и заливка иконки */
-.gi .vb .ib{background:var(--panel);border:1px solid var(--line);color:var(--muted);transition:border-color .15s,color .15s}
-.gi .vb .ib:hover{border-color:var(--acc);color:var(--acc-text);background:var(--panel)}
-.gi .vb .ib.up,.gi .vb .ib.dn{background:var(--panel);border-color:var(--acc);color:var(--acc)}
+.gi .vb .ib{background:var(--panel);border:0;color:var(--muted);box-shadow:0 1px 2px #0000000f;transition:color .15s,background .15s}
+.gi .vb .ib:hover{color:var(--acc-text);background:var(--panel)}
+.gi .vb .ib.up,.gi .vb .ib.dn{background:var(--panel);color:var(--acc)}
 /* выбранное везде одним способом: мягкий акцент + текст акцента */
 .orow.on,.ib.on,.chip.on{background:var(--acc-soft);color:var(--acc-text)}
 .btn:disabled,.ib:disabled,.chip:disabled,.seg button:disabled{opacity:.45;cursor:not-allowed}
@@ -792,4 +792,12 @@ renderProps=(_rp=>function(){_rp();const M=curM(),s=ED.sel;if(!ED.on||!M||!s||s.
  last&&last.insertAdjacentHTML('beforebegin',`<div class="chk ${o.dbl?'on':''}" style="margin-top:6px" role="checkbox" tabindex="0" aria-checked="${!!o.dbl}" onclick="ipDbl('${o.id}')" onkeydown="if(event.key==' '||event.key=='Enter'){event.preventDefault();ipDbl('${o.id}')}"><span class="bx"><span class="i">check</span></span>Двойная дверь</div>`+
   (o.dbl?`<div class="ipsub">${fld('Вторая створка',sec2,`ipDblW('${o.id}',this.value)`)}<div class="row" style="font-size:12px"><span class="lead">Основная створка</span><span>${nf(main,0)} мм</span></div></div>`:''))})(renderProps);
 document.head.insertAdjacentHTML('beforeend','<style>.ipsub{border-left:2px solid var(--line);padding-left:10px;margin:2px 0 6px 8px}.ipsub .fld{grid-template-columns:112px 1fr 26px}</style>');
+/* обводки — только там, где без них не понять границу (поля ввода, дропзона); кнопки, чипы и переключатели — заливкой */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.btn:not(.pri):not(.ghost){border-color:transparent;background:var(--sub)}
+.btn:not(.pri):not(.ghost):hover{background:color-mix(in srgb,var(--sub) 70%,var(--line2))}
+.chip{border-color:transparent;background:var(--sub)}.chip:hover{background:color-mix(in srgb,var(--sub) 70%,var(--line2))}
+.chip.on{border-color:transparent}
+.seg{border-color:transparent}
+</style>`);
 if($('#s-projects').classList.contains('on'))ipGrid();
