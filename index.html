@@ -1366,7 +1366,7 @@ function ipSaveSt(s,t){const b=$('#save');IP.saveSt=s;b.className='badge '+(s=='
  b.innerHTML=s=='ing'?'<span class="i spin">progress_activity</span>Сохранение…':s=='ok'?'<span class="i">cloud_done</span>Сохранено в браузере':s=='ro'?'<span class="i">visibility</span>Пример · не сохраняется':s=='err'?`<span class="i">error</span>${t||'Не сохранено'}`:'';
  b.title=s=='ok'?'Файл хранится в этом браузере на этом компьютере':s=='err'?'Нажмите, чтобы попробовать ещё раз':'';b.onclick=s=='err'?ipSaveNow:s=='ro'?ipSaveCopy:null;if(s=='ro')b.innerHTML+=' · <u>сохранить копию</u>';b.style.cursor=s=='err'||s=='ro'?'pointer':''}
 saved=function(){if(!$('#s-ws').classList.contains('on'))return;if(IP.ro){ipSaveSt('ro');return}if(!IP.pid&&!ipHas(CM))return;ipSaveSt('ing');clearTimeout(IP.saveT);IP.saveT=setTimeout(ipSaveNow,500)};
-function ipRec(){return {id:IP.pid,name:$('#fn').textContent.trim()||'Без названия',upd:Date.now(),M:cl(CM),run,cv:IP.cv,tz:$('#tz').value,type:curType,
+function ipRec(){return {id:IP.pid,name:$('#fn').textContent.trim()||'Без названия',upd:Date.now(),M:cl(CM),run,cv:IP.cv,tz:$('#tz').value,type:curType,cls,
  V:V.map(v=>({id:v.id,run:v.run,q:v.q,seed:v.seed,type:v.type,err:v.err,warn:v.warn,vote:v.vote,ver:v.ver,from:v.from,cv:v.cv,M:cl(v.M)}))}}
 function ipSaveNow(){clearTimeout(IP.saveT);IP.saveT=0;if(IP.ro||!CM)return;if(!IP.pid)IP.pid='p'+Date.now().toString(36);const d=ipLS.get(),r=ipRec();
  const put=rec=>{const i=d.projects.findIndex(p=>p.id==rec.id);if(i>=0)d.projects[i]=rec;else d.projects.unshift(rec);ipLS.set(d)};
@@ -1375,7 +1375,7 @@ function ipSaveNow(){clearTimeout(IP.saveT);IP.saveT=0;if(IP.ro||!CM)return;if(!
 function ipSaveCopy(){IP.ro=0;IP.pid=null;$('#fn').textContent=$('#fn').textContent.replace(/^Пример · /,'')+' · копия';ipSaveNow();toast('Копия сохранена — это ваш файл, правьте свободно')}
 window.addEventListener('beforeunload',e=>{if(IP.saveT){ipSaveNow()}if(IP.busy){e.preventDefault();e.returnValue=''}});
 function ipOpen(id){const p=ipLS.get().projects.find(x=>x.id==id);if(!p)return toast('Файл не найден — возможно, его удалили в другой вкладке',{k:'err'});
- openWs(true);IP.pid=id;IP.ro=0;$('#fn').textContent=p.name;$('#tz').value=p.tz||'';if(p.type){curType=p.type;$$('#typeseg button').forEach(b=>b.classList.toggle('on',b.getAttribute('onclick').includes(`'${p.type}'`)))}
+ openWs(true);IP.pid=id;IP.ro=0;$('#fn').textContent=p.name;$('#tz').value=p.tz||'';if(p.cls!=null){cls=p.cls;renderComp()}if(p.type){curType=p.type;$$('#typeseg button').forEach(b=>b.classList.toggle('on',b.getAttribute('onclick').includes(`'${p.type}'`)))}
  const M=p.M;M.gv=1;M.seq=M.seq||900;if(M.ul&&!M.ul.url){delete M.ul;setTimeout(()=>toast('Подложка не сохранилась — загрузите её снова',{k:'warn'}),600)}
  CM=M;contour=ipHas(M);run=p.run||0;IP.cv=p.cv||1;V=(p.V||[]).map(v=>{v.M.gv=1;syncR(v);return v});
  if(contour){IP.wasClosed=ipCheck(M).closed;ipShowStage()}
@@ -1563,8 +1563,8 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .pnew{position:relative;text-align:center;padding:20px 16px;gap:6px}
 .pnew>.i{font-size:32px;color:var(--acc)}.pnew b{font-size:15px;color:var(--text);font-weight:600}
 .pnew .pn-sub{font-size:13px;font-weight:400;line-height:1.45}
-.pnew .pn-fmt{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;margin-top:8px}
-.pnew .pn-sep{width:48px;height:1px;background:var(--line2);margin:2px 0}.pnew .pn-lim{font-size:11px;font-weight:400;color:var(--faint)}
+.pnew .pn-fmt{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap}
+.pnew .pn-foot{position:absolute;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:2px}.pnew>b{margin-bottom:22px}.pcard .bd .meta+.meta{margin-top:2px}.pnew .pn-lim{font-size:11px;font-weight:400;color:var(--faint)}
 .pnew .pn-drop{position:absolute;inset:-1.5px;border:2px dashed var(--acc);border-radius:inherit;background:var(--acc-soft);color:var(--acc-text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .15s}
 .pnew .pn-drop .i{font-size:36px;color:var(--acc);animation:ipBob 1s ease-in-out infinite alternate}.pnew .pn-drop small{font-weight:400;font-size:12px;color:var(--muted);max-width:240px}
 .pnew.drag .pn-drop{opacity:1}.pnew.drag{transform:scale(1.02)}
@@ -1579,25 +1579,28 @@ function ipDemoM(pts,ops,ris){const M=ipBlank();pts.forEach((p,i)=>{const q=pts[
  ops.forEach(([k,x,y,w])=>{const o=placeOp(M,{x:x/MM+o0[0],y:y/MM+o0[1]},k,w/MM);if(o){o.id=nid(M,'o');if(k=='door'){o.h='s'}M.ops.push(o);M.gv++}});
  ris.forEach(([x,y,t])=>M.risers.push({id:nid(M,'r'),x:x/MM+o0[0],y:y/MM+o0[1],d:110,type:t,fixed:1}));ED.s=s0;M.gv++;return M}
 const EXD=[
- {n:'Пример · прямоугольник',d:'9 × 6 м · вход и 3 окна',M:()=>ipDemoM([[0,0],[9000,0],[9000,6000],[0,6000]],
+ {n:'Пример · прямоугольник',t:'1к',c:0,M:()=>ipDemoM([[0,0],[9000,0],[9000,6000],[0,6000]],
   [['door',1600,5900,900],['win',2600,0,1500],['win',6600,0,1500],['win',9000,3200,1500]],[[8300,5300,'К1']])},
- {n:'Пример · кв. 28',d:'3к · 106,21 м² · 4 варианта',rh:1},
- {n:'Пример · Г-образная',d:'79 м² · 2 угловых окна',M:()=>ipDemoM([[0,0],[11400,0],[11400,5400],[6600,5400],[6600,9000],[0,9000]],
+ {n:'Пример · кв. 28',t:'3к',c:2,a:106.21,nv:4,rh:1},
+ {n:'Пример · Г-образная',t:'2к',c:1,M:()=>ipDemoM([[0,0],[11400,0],[11400,5400],[6600,5400],[6600,9000],[0,9000]],
   [['door',9200,5300,900],['win',400,0,1800],['win',8600,0,1800],['win',11400,2700,1500],['win',6600,8600,1800],['win',0,5600,1500]],[[6950,5000,'К1'],[7300,5000,'В1']])}];
-function ipOpenDemo(k){const D=EXD[k];if(D.rh)return openWs(false,D.n);openWs(true);IP.ro=1;$('#fn').textContent=D.n;ipStartWith(D.M());ipSaveSt('ro');renderList();ipGate();
+function ipSetTC(t,c){cls=c;renderComp();curType=t;$$('#typeseg button').forEach(b=>b.classList.toggle('on',b.getAttribute('onclick').includes(`'${t}'`)))}
+function ipOpenDemo(k){const D=EXD[k];if(D.rh){openWs(false,D.n);return ipSetTC(D.t,D.c)}openWs(true);ipSetTC(D.t,D.c);IP.ro=1;$('#fn').textContent=D.n;ipStartWith(D.M());ipSaveSt('ro');renderList();ipGate();
  toast('Пример открыт для просмотра. Чтобы править и сохранять — сделайте копию',{act:'Сделать копию',fn:ipSaveCopy,ms:6000})}
 /* превью в списке — пустая оболочка: стены, окна, двери; без комнат, мебели и стояков */
 const ipShell=M=>{const C=Object.assign(cl(M),{risers:[],rooms:[],furn:[],furnOn:false,gv:1});C._K=null;return M.user?ipThumb(C):msvg(C,{label:false,thumb:1,exp:1}).replace(/<image href="data:image\/png[^>]*>/g,'')};
 const ipDemoThumb=k=>{try{return ipShell(EXD[k].rh?(M=>Object.assign(M,{lay:'contour',walls:[],cut:[],ops:M.ops.filter(o=>!o.wall)}))(mkModel('v3')):EXD[k].M())}catch{return ''}};
-const IPTH={};
+const IPTH={},IPA={},IPTN={'С':'Студия','1к':'1-комнатная','2к':'2-комнатная','3к':'3-комнатная'};
+const ipNV=n=>n?n+' '+(n%10==1&&n%100!=11?'вариант':n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'варианта':'вариантов'):'без вариантов';
+const ipMeta=(t,c,a)=>`<div class="meta">${IPTN[t]||'Квартира'} · ${(CLS[c??0]||CLS[0]).toLowerCase()}${a?` / ${nf(a,a>=100&&a%1?2:0)} м²`:''}</div>`;
 ipGrid=function(){const P=ipLS.get().projects.sort((a,b)=>b.upd-a.upd),w=$('#s-projects .wrap');
  const card=p=>{let th='';try{th=ipHas(p.M)?ipShell(p.M):''}catch{th=''}
-  const n=(p.V||[]).length;return `<div class="card pcard" onclick="ipOpen('${p.id}')"><div class="th">${th||'<div class="ph"><span class="i">draft</span>Контур не начат</div>'}</div><div class="bd"><b>${esc(p.name)}</b><div class="meta"><span>${n?(n+' '+(n%10==1&&n%100!=11?'вариант':n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'варианта':'вариантов')):'без вариантов'}</span><span>${ago(p.upd)}</span></div></div><button class="ib more" title="Ещё" onclick="event.stopPropagation();ipCardMenu(event,'${p.id}')"><span class="i">more_horiz</span></button></div>`};
- const ex=(D,k)=>`<div class="card pcard" onclick="ipOpenDemo(${k})" title="Открывается только для просмотра"><div class="th">${IPTH[k]||(IPTH[k]=ipDemoThumb(k))}</div><div class="bd"><b>${esc(D.n)}</b><div class="meta"><span>${D.d}</span><span class="ex">пример</span></div></div></div>`;
+  let ar=null;try{const c=ipHas(p.M)&&ipCheck(p.M);if(c&&c.closed)ar=c.area}catch{}
+  return `<div class="card pcard" onclick="ipOpen('${p.id}')"><div class="th">${th||'<div class="ph"><span class="i">draft</span>Контур не начат</div>'}</div><div class="bd"><b>${esc(p.name)}</b>${ipMeta(p.type,p.cls,ar)}<div class="meta"><span>${ipNV((p.V||[]).length)} · ${ago(p.upd)}</span></div></div><button class="ib more" title="Ещё" onclick="event.stopPropagation();ipCardMenu(event,'${p.id}')"><span class="i">more_horiz</span></button></div>`};
+ const ex=(D,k)=>`<div class="card pcard" onclick="ipOpenDemo(${k})" title="Открывается только для просмотра"><div class="th">${IPTH[k]||(IPTH[k]=ipDemoThumb(k))}</div><div class="bd"><b>${esc(D.n)}</b>${ipMeta(D.t,D.c,D.a!=null?D.a:IPA[k]??(IPA[k]=(()=>{try{return ipCheck(D.M()).area}catch{return null}})()))}<div class="meta"><span>${ipNV(D.nv||0)} · <span class="ex">пример</span></span></div></div></div>`;
  w.innerHTML=`<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><h1>Мои планировки</h1><p class="lead">Один файл — одна квартира и все варианты её планировки. Файлы хранятся в этом браузере</p></div><button class="btn pri lg" onclick="openWs(true)"><span class="i">add</span>Новый файл</button></div>
  <div class="grid" id="pgrid"><div class="card pnew" id="pnew" role="button" tabindex="0" title="Выбрать файл на компьютере" onclick="ipPickNew()" onkeydown="if(event.key=='Enter'||event.key==' '){event.preventDefault();ipPickNew()}">
-  <span class="i">upload_file</span><b>Добавьте файл</b><span class="pn-sub">Перетащите план сюда<br>или нажмите, чтобы выбрать</span>
-  <span class="pn-fmt">Revit .json · .dxf · PDF · PNG · JPG</span><span class="pn-sep"></span><span class="pn-lim">до 25 МБ</span>
+  <span class="i">upload_file</span><b>Добавьте файл</b><span class="pn-foot"><span class="pn-fmt">Revit .json · .dxf · PDF · PNG · JPG</span><span class="pn-lim">до 25 МБ</span></span>
   <div class="pn-drop"><span class="i">download</span>Отпустите — создадим файл<small>JSON и DXF станут стенами, PDF и картинка — подложкой</small></div></div>
   ${P.map(card).join('')}${EXD.map(ex).join('')}</div>`};
 function ipNewFrom(f){openWs(true);setTimeout(()=>ipFile(f),60)}
