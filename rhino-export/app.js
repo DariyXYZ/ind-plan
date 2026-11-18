@@ -90,8 +90,8 @@ function ipCheck(M){if(!M)return null;const ext=M.walls.filter(w=>w.type!='part'
  if(!wins)E.push({t:'Добавьте хотя бы одно окно в наружную стену',tool:'window'});
  if(M.ul&&!M.ul.cal)W.push({t:'Масштаб подложки не задан — стены могут не совпасть с чертежом',tool:'ruler'});
  if(closed&&area>600)W.push({t:`Площадь ${nf(area,0)} м² — больше обычной квартиры. Проверьте масштаб`,tool:'wall'});
- if(!M.risers.length)W.push({t:'Стояк не задан — санузлы встанут, где удобнее генератору',tool:'riser'});
- if(rOut)W.push({t:'Стояк стоит за пределами квартиры',tool:'riser'});
+ 
+ 
  return {closed,area,entr,wins,risers:M.risers.length,ext:ext.length,ok:!E.length,err:E[0],warn:W[0],E,W}}
 function ipDims(M){if(M.fixed)return '16,6 × 8,8 м';const ex=M.walls.filter(w=>w.type!='part');if(!ex.length)return '';let a=1e9,b=1e9,c=-1e9,d=-1e9;
  ex.forEach(w=>{const h=w.t/2;a=Math.min(a,w.x1-h,w.x2-h);b=Math.min(b,w.y1-h,w.y2-h);c=Math.max(c,w.x1+h,w.x2+h);d=Math.max(d,w.y1+h,w.y2+h)});return `${nf((c-a)*MM/1000)} × ${nf((d-b)*MM/1000)} м`}
