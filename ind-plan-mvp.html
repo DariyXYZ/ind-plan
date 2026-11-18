@@ -1900,6 +1900,9 @@ ipSaveSt=(_s=>function(st,t){_s(st,t);const b=$('#save');if(!b||st=='ro')return;
  const ic=st=='ing'?'<span class="i spin">progress_activity</span>':st=='ok'?'<span class="i f">cloud_done</span>':st=='err'?'<span class="i f">cloud_off</span>':'';if(!ic)return;
  b.title=st=='ing'?'Сохраняем…':st=='ok'?'Сохранено в этом браузере':(t||'Не сохранено')+' — нажмите, чтобы повторить';b.setAttribute('aria-label',b.title);
  b.innerHTML=ic;b.className='badge ipico '+(st=='ing'?'ingc':st=='ok'?'okc':'errc')})(ipSaveSt);
+/* типы стен — сеткой 2×2: Наружная · Несущая / Перегородка · Разделитель */
+document.head.insertAdjacentHTML('beforeend','<style>.seg.ipseg2{display:grid;grid-template-columns:1fr 1fr;gap:2px}.seg.ipseg2 button{white-space:nowrap}</style>');
+renderProps=(_r=>function(){_r();$$('#props .seg').forEach(g=>{if([...g.children].some(b=>b.textContent.trim()==WT.zone[0]))g.classList.add('ipseg2')})})(renderProps);
 if($('#s-projects').classList.contains('on'))ipGrid();
 
 /*/js:editor*/</script></body></html>
