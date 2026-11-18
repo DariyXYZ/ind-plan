@@ -445,7 +445,7 @@ function ipToJson(M){const o0=M.off||[0,0],X2=x=>Math.round((x-o0[0])*MM),Y2=y=>
  const walls=M.walls.map(w=>{const G=wgeo(w);return {id:w.id,type:{ext:'exterior',bear:'bearing',part:'partition'}[w.type]||'partition',thickness:Math.round(w.t*MM),axis:[[X2(w.x1),Y2(w.y1)],[X2(w.x2),Y2(w.y2)]],closed:false,
   openings:M.ops.filter(o=>(o.wall==w.id||o.cw&&o.cw.w2==w.id)&&(o.k=='door'||o.k=='win')).map(o=>{const at=P=>Math.round(((P[0]-w.x1)*G.ux+(P[1]-w.y1)*G.uy)*MM);
    if(o.cw){const c=o.cw,on1=o.wall==w.id,L=on1?c.L1:c.L2;return {id:o.id+(on1?'':'-2'),kind:'window',corner:o.id,seg:0,at:at(pa(c.I,on1?c.d1:c.d2,L/2)),width:Math.round(L*MM)}} // угловое окно — две части, по одной на каждой стене
-   return {id:o.id,kind:o.k=='door'?'door':'window',seg:0,at:at([o.x,o.y]),width:Math.round(o.w*MM),...(o.k=='door'?{hinge:o.h=='e'?'end':'start',side:o.side}:{})}})}});
+   return {id:o.id,kind:o.k=='door'?'door':'window',seg:0,at:at([o.x,o.y]),width:Math.round(o.w*MM),...(o.k=='door'?{hinge:o.h=='e'?'end':'start',side:o.side,...(o.dbl?{double:true,leaf2:Math.round((o.w2||o.w/2)*MM)}:{})}:{})}})}});
  const K2=calcRooms(M);return {format:'ind-plan',version:2,units:'mm',source:'ind-plan-mvp',walls,risers:M.risers.map(r=>({type:r.type,d:r.d,at:[X2(r.x),Y2(r.y)]})),
   rooms:K2.regs.map(R=>{const l=M.rooms[R.main];return {name:l.n,seed:[X2(l.x),Y2(l.y)],area:R.a}}),...(M.fixed?{note:'Наружный контур — из модели Rhino, в JSON не входит'}:{})}}
 function ipSvgDoc(M){let s=msvg(M,{area:1,exp:1,label:true});const css=getComputedStyle(document.documentElement);s=s.replace(/var\((--[\w-]+)\)/g,(m,n)=>css.getPropertyValue(n).trim()||'#000');
@@ -742,4 +742,54 @@ renderProps=(_rp=>function(){const M0=curM();if(M0&&ED.msel.length){const has=x=
  h+=opSec(D,'door','door_front','Двери')+opSec(Wn,'win','window','Окна');
  h+=`<p class="hintp">Тяните любой выбранный элемент — сдвинется вся группа · стрелки — на 10 мм, с Shift — на 100 мм · Shift + рамка — добавить · Esc — снять</p><div class="pacts"><button class="btn sm" onclick="ipMselDel()"><span class="i">delete</span>Удалить выбранное</button></div>`;
  $('#props').innerHTML=h;$('#undo').disabled=!ED.hist.length;$('#redo').disabled=!ED.fut.length})(renderProps);
+/* ---------- единая система компонентов: фокус, поля, ползунок, кнопки-иконки, состояния ---------- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+:root{--ring:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent);--r-s:6px;--r-m:8px;--r-l:12px}
+/* фокус: только с клавиатуры и одинаковый везде */
+:focus:not(:focus-visible){outline:none}
+:where(button,.btn,.ib,.chip,.seg button,.chk,.orow,.gi,.pcard,.pnew,a,[role=button],select,summary):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* поля ввода: одна высота, одна рамка, фокус — рамка акцента и мягкое кольцо, без системной обводки */
+.fld input,.inp,.sel,.ipname-in{border:1px solid var(--line2);border-radius:var(--r-m);background:var(--panel);color:var(--text);transition:border-color .15s,box-shadow .15s}
+.fld input:hover,.inp:hover,.sel:hover{border-color:var(--faint)}
+.fld input:focus,.inp:focus,.sel:focus,.ipname-in:focus{outline:none;border-color:var(--acc);box-shadow:var(--ring)}
+.fld input::placeholder{color:var(--faint)}
+.inp.bad,.fld input.bad{border-color:var(--err);box-shadow:0 0 0 3px var(--err-soft)}
+/* ползунок: тонкая дорожка, белый бегунок с рамкой акцента, без рамки вокруг при клике */
+input[type=range]{-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer;outline:none}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line2)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line2)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--acc)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;background:var(--panel);border:2px solid var(--acc);box-shadow:0 1px 3px #0003;transition:box-shadow .15s}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--panel);border:2px solid var(--acc)}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:var(--ring)}
+input[type=range]:hover::-webkit-slider-thumb{box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 14%,transparent)}
+/* чекбокс: та же логика состояний, что у кнопок */
+.chk .bx{transition:background .15s,border-color .15s}.chk:hover .bx{border-color:var(--acc)}
+/* кнопки-иконки на цветном фоне (выбранная карточка) — белые с рамкой; включённая — синяя линия и заливка иконки */
+.gi .vb .ib{background:var(--panel);border:1px solid var(--line);color:var(--muted);transition:border-color .15s,color .15s}
+.gi .vb .ib:hover{border-color:var(--acc);color:var(--acc-text);background:var(--panel)}
+.gi .vb .ib.up,.gi .vb .ib.dn{background:var(--panel);border-color:var(--acc);color:var(--acc)}
+/* выбранное везде одним способом: мягкий акцент + текст акцента */
+.orow.on,.ib.on,.chip.on{background:var(--acc-soft);color:var(--acc-text)}
+.btn:disabled,.ib:disabled,.chip:disabled,.seg button:disabled{opacity:.45;cursor:not-allowed}
+.pacts .btn{flex:none}
+</style>`);
+
+/* ---------- двойная дверь: вторая створка от противоположного откоса ---------- */
+function ipLeaf(H,F,n,r){const E=[H[0]+n[0]*r,H[1]+n[1]*r],cr=(E[0]-H[0])*(F[1]-H[1])-(E[1]-H[1])*(F[0]-H[0]);return `M${f2(H)}L${f2(E)}A${r} ${r} 0 0 ${cr>0?1:0} ${f2(F)}`}
+function ipDblP(o){const [ux,uy]=ang(o.a),n=[-uy*o.side,ux*o.side],h=o.w/2,k=o.t/2,sg=o.h=='s'?-1:1,b=Math.max(10,Math.min(o.w-10,o.w2||o.w/2)),a=o.w-b;
+ const J1=[o.x+ux*sg*h+n[0]*k,o.y+uy*sg*h+n[1]*k],J2=[o.x-ux*sg*h+n[0]*k,o.y-uy*sg*h+n[1]*k],d=[-ux*sg,-uy*sg],Mp=[J1[0]+d[0]*a,J1[1]+d[1]*a];
+ return ipLeaf(J1,Mp,n,a)+ipLeaf(J2,Mp,n,b)}
+const _ipOpG=opG;opG=function(o){if(o.k!='door'||!o.dbl||o.cw)return _ipOpG(o);
+ return `<path d="${obox(o.x,o.y,o.a,o.w,o.t+.6)}" fill="${EC.floor}"/><path d="${ipDblP(o)}" fill="none" stroke="${EC.door}" stroke-width=".75" stroke-linecap="round"/>`};
+function ipDbl(id){mut(M=>{const o=M.ops.find(x=>x.id==id);if(!o)return;o.dbl=o.dbl?0:1;if(o.dbl&&!o.w2)o.w2=Math.round(o.w/2*MM/10)*10/MM},0);renderProps()}
+function ipDblW(id,v){const n=+String(v).replace(/\s/g,'').replace(',','.');const M=curM(),o=M&&M.ops.find(x=>x.id==id);if(!o)return;
+ if(!(n>=200&&n<=o.w*MM-200)){toast(`Вторая створка — от 200 до ${nf(Math.round(o.w*MM-200),0)} мм`,{k:'warn'});return renderProps()}mut(M=>{M.ops.find(x=>x.id==id).w2=n/MM},0)}
+/* панель двери: вместо четырёх значков-дублей — две понятные кнопки и «Двойная дверь» */
+renderProps=(_rp=>function(){_rp();const M=curM(),s=ED.sel;if(!ED.on||!M||!s||s.t!='op'||ED.msel.length)return;const o=M.ops.find(x=>x.id==s.id);if(!o||o.k!='door'||o.cw)return;
+ const g=$('#props .swg');if(!g)return;const blk=g.closest('.blk'),acts=g.nextElementSibling;g.remove();if(acts)acts.style.marginTop='0';const P=blk.querySelectorAll('.pacts'),last=P[P.length-1];
+ const main=Math.round((o.w-(o.w2||o.w/2))*MM),sec2=Math.round((o.w2||o.w/2)*MM);
+ last&&last.insertAdjacentHTML('beforebegin',`<div class="chk ${o.dbl?'on':''}" style="margin-top:6px" role="checkbox" tabindex="0" aria-checked="${!!o.dbl}" onclick="ipDbl('${o.id}')" onkeydown="if(event.key==' '||event.key=='Enter'){event.preventDefault();ipDbl('${o.id}')}"><span class="bx"><span class="i">check</span></span>Двойная дверь</div>`+
+  (o.dbl?`<div class="ipsub">${fld('Вторая створка',sec2,`ipDblW('${o.id}',this.value)`)}<div class="row" style="font-size:12px"><span class="lead">Основная створка</span><span>${nf(main,0)} мм</span></div></div>`:''))})(renderProps);
+document.head.insertAdjacentHTML('beforeend','<style>.ipsub{border-left:2px solid var(--line);padding-left:10px;margin:2px 0 6px 8px}.ipsub .fld{grid-template-columns:112px 1fr 26px}</style>');
 if($('#s-projects').classList.contains('on'))ipGrid();
