@@ -849,16 +849,16 @@ ipPlaceWallOp=(_p=>function(M,p,k,w0,ex){if(!M.user||!M.walls.some(w=>w.type=='z
  try{return _p(M,p,k,w0,ex)}finally{M.walls=M.walls.concat(Z)}})(ipPlaceWallOp);
 /* ---------- подложка сверху плана в режиме «умножение»: стены и заливка помещений её не перекрывают ---------- */
 msvg=(_m=>function(M,o={}){let s=_m(M,o);const u=M.user&&M.ul;if(!u||o.exp||o.thumb)return s;
- const img=u.hid?'':`<image href="${u.url}" x="${u.x}" y="${u.y}" width="${u.w}" height="${u.h}" opacity="${Math.max(.35,u.op)}" preserveAspectRatio="none" style="pointer-events:none;mix-blend-mode:multiply"/>`;
+ const img=u.hid?'':`<image href="${u.url}" x="${u.x}" y="${u.y}" width="${u.w}" height="${u.h}" opacity="${u.op}" preserveAspectRatio="none" style="pointer-events:none;mix-blend-mode:multiply"/>`;
  const fr=`<rect x="${u.x}" y="${u.y}" width="${u.w}" height="${u.h}" fill="none" stroke="var(--faint)" stroke-width="1" ${u.hid?'stroke-dasharray="4 4"':''} vector-effect="non-scaling-stroke" style="pointer-events:none"/>`;
  // над стенами и помещениями, под подписями и выделением
  const i=s.indexOf('<g style="pointer-events:none" font-family'),j=i>0?i:s.lastIndexOf('</svg>');return s.slice(0,j)+img+fr+s.slice(j)})(msvg);
 /* значки у угла подложки: скрыть/показать и убрать (с «Вернуть») */
-$('.sheet').insertAdjacentHTML('beforeend','<div class="ipulc" id="ipulc"><span class="i">image</span><button class="ib" id="ipulh" title="Скрыть подложку"><span class="i">visibility</span></button><button class="ib" title="Убрать подложку" onclick="ipUlDel()"><span class="i">close</span></button></div>');
+$('.sheet').insertAdjacentHTML('beforeend','<div class="ipulc" id="ipulc"><button class="ib" id="ipulh" title="Скрыть подложку"><span class="i">visibility</span></button><button class="ib" title="Убрать подложку" onclick="ipUlDel()"><span class="i">close</span></button></div>');
 document.head.insertAdjacentHTML('beforeend',`<style>
-.ipulc{position:absolute;display:none;align-items:center;gap:0;height:30px;padding:0 2px 0 8px;background:var(--panel);border-radius:8px;box-shadow:0 1px 4px #0000001f;z-index:3;transform:translate(-100%,calc(-100% - 6px))}
+.ipulc{position:absolute;display:none;align-items:center;gap:2px;height:30px;padding:2px;background:var(--panel);border-radius:8px;box-shadow:0 1px 4px #0000001f;z-index:3;transform:translate(-100%,calc(-100% - 6px))}
 .ipulc>.i{font-size:15px;color:var(--faint);margin-right:2px}.ipulc .ib{width:26px;height:26px;border-radius:6px}.ipulc .ib .i{font-size:17px}
-.ipulc.off .ib:first-of-type{color:var(--acc)}
+.ipulc.ulhid #ipulh{color:var(--acc);background:var(--acc-soft)}
 /* плашки над полем — одной высоты 40, без обводки, только тень */
 .zoom,.ipsteps,.insp{border:0}
 .zoom{height:40px;padding:4px;border-radius:12px}.zoom .ib{width:32px;height:32px;border-radius:8px}.zoom .zv{width:46px}
@@ -869,11 +869,17 @@ function ipUlDel(){const M=curM();if(!M||!M.ul)return;const keep=M.ul;delete M.u
  toast('Подложка убрана',{icon:'delete',act:'Вернуть',fn:()=>{const M2=curM();if(M2&&!M2.ul){M2.ul=keep;draw();renderProps();ipSteps();saved()}}})}
 function ipUlCtl(){const c=$('#ipulc'),M=curM();if(!c)return;const u=M&&M.user&&!sel&&!refOn&&M.ul;if(!u){c.style.display='none';return}
  const sv=$('#plan svg[data-m]'),m=sv&&sv.getScreenCTM();if(!m){c.style.display='none';return}const P=new DOMPoint(u.x+u.w,u.y).matrixTransform(m),R=$('.sheet').getBoundingClientRect();
- c.style.display='flex';c.style.left=(P.x-R.left)+'px';c.style.top=(P.y-R.top)+'px';c.classList.toggle('off',!!u.hid);
+ c.style.display='flex';c.style.left=(P.x-R.left)+'px';c.style.top=(P.y-R.top)+'px';c.classList.toggle('ulhid',!!u.hid);
  const b=$('#ipulh');b.title=u.hid?'Показать подложку':'Скрыть подложку';b.innerHTML=`<span class="i">${u.hid?'visibility_off':'visibility'}</span>`}
 draw=(_d=>function(){_d();ipUlCtl()})(draw);
 ipShowStage=(_s=>function(){_s();ipUlCtl()})(ipShowStage);
 zoom=(_z=>function(d){_z(d);ipUlCtl()})(zoom);
 /* в панели «Подложка» «Убрать» — тот же путь с «Вернуть» */
 renderProps=(_r=>function(){_r();const b=[...$$('#props .pacts button')].find(x=>/Убрать$/.test(x.textContent.trim()));if(b)b.setAttribute('onclick','ipUlDel()')})(renderProps);
+/* ползунок внутри .fld не получает рамку поля; панель подложки — «Видимость», без лишнего */
+document.head.insertAdjacentHTML('beforeend',`<style>.fld input[type=range],.fld input[type=range]:hover,.fld input[type=range]:focus{border:0;box-shadow:none;background:transparent;padding:0;height:20px;border-radius:0}</style>`);
+renderProps=(_r=>function(){_r();const r=$('#props input[type=range]');if(!r||!CM||!CM.ul)return;const lab=r.closest('.fld').firstElementChild;lab.textContent='Видимость';r.min=15;r.max=100;
+ const sec=r.closest('.blk');if(sec&&!sec.querySelector('.ulv')){const h=sec.querySelector('.lbl');h&&h.insertAdjacentHTML('beforeend',`<span class="sp" style="flex:1"></span><button class="ib ulv" style="width:26px;height:26px" title="${CM.ul.hid?'Показать':'Скрыть'}" onclick="$('#ipulh').click()"><span class="i" style="font-size:17px">${CM.ul.hid?'visibility_off':'visibility'}</span></button>`)}
+ if(CM.ul.hid){r.disabled=true;r.closest('.fld').style.opacity=.45}})(renderProps);
+$('#ipulh').onclick=(_h=>function(){_h();renderProps()})($('#ipulh').onclick);
 if($('#s-projects').classList.contains('on'))ipGrid();
