@@ -1798,6 +1798,38 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 </style>`);
 /* градация акцентов: залита только главная кнопка экрана — «Создать планировку»; экспорт в шапке вторичный */
 {const b=$('#expbtn');if(b)b.classList.remove('pri')}
+/* ---------- слои стен: перегородки снизу и уходят под наружные/несущие; несущие — тем же чёрным ---------- */
+EC.bear=EC.ext;
+const _ipWP=wallPolys;wallPolys=function(M){if(!M.user)return _ipWP(M);
+ // наружные и несущие стыкуются между собой; перегородки — только между собой, у чёрных стен кончаются на оси (под ними)
+ return [..._ipWP({walls:M.walls.filter(w=>w.type=='part')}),..._ipWP({walls:M.walls.filter(w=>w.type!='part')})]};
+/* свободная часть перегородки — до грани чёрной стены, а не до её оси: дверь не заедет внутрь наружной стены */
+const _ipWG=ipWG;ipWG=function(M,w){const A=_ipWG(M,w);if(!M.user||w.type!='part')return A;
+ const cap=k=>{let t=0;M.walls.forEach(v=>{if(v.type=='part'||v===w)return;const P=ipWE(w,k),G=wgeo(v),[s,q]=loc(P[0],P[1],G.cx,G.cy,G.a);if(Math.abs(q)<1&&Math.abs(s)<=G.len/2+1)t=Math.max(t,v.t/2)});return t};
+ A.a=Math.max(A.a,cap(1));A.b=Math.min(A.b,A.G.len-cap(2));return A};
+
+/* ---------- помещения сами: каждая замкнутая область без подписи получает «Помещение» ---------- */
+function ipAutoRooms(M){if(!M||!M.user)return;M.gv++;let K=calcRooms(M);const {W,H,L}=K,seen=new Uint8Array(W*H),add=[];
+ for(let i=0;i<L.length;i++){if(L[i]!==0||seen[i])continue;const st=[i];seen[i]=1;let n=0,sx=0,sy=0;const px=[];
+  while(st.length){const j=st.pop();n++;const x=j%W,y=(j-x)/W;sx+=x;sy+=y;if(n%7==1)px.push(j);
+   for(const k of [j-1,j+1,j-W,j+W]){if(k<0||k>=L.length||seen[k]||L[k]!==0)continue;if((k==j-1||k==j+1)&&((k/W|0)!=y))continue;seen[k]=1;st.push(k)}}
+  if(n*MM*MM/1e6<1)continue; // меньше 1 м² — шахта или щель
+  let cx=Math.round(sx/n),cy=Math.round(sy/n),c=cy*W+cx;if(L[c]!==0||!seen[c]){let b=px[0],bd=1e18;px.forEach(j=>{const d=(j%W-cx)**2+((j/W|0)-cy)**2;if(d<bd){bd=d;b=j}});c=b} // центр вне области (Г-образная) — ближайшая точка области
+  add.push({n:'Помещение',x:c%W,y:c/W|0,auto:1})}
+ // автоподписи-дубли в одной области (стену убрали — две комнаты слились) — лишние убираем
+ const lab=K.lab2,drop=new Set();K.regs.forEach(R=>{const au=R.labs.filter(i=>M.rooms[i]&&M.rooms[i].auto);if(R.labs.length>1&&au.length)(au.length==R.labs.length?au.slice(1):au).forEach(i=>drop.add(i))});
+ if(!add.length&&!drop.size)return;M.rooms=M.rooms.filter((r,i)=>!drop.has(i)).concat(add);M.gv++}
+changed=(_c=>function(geo){const M=curM();if(geo&&M&&M.user&&!sel){ipWeld(M);ipAutoRooms(M)}_c(geo)})(changed);
+/* автоподпись — в самую «глубокую» точку помещения (дальше всего от стен); подпись, сдвинутую руками, не трогаем */
+function ipCenterAuto(M){const K=calcRooms(M),{W,H,L}=K,S={};K.regs.forEach((R,ri)=>{const l=M.rooms[R.main];if(l&&l.auto)S[ri+1]=[]});if(!Object.keys(S).length)return;
+ for(let i=0;i<L.length;i+=7){const v=L[i];if(S[v])S[v].push(i)}
+ const D=[[1,0],[-1,0],[0,1],[0,-1],[.7071,.7071],[-.7071,.7071],[.7071,-.7071],[-.7071,-.7071]];let moved=0;
+ for(const v in S){const P=S[v];if(!P.length)continue;let best=P[0],bd=-1;const st=Math.max(1,Math.floor(P.length/1500));
+  for(let n=0;n<P.length;n+=st){const j=P[n],x=j%W,y=j/W|0;let m=1e9;for(const [dx,dy] of D){let r=1;for(;r<m&&r<400;r++){const xx=Math.round(x+dx*r),yy=Math.round(y+dy*r);if(xx<0||yy<0||xx>=W||yy>=H||L[yy*W+xx]!=v)break}m=Math.min(m,r)}if(m>bd){bd=m;best=j}}
+  const l=M.rooms[K.regs[v-1].main],nx=best%W,ny=best/W|0;if(Math.hypot(l.x-nx,l.y-ny)>2){l.x=nx;l.y=ny;moved=1}}
+ if(moved)M.gv++}
+ipAutoRooms=(_a=>function(M){_a(M);if(M&&M.user)ipCenterAuto(M)})(ipAutoRooms);
+window.addEventListener('pointerup',()=>{if(DR&&DR.k=='room'&&DR.mv&&DR.lab!=null){const M=curM(),l=M&&M.rooms[DR.lab];if(l)l.auto=0}},true);
 if($('#s-projects').classList.contains('on'))ipGrid();
 
 /*/js:editor*/</script></body></html>
