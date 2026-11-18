@@ -1099,7 +1099,7 @@ function ipFit(M){if(M.fixed)return true;let a=1e9,b=1e9,c=-1e9,d=-1e9;const add
 /* ---------- отрисовка: сетка листа, подложка, линейка ---------- */
 const _ipMsvg=msvg;msvg=function(M,o={}){let s=_ipMsvg(M,o);if(!M.user)return s;let pre='';
  if(!o.exp)pre+=`<rect x="0" y="0" width="${M.W}" height="${M.H}" fill="url(#ipg)"/>`;
- if(M.ul&&!o.exp&&!o.thumb)pre+=`<image href="${M.ul.url}" x="${M.ul.x}" y="${M.ul.y}" width="${M.ul.w}" height="${M.ul.h}" opacity="${M.ul.op}" preserveAspectRatio="none" style="pointer-events:none"/>`;
+ // подложка рисуется выше, поверх плана в режиме multiply (см. блок «подложка сверху»)
  s=s.replace('data-m="1">','data-m="1">'+pre);s=s.replace(/stroke-width="\.25" stroke-linejoin="round"/g,'stroke-width=".9" stroke-linejoin="round"');
  if(o.ed&&ED.on&&ED.tool=='ruler'&&IP.r1){const P=ED.pt||IP.r1,z=ED.s||1,L=Math.hypot(P.x-IP.r1.x,P.y-IP.r1.y);
   s=s.replace(/<\/svg>$/,`<path d="M${IP.r1.x} ${IP.r1.y}L${P.x} ${P.y}" stroke="#E5484D" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="${IP.r1.x}" cy="${IP.r1.y}" r="${4*z}" fill="#E5484D"/><text x="${(IP.r1.x+P.x)/2}" y="${(IP.r1.y+P.y)/2-8*z}" font-size="${12*z}" text-anchor="middle" font-family="Inter,sans-serif" fill="#E5484D" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="${3*z}">${M.ul&&M.ul.cal?Math.round(L*MM).toLocaleString('ru-RU')+' мм':'кликните во вторую точку'}</text></svg>`)}
@@ -1840,6 +1840,35 @@ msvg=(_m=>function(M,o={}){let s=_m(M,o);if(!M.user)return s;const Z=M.walls.fil
 /* в разделитель нельзя поставить дверь или окно */
 ipPlaceWallOp=(_p=>function(M,p,k,w0,ex){if(!M.user||!M.walls.some(w=>w.type=='zone'))return _p(M,p,k,w0,ex);const Z=M.walls.filter(w=>w.type=='zone');M.walls=M.walls.filter(w=>w.type!='zone');
  try{return _p(M,p,k,w0,ex)}finally{M.walls=M.walls.concat(Z)}})(ipPlaceWallOp);
+/* ---------- подложка сверху плана в режиме «умножение»: стены и заливка помещений её не перекрывают ---------- */
+msvg=(_m=>function(M,o={}){let s=_m(M,o);const u=M.user&&M.ul;if(!u||o.exp||o.thumb)return s;
+ const img=u.hid?'':`<image href="${u.url}" x="${u.x}" y="${u.y}" width="${u.w}" height="${u.h}" opacity="${Math.max(.35,u.op)}" preserveAspectRatio="none" style="pointer-events:none;mix-blend-mode:multiply"/>`;
+ const fr=`<rect x="${u.x}" y="${u.y}" width="${u.w}" height="${u.h}" fill="none" stroke="var(--faint)" stroke-width="1" ${u.hid?'stroke-dasharray="4 4"':''} vector-effect="non-scaling-stroke" style="pointer-events:none"/>`;
+ // над стенами и помещениями, под подписями и выделением
+ const i=s.indexOf('<g style="pointer-events:none" font-family'),j=i>0?i:s.lastIndexOf('</svg>');return s.slice(0,j)+img+fr+s.slice(j)})(msvg);
+/* значки у угла подложки: скрыть/показать и убрать (с «Вернуть») */
+$('.sheet').insertAdjacentHTML('beforeend','<div class="ipulc" id="ipulc"><span class="i">image</span><button class="ib" id="ipulh" title="Скрыть подложку"><span class="i">visibility</span></button><button class="ib" title="Убрать подложку" onclick="ipUlDel()"><span class="i">close</span></button></div>');
+document.head.insertAdjacentHTML('beforeend',`<style>
+.ipulc{position:absolute;display:none;align-items:center;gap:0;height:30px;padding:0 2px 0 8px;background:var(--panel);border-radius:8px;box-shadow:0 1px 4px #0000001f;z-index:3;transform:translate(-100%,calc(-100% - 6px))}
+.ipulc>.i{font-size:15px;color:var(--faint);margin-right:2px}.ipulc .ib{width:26px;height:26px;border-radius:6px}.ipulc .ib .i{font-size:17px}
+.ipulc.off .ib:first-of-type{color:var(--acc)}
+/* плашки над полем — одной высоты 40, без обводки, только тень */
+.zoom,.ipsteps,.insp{border:0}
+.zoom{height:40px;padding:4px;border-radius:12px}.zoom .ib{width:32px;height:32px;border-radius:8px}.zoom .zv{width:46px}
+.insp{min-height:40px;border-radius:12px}.insp .ih{height:40px}
+</style>`);
+$('#ipulh').onclick=()=>{const M=curM();if(!M||!M.ul)return;M.ul.hid=!M.ul.hid;draw();saved();toast(M.ul.hid?'Подложка скрыта — значок с глазом вернёт её':'Подложка снова видна',{icon:M.ul.hid?'visibility_off':'visibility'})};
+function ipUlDel(){const M=curM();if(!M||!M.ul)return;const keep=M.ul;delete M.ul;draw();renderProps();ipSteps();saved();
+ toast('Подложка убрана',{icon:'delete',act:'Вернуть',fn:()=>{const M2=curM();if(M2&&!M2.ul){M2.ul=keep;draw();renderProps();ipSteps();saved()}}})}
+function ipUlCtl(){const c=$('#ipulc'),M=curM();if(!c)return;const u=M&&M.user&&!sel&&!refOn&&M.ul;if(!u){c.style.display='none';return}
+ const sv=$('#plan svg[data-m]'),m=sv&&sv.getScreenCTM();if(!m){c.style.display='none';return}const P=new DOMPoint(u.x+u.w,u.y).matrixTransform(m),R=$('.sheet').getBoundingClientRect();
+ c.style.display='flex';c.style.left=(P.x-R.left)+'px';c.style.top=(P.y-R.top)+'px';c.classList.toggle('off',!!u.hid);
+ const b=$('#ipulh');b.title=u.hid?'Показать подложку':'Скрыть подложку';b.innerHTML=`<span class="i">${u.hid?'visibility_off':'visibility'}</span>`}
+draw=(_d=>function(){_d();ipUlCtl()})(draw);
+ipShowStage=(_s=>function(){_s();ipUlCtl()})(ipShowStage);
+zoom=(_z=>function(d){_z(d);ipUlCtl()})(zoom);
+/* в панели «Подложка» «Убрать» — тот же путь с «Вернуть» */
+renderProps=(_r=>function(){_r();const b=[...$$('#props .pacts button')].find(x=>/Убрать$/.test(x.textContent.trim()));if(b)b.setAttribute('onclick','ipUlDel()')})(renderProps);
 if($('#s-projects').classList.contains('on'))ipGrid();
 
 /*/js:editor*/</script></body></html>
