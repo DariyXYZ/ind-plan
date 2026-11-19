@@ -128,8 +128,83 @@ def door_geom(c, rooms, W, d):
             return (None if sl else (x - w / 2, min(f, f + s * w), x + w / 2, max(f, f + s * w))), (x - w / 2, y - 550, x + w / 2, y + 550), None, (0, s)
     return None, None, 'нет стены под дверью', None
 
+CORR = ('Прихожая', 'Коридор', 'Холл')
+
+def door_hinge(c, rooms, W, d, bodies=()):
+    """(комната с другой стороны, направление петель (hx, hy), зазор от петли до стены в мм)"""
+    x, y, w, into = d[:4]
+    segs = [(x1, y1, x2, y2, PT) for x1, y1, x2, y2 in W] + \
+           [(p[0], p[1], q[0], q[1], t) for p, q, t in zip(c['poly'], c['poly'][1:] + c['poly'][:1], c['ts'])] +            [e for a, b, cc, dd in bodies for e in ((a, b, cc, b, 0), (a, dd, cc, dd, 0), (a, b, a, dd, 0), (cc, b, cc, dd, 0))]
+    vert = any(x1 == x2 == x and min(y1, y2) <= y <= max(y1, y2) for x1, y1, x2, y2 in W + [(p[0], p[1], q[0], q[1]) for p, q in zip(c['poly'], c['poly'][1:] + c['poly'][:1])])
+    if vert:
+        s_ = 1 if room_at(rooms, x + 200, y) == into else -1
+        other = room_at(rooms, x - s_ * 200, y)
+        best = None
+        for hd in (-1, 1):
+            ye = y + hd * w / 2; g = None
+            for x1, y1, x2, y2, t in segs:
+                if y1 == y2 and (y1 - ye) * hd >= 0:
+                    lo, hi = sorted((x, x + s_ * w))
+                    if min(x1, x2) < hi - 1 and max(x1, x2) > lo + 1:
+                        gg = abs(y1 - ye) - t / 2
+                        g = gg if g is None else min(g, gg)
+            if g is not None and (best is None or g < best[1]): best = ((0, hd), g)
+    else:
+        s_ = 1 if room_at(rooms, x, y + 200) == into else -1
+        other = room_at(rooms, x, y - s_ * 200)
+        best = None
+        for hd in (-1, 1):
+            xe = x + hd * w / 2; g = None
+            for x1, y1, x2, y2, t in segs:
+                if x1 == x2 and (x1 - xe) * hd >= 0:
+                    lo, hi = sorted((y, y + s_ * w))
+                    if min(y1, y2) < hi - 1 and max(y1, y2) > lo + 1:
+                        gg = abs(x1 - xe) - t / 2
+                        g = gg if g is None else min(g, gg)
+            if g is not None and (best is None or g < best[1]): best = ((hd, 0), g)
+    if best is None: best = (((0, 1) if vert else (1, 0)), 9999)
+    return other, best[0], round(best[1])
+
+def obst(c, V):
+    return [body(f) for f in V['furn']] + [(x - 130, y - 130, x + 130, y + 130) for x, y in c['ris']] + [(x, y, x + w, y + h) for x, y, w, h in c['pyl']]
+
+def place_doors(c, V, W):
+    """достройка дверей: из коридора — внутрь комнаты; петли у угла, створка к стене; без мебели под распашкой"""
+    rooms = V['rooms']; out = []
+    bodies = obst(c, V)
+    polyW = W + [(p[0], p[1], q[0], q[1]) for p, q in zip(c['poly'], c['poly'][1:] + c['poly'][:1])]
+    for d in V['doors']:
+        d = list(d)
+        sl = len(d) > 5 and d[5] == 'sl'
+        x, y, w, into = d[:4]
+        vert = any(x1 == x2 == x and min(y1, y2) <= y <= max(y1, y2) for x1, y1, x2, y2 in polyW)
+        def side_rooms(xx, yy, sgn):
+            return (room_at(rooms, xx + 200 * sgn, yy), room_at(rooms, xx - 200 * sgn, yy)) if vert else (room_at(rooms, xx, yy + 200 * sgn), room_at(rooms, xx, yy - 200 * sgn))
+        sgn = 1 if side_rooms(x, y, 1)[0] == into else -1
+        other = side_rooms(x, y, sgn)[1]
+        if into in CORR and other not in CORR:
+            into, other, sgn = other, into, -sgn; d[3] = into
+        if not sl:
+            best = None
+            for k in range(-80, 81):
+                t0 = k * 25
+                nx, ny = (x, y + t0) if vert else (x + t0, y)
+                if not all(side_rooms(*((nx, ny + t) if vert else (nx + t, ny)), sgn) == (into, other) for t in (-w / 2 + 20, 0, w / 2 - 20)):
+                    continue
+                dd = (nx, ny, w, into) + tuple(d[4:])
+                sw, cl, e, _ = door_geom(c, rooms, W, dd)
+                if e: continue
+                conf = sum(1 for b in bodies if (sw and ov(b, sw, 10)) or ov(b, cl, 10))
+                g = door_hinge(c, rooms, W, dd, bodies)[2]
+                sc = (conf, 0 if g <= 300 else 1, g if g > 300 else 0, abs(t0))
+                if best is None or sc < best[0]: best = (sc, nx, ny)
+            if best: d[0], d[1] = round(best[1]), round(best[2])
+        out.append(tuple(d))
+    V['doors'] = out
+
 def check(cid, V):
     c = C[cid]; rooms = V['rooms']; W, errs = walls(c, rooms); warn = []
+    place_doors(c, V, W)
     INN = {n: [inner_rect(c, r, rooms, n) for r in rs] for n, rs in rooms.items()}
     pyl = [(x, y, x + w, y + h) for x, y, w, h in c['pyl']] + [(x - 130, y - 130, x + 130, y + 130) for x, y in c['ris']]  # стояк в коробе — тоже препятствие
     SEG = [(x1, y1, x2, y2, PT / 2) for x1, y1, x2, y2 in W] + \
@@ -164,7 +239,14 @@ def check(cid, V):
     for d in V['doors']:
         sw, cl, e, s = door_geom(c, rooms, W, d)
         if e: errs.append(f'дверь {d[:2]}: {e}')
-        else: D.append((d, sw, cl))
+        else:
+            D.append((d, sw, cl))
+            other, hv, gap = door_hinge(c, rooms, W, d, obst(c, V))
+            sl = len(d) > 5 and d[5] == 'sl'
+            if not sl and d[3] in CORR and other not in CORR:
+                errs.append(f'дверь {d[:2]} ({other}) открывается в коридор — открывать внутрь комнаты')
+            if not sl and gap > 300:
+                errs.append(f'дверь {d[:2]}: петли не у стены, створка в {gap} мм от стены')
     for i in range(len(D)):
         for j in range(i + 1, len(D)):
             if D[i][1] and D[j][1] and ov(D[i][1], D[j][1], 10): errs.append(f'двери {D[i][0][:2]} и {D[j][0][:2]} бьются друг о друга')
@@ -224,7 +306,7 @@ def check(cid, V):
             for x in range(int(r[0] + W_ / 2), int(r[2] - W_ / 2) + 1, 100):
                 for y in range(int(r[1] + 350), int(r[3] - 300) + 1, 100):
                     box = (x - W_ / 2, y - 330, x + W_ / 2, y + 280)
-                    if any(ov(box, ob, 0) for ob in bodies) or any(ov(box, p, 0) for p in pyl): continue
+                    if any(ov(box, ob, 0) for ob in bodies) or any(ov(box, p, 0) for p in pyl) or any(dd[1] and ov(box, dd[1], 0) for dd in D): continue
                     dist = min([math.hypot(x - (ob[0] + ob[2]) / 2, y - (ob[1] + ob[3]) / 2) for ob in bodies] + [1e5])
                     cen = math.hypot(x - (r[0] + r[2]) / 2, y - (r[1] + r[3]) / 2)
                     score = min(dist, 1500) - cen * 0.6 + (r[2] - r[0]) * (r[3] - r[1]) / 1e5
@@ -246,7 +328,8 @@ for cid, VS in lay.L.items():
         DD = []
         for d in V['doors']:
             sw, cl, e, s = door_geom(C[cid], V['rooms'], W, d)
-            DD.append([d[0], d[1], d[2], s[0], s[1], d[4], 1 if len(d) > 5 and d[5] == 'sl' else 0])
+            hv = door_hinge(C[cid], V['rooms'], W, d, obst(C[cid], V))[1]
+            DD.append([d[0], d[1], d[2], s[0], s[1], list(hv), 1 if len(d) > 5 and d[5] == 'sl' else 0])
         out[cid].append({'name': V['name'], 'walls': W, 'doors': DD, 'rooms': lab,
                          'furn': [[f[0], f[1], f[2], f[3], f[4] if len(f) > 4 else 0, f[5] if len(f) > 5 else 0] for f in V['furn']], 'warn': len(warn)})
 json.dump(out, open(os.path.join(HERE, 'layouts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
