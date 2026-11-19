@@ -1944,7 +1944,8 @@ function vM(c,L){const M=tM(c),o0=M.off,s0=ED.s,P=(x,y)=>({x:x/MM+o0[0],y:y/MM+o
  L.furn.forEach(([k,x,y,r,w,d])=>{const p=P(x,y),f={id:nid(M,'f'),c:k,x:p.x,y:p.y,r,m:0};if(w)f.w=w;if(d)f.d=d;M.furn.push(f)});
  M.furnOn=true;ED.s=s0;M.gv++;return M}
 EXD.length=0;T.forEach(c=>EXD.push({n:c.n,t:c.t,c:c.c,M:()=>tM(c),V:c.V,src:c,nv:c.V?c.V.length:0}));
-const _od=ipOpenDemo;ipOpenDemo=function(k){const D=EXD[k];IP.tst=D.V?D:null;_od(k);if(!D.V)return;
+const _ss=ipSaveSt;ipSaveSt=function(s,t){_ss(s,t);if(s=='ro'){const b=document.getElementById('save');if(b)b.style.display='none'}};
+const _od=ipOpenDemo;ipOpenDemo=function(k){const D=EXD[k];IP.tst=D.V?D:null;{const _t=toast;toast=()=>{};try{_od(k)}finally{toast=_t}}if(!D.V)return;
  V.length=0;D.V.forEach((L,i)=>{const M=vM(D.src,L);M.gv=1;M.seq=500;const v={id:i+1,run:1,q:'по методичке IND',seed:0,M,type:D.t,err:0,warn:L.warn?1:0,vote:0,ver:1,from:0,nm:L.name};syncR(v);
   v.live=v.R.filter(r=>/Спальн|Детск|Гостин|Кабинет|Гостев|гостин/.test(r.n)).reduce((s,r)=>s+ +r.a,0).toFixed(1);V.push(v)});
  run=1;$('#gempty').style.display='none';$('#glist').style.display='block';setGen('auto_awesome','Создать ещё');renderList();showVar(1);$('#expbtn').disabled=false};
