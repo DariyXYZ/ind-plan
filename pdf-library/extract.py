@@ -431,7 +431,7 @@ def extract(pdf, pno=0, extra_wall_axes=None):
         ent = [l for l in es if l['type'] == 'entry']
         g = collections.defaultdict(set)
         for l in es:
-            if l['type'] in ('door', 'open'): g[l['between'][0]].add(l['between'][1]); g[l['between'][1]].add(l['between'][0])
+            if l['type'] in ('door', 'open', 'balcony'): g[l['between'][0]].add(l['between'][1]); g[l['between'][1]].add(l['between'][0])
         reach = set()
         if ent:
             st = [ent[0]['between'][1]]

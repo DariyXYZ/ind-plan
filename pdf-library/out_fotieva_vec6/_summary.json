@@ -1,0 +1,43 @@
+[
+ {
+  "file": "X:/2024/1-2024 Architecture PUBLIC/1-44-2024 Etalon Fotieva/02-RABOCHYA/01-Architecture/02-PDF/2024-12-12_Планы/Лист-9 этаж.pdf",
+  "name": "2024-12-12__Лист-9 этаж",
+  "mm_per_unit": 70.8,
+  "rooms_found": 66,
+  "labels": 76,
+  "room_fills": 66,
+  "labels_in_one_fill": [],
+  "risers": 0,
+  "windows_text": 0,
+  "totals_on_sheet": [],
+  "area_dev_max": 0.065,
+  "apartments": 4,
+  "apartments_total_ok": 4,
+  "apts": [
+   [
+    215.78,
+    null,
+    16,
+    1
+   ],
+   [
+    326.71,
+    null,
+    17,
+    1
+   ],
+   [
+    215.79,
+    null,
+    16,
+    1
+   ],
+   [
+    325.26,
+    null,
+    17,
+    1
+   ]
+  ]
+ }
+]
