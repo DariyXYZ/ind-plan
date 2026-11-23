@@ -13,5 +13,10 @@
   "directory": "out_fotieva_vec6",
   "prefix": "fotv9",
   "project": "1-44-2024 Etalon Fotieva (Москва)"
+ },
+ {
+  "directory": "out_touch_checked",
+  "prefix": "tch",
+  "project": "1-41-2024 Touch Dovzhenko (Москва)"
  }
 ]
