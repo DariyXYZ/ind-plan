@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IND extracted apartment plan",
+  "type": "object",
+  "required": ["schema_version", "id", "kind", "area", "src", "geom", "graph", "areas", "key", "checks", "source", "rooms", "edges", "plan", "count"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "kind": {"type": "string"},
+    "area": {"type": "number", "exclusiveMinimum": 0},
+    "src": {"type": "string"},
+    "geom": {"enum": ["ok", "approx"]},
+    "why": {"type": "string"},
+    "graph": {"type": "string"},
+    "areas": {"type": "object", "additionalProperties": {"type": "number"}},
+    "count": {"type": "integer", "minimum": 1},
+    "checks": {"type": "object", "required": ["ok"], "properties": {"ok": {"const": true}}},
+    "key": {
+      "type": "object",
+      "required": ["type", "area", "w", "d", "facades", "entry", "bedrooms", "wardrobe", "kids", "master_bath", "laundry", "separate_kitchen", "bathrooms", "facade_width_mm", "entry_type", "risers", "levels"],
+      "properties": {
+        "type": {"type": "string"}, "area": {"type": "number"},
+        "w": {"type": "number"}, "d": {"type": "number"},
+        "facades": {"type": "integer"}, "entry": {"type": ["string", "null"]},
+        "bedrooms": {"type": "integer"}, "wardrobe": {"type": "boolean"},
+        "kids": {"type": "boolean"}, "master_bath": {"type": "boolean"},
+        "laundry": {"type": "boolean"}, "separate_kitchen": {"type": "boolean"},
+        "bathrooms": {"type": "integer"}, "facade_width_mm": {"type": "number"},
+        "entry_type": {"type": ["string", "null"]}, "risers": {"type": "boolean"},
+        "levels": {"type": "integer", "minimum": 1}
+      }
+    },
+    "source": {
+      "type": "object", "required": ["project", "file", "page", "floor", "section"],
+      "properties": {
+        "project": {"type": "string"}, "file": {"type": ["string", "null"]},
+        "page": {"type": ["integer", "null"]}, "floor": {"type": ["string", "null"]},
+        "section": {"type": ["string", "null"]}, "sheets": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "rooms": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["id", "role", "name_src", "area", "rects"]}},
+    "edges": {"type": "array", "items": {"type": "object", "required": ["between"]}},
+    "plan": {"type": "object", "required": ["outer", "windows", "risers", "rooms", "doors"]}
+  }
+}

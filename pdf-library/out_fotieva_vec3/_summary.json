@@ -1,0 +1,233 @@
+[
+ {
+  "file": "X:\\2024\\1-2024 Architecture PUBLIC\\1-44-2024 Etalon Fotieva\\02-RABOCHYA\\01-Architecture\\02-PDF\\2024-12-12_Планы\\Лист-3 этаж.pdf",
+  "name": "2024-12-12__Лист-3 этаж",
+  "mm_per_unit": 70.77,
+  "rooms_found": 108,
+  "labels": 128,
+  "room_fills": 108,
+  "labels_in_one_fill": [],
+  "risers": 0,
+  "windows_text": 0,
+  "totals_on_sheet": [],
+  "area_dev_max": 0.299,
+  "apartments": 10,
+  "apartments_total_ok": 8,
+  "apts": [
+   [
+    93.98,
+    null,
+    8,
+    1
+   ],
+   [
+    96.78,
+    null,
+    11,
+    1
+   ],
+   [
+    131.56,
+    null,
+    11,
+    1
+   ],
+   [
+    73.04,
+    null,
+    8,
+    1
+   ],
+   [
+    177.98,
+    null,
+    17,
+    1
+   ],
+   [
+    148.16,
+    null,
+    14,
+    1
+   ],
+   [
+    101.13,
+    null,
+    9,
+    1
+   ],
+   [
+    131.55,
+    null,
+    11,
+    1
+   ],
+   [
+    93.98,
+    null,
+    8,
+    1
+   ],
+   [
+    96.79,
+    null,
+    11,
+    1
+   ]
+  ]
+ },
+ {
+  "file": "X:\\2024\\1-2024 Architecture PUBLIC\\1-44-2024 Etalon Fotieva\\02-RABOCHYA\\01-Architecture\\02-PDF\\2024-12-12_Планы\\Лист-4 этаж.pdf",
+  "name": "2024-12-12__Лист-4 этаж",
+  "mm_per_unit": 70.67,
+  "rooms_found": 108,
+  "labels": 118,
+  "room_fills": 108,
+  "labels_in_one_fill": [],
+  "risers": 0,
+  "windows_text": 0,
+  "totals_on_sheet": [],
+  "area_dev_max": 0.285,
+  "apartments": 10,
+  "apartments_total_ok": 8,
+  "apts": [
+   [
+    94.23,
+    null,
+    8,
+    1
+   ],
+   [
+    99.54,
+    null,
+    11,
+    1
+   ],
+   [
+    139.5,
+    null,
+    11,
+    1
+   ],
+   [
+    73.24,
+    null,
+    8,
+    1
+   ],
+   [
+    178.93,
+    null,
+    17,
+    1
+   ],
+   [
+    149.01,
+    null,
+    14,
+    1
+   ],
+   [
+    101.43,
+    null,
+    9,
+    1
+   ],
+   [
+    139.5,
+    null,
+    11,
+    1
+   ],
+   [
+    94.23,
+    null,
+    8,
+    1
+   ],
+   [
+    99.54,
+    null,
+    11,
+    1
+   ]
+  ]
+ },
+ {
+  "file": "X:\\2024\\1-2024 Architecture PUBLIC\\1-44-2024 Etalon Fotieva\\02-RABOCHYA\\01-Architecture\\02-PDF\\2024-12-12_Планы\\Лист-8 этаж.pdf",
+  "name": "2024-12-12__Лист-8 этаж",
+  "mm_per_unit": 70.67,
+  "rooms_found": 108,
+  "labels": 118,
+  "room_fills": 108,
+  "labels_in_one_fill": [],
+  "risers": 0,
+  "windows_text": 0,
+  "totals_on_sheet": [],
+  "area_dev_max": 0.285,
+  "apartments": 10,
+  "apartments_total_ok": 8,
+  "apts": [
+   [
+    94.23,
+    null,
+    8,
+    1
+   ],
+   [
+    99.54,
+    null,
+    11,
+    1
+   ],
+   [
+    139.51,
+    null,
+    11,
+    1
+   ],
+   [
+    73.24,
+    null,
+    8,
+    1
+   ],
+   [
+    178.93,
+    null,
+    17,
+    1
+   ],
+   [
+    149.01,
+    null,
+    14,
+    1
+   ],
+   [
+    101.43,
+    null,
+    9,
+    1
+   ],
+   [
+    139.5,
+    null,
+    11,
+    1
+   ],
+   [
+    94.23,
+    null,
+    8,
+    1
+   ],
+   [
+    99.55,
+    null,
+    11,
+    1
+   ]
+  ]
+ }
+]

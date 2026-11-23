@@ -1,0 +1,466 @@
+{
+ "sheets": 23,
+ "apartments_found": 300,
+ "apartments_ok": 236,
+ "fail_reasons": [
+  [
+   "ok",
+   236
+  ],
+  [
+   "area_total_ok",
+   30
+  ],
+  [
+   "entries,unreached",
+   17
+  ],
+  [
+   "entries,unreached,area_total_ok",
+   8
+  ],
+  [
+   "entries",
+   6
+  ],
+  [
+   "no_window",
+   2
+  ],
+  [
+   "entries,area_total_ok",
+   1
+  ]
+ ],
+ "unique": 137,
+ "unique_ok": 100,
+ "unique_ok_but_no_kitchen": 2,
+ "types": [
+  [
+   "2E",
+   39
+  ],
+  [
+   "ST",
+   27
+  ],
+  [
+   "3E",
+   21
+  ],
+  [
+   "4E",
+   11
+  ],
+  [
+   "5E",
+   2
+  ]
+ ],
+ "techniques": {
+  "2E": {
+   "n": 39,
+   "area": [
+    39.88,
+    43.6,
+    53.93
+   ],
+   "kl_open_to_hall": 22,
+   "has_corr": 16,
+   "ensuite_any": 0,
+   "baths": [
+    [
+     1,
+     39
+    ]
+   ],
+   "bed_via_kl": 4,
+   "bath_from_kl": 8,
+   "laundry": 0,
+   "facades": [
+    [
+     1,
+     28
+    ],
+    [
+     2,
+     11
+    ]
+   ],
+   "kl_share": [
+    0.32,
+    0.56
+   ],
+   "circ_share": [
+    0.07,
+    0.17
+   ],
+   "bbox_w": [
+    5900,
+    6000,
+    6100,
+    6200,
+    6300,
+    6800,
+    7400,
+    7500
+   ],
+   "bbox_d": [
+    7400,
+    7600,
+    8000,
+    8100,
+    8300,
+    8600,
+    8700,
+    9000
+   ],
+   "schemes": [
+    [
+     "bath-hall bed-hall hall-kl(o)",
+     16
+    ],
+    [
+     "bath-corr bed-corr corr-hall(o) corr-kl(o)",
+     14
+    ],
+    [
+     "bath-kl bed-kl hall-kl(o)",
+     4
+    ],
+    [
+     "bath-kl bed-corr corr-hall(o) corr-kl(o)",
+     2
+    ],
+    [
+     "bath-kl bed-hall hall-kl(o)",
+     2
+    ],
+    [
+     "bath-hall bed-hall(o) hall-kl",
+     1
+    ]
+   ],
+   "bath_riser_mm_max": 1331
+  },
+  "3E": {
+   "n": 21,
+   "area": [
+    51.38,
+    63.6,
+    74.79
+   ],
+   "kl_open_to_hall": 4,
+   "has_corr": 17,
+   "ensuite_any": 18,
+   "baths": [
+    [
+     2,
+     18
+    ],
+    [
+     1,
+     3
+    ]
+   ],
+   "bed_via_kl": 4,
+   "bath_from_kl": 3,
+   "laundry": 0,
+   "facades": [
+    [
+     2,
+     15
+    ],
+    [
+     1,
+     4
+    ],
+    [
+     3,
+     2
+    ]
+   ],
+   "kl_share": [
+    0.31,
+    0.42
+   ],
+   "circ_share": [
+    0.06,
+    0.16
+   ],
+   "bbox_w": [
+    7300,
+    7400,
+    7500,
+    7600,
+    7700,
+    7900,
+    8000,
+    8100,
+    8800,
+    9000,
+    9200,
+    9300
+   ],
+   "bbox_d": [
+    8100,
+    8600,
+    8900,
+    9000,
+    9100,
+    9200,
+    9400,
+    9500,
+    9600,
+    11100
+   ],
+   "schemes": [
+    [
+     "bath-bed bath-corr bed-corr corr-hall(o) corr-kl(o)",
+     13
+    ],
+    [
+     "bath-kl bed-hall bed-kl hall-kl(o)",
+     2
+    ],
+    [
+     "bath-bed bath-corr bed-corr bed-hall corr-hall(o) corr-kl(o)",
+     1
+    ],
+    [
+     "bath-kl bed-kl hall-kl(o)",
+     1
+    ],
+    [
+     "bath-bed bath-corr bed-corr bed-kl corr-hall(o) corr-kl(o)",
+     1
+    ],
+    [
+     "bath-bed bath-corr bed-corr corr-hall corr-kl(o) hall-kl(o)",
+     1
+    ],
+    [
+     "bath-bed bath-corr bed-corr corr-hall(o) corr-kl(o) corr-store",
+     1
+    ],
+    [
+     "bath-bed bath-hall bed-hall hall-hall(o) hall-kl(o)",
+     1
+    ]
+   ],
+   "bath_riser_mm_max": 1663
+  },
+  "4E": {
+   "n": 11,
+   "area": [
+    63.66,
+    76.7,
+    90.46
+   ],
+   "kl_open_to_hall": 1,
+   "has_corr": 11,
+   "ensuite_any": 10,
+   "baths": [
+    [
+     2,
+     11
+    ]
+   ],
+   "bed_via_kl": 4,
+   "bath_from_kl": 4,
+   "laundry": 3,
+   "facades": [
+    [
+     2,
+     8
+    ],
+    [
+     3,
+     3
+    ]
+   ],
+   "kl_share": [
+    0.24,
+    0.33
+   ],
+   "circ_share": [
+    0.07,
+    0.14
+   ],
+   "bbox_w": [
+    7400,
+    7600,
+    8500,
+    8600,
+    8700,
+    9000
+   ],
+   "bbox_d": [
+    9400,
+    9500,
+    9800,
+    10700,
+    11500,
+    12400,
+    13500,
+    13800
+   ],
+   "schemes": [
+    [
+     "bath-bed bath-corr bed-corr bed-kl corr-hall(o) corr-kl(o)",
+     2
+    ],
+    [
+     "bath-bed bath-kl bed-corr bed-kl corr-hall(o) corr-kl(o)",
+     2
+    ],
+    [
+     "bath-bed bath-kl bed-corr corr-hall(o) corr-kl(o) corr-laundry hall-wr",
+     2
+    ],
+    [
+     "bath-bed bath-corr bed-corr corr-hall(o) corr-kl(o) corr-wr",
+     2
+    ],
+    [
+     "bath-corr bath-hall bed-corr corr-kl(o) hall-kl(o)",
+     1
+    ],
+    [
+     "bath-bed bath-corr bed-corr corr-hall(o) corr-kl(o) hall-laundry",
+     1
+    ],
+    [
+     "bath-bed bath-corr bed-corr corr-hall(o) corr-kl(o)",
+     1
+    ]
+   ],
+   "bath_riser_mm_max": 1422
+  },
+  "5E": {
+   "n": 2,
+   "area": [
+    102.23,
+    102.2,
+    102.24
+   ],
+   "kl_open_to_hall": 2,
+   "has_corr": 2,
+   "ensuite_any": 2,
+   "baths": [
+    [
+     2,
+     2
+    ]
+   ],
+   "bed_via_kl": 0,
+   "bath_from_kl": 1,
+   "laundry": 2,
+   "facades": [
+    [
+     3,
+     2
+    ]
+   ],
+   "kl_share": [
+    0.32,
+    0.33
+   ],
+   "circ_share": [
+    0.08,
+    0.08
+   ],
+   "bbox_w": [
+    9200
+   ],
+   "bbox_d": [
+    16600
+   ],
+   "schemes": [
+    [
+     "bath-bed bath-kl bed-corr corr-hall(o) corr-laundry hall-kl(o)",
+     1
+    ],
+    [
+     "bath-bed bath-hall bed-corr corr-hall(o) corr-laundry hall-kl(o)",
+     1
+    ]
+   ],
+   "bath_riser_mm_max": 1502
+  },
+  "ST": {
+   "n": 27,
+   "area": [
+    19.81,
+    31.3,
+    49.58
+   ],
+   "kl_open_to_hall": 26,
+   "has_corr": 1,
+   "ensuite_any": 0,
+   "baths": [
+    [
+     1,
+     27
+    ]
+   ],
+   "bed_via_kl": 0,
+   "bath_from_kl": 1,
+   "laundry": 0,
+   "facades": [
+    [
+     1,
+     25
+    ],
+    [
+     2,
+     2
+    ]
+   ],
+   "kl_share": [
+    0.65,
+    0.84
+   ],
+   "circ_share": [
+    0.07,
+    0.18
+   ],
+   "bbox_w": [
+    2900,
+    3000,
+    4300,
+    4400,
+    4500,
+    4600,
+    4700,
+    5600,
+    6100
+   ],
+   "bbox_d": [
+    6000,
+    7400,
+    7600,
+    7700,
+    8000,
+    8100,
+    8300,
+    8700
+   ],
+   "schemes": [
+    [
+     "bath-hall hall-kl(o)",
+     25
+    ],
+    [
+     "bath-kl hall-kl(o)",
+     1
+    ],
+    [
+     "bath-corr corr-hall(o) corr-kl corr-kl(o)",
+     1
+    ]
+   ],
+   "bath_riser_mm_max": 1345
+  }
+ }
+}

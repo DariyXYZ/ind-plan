@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>База планировок IND</title>
+<style>
+:root{--bg:#f6f6f4;--panel:#fff;--ink:#161616;--mute:#6b6b6b;--line:#e2e2de;--chip:#ececea;--acc:#161616;
+--door:#d33b2f;--open:#2f6fd3;--entry:#1f9d55;--wall:#2a2a2a}
+@media (prefers-color-scheme:dark){:root{--bg:#131313;--panel:#1c1c1c;--ink:#ececec;--mute:#9a9a9a;--line:#2e2e2e;--chip:#2a2a2a;--acc:#ececec;--wall:#d8d8d8}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:16px 20px 8px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+h1{font-size:20px;margin:0;font-weight:600}
+.cnt{color:var(--mute)}
+.wrap{display:grid;grid-template-columns:260px 1fr;gap:16px;padding:0 20px 20px}
+aside{background:var(--panel);border-radius:12px;padding:14px;align-self:start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+aside h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:14px 0 6px;font-weight:600}
+aside h3:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:0;background:var(--chip);color:var(--ink);padding:5px 10px;border-radius:99px;cursor:pointer;font:inherit;font-size:13px}
+.chip.on{background:var(--acc);color:var(--bg)}
+input[type=number],input[type=search],select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+.row2{display:flex;gap:6px}
+label.ck{display:flex;gap:8px;align-items:center;padding:3px 0;cursor:pointer}
+.reset{margin-top:14px;width:100%;background:var(--chip);border:0;border-radius:8px;padding:8px;cursor:pointer;color:var(--ink);font:inherit}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;align-content:start}
+.card{background:var(--panel);border-radius:12px;padding:10px;cursor:pointer;border:2px solid transparent}
+.card:hover{border-color:var(--line)}
+.card.sel{border-color:var(--acc)}
+.card svg{width:100%;height:190px;display:block}
+.card .t{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-weight:600}
+.card .s{color:var(--mute);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:11px;background:var(--chip);border-radius:99px;padding:2px 7px}
+.detail{position:fixed;right:0;top:0;bottom:0;width:min(560px,100vw);background:var(--panel);box-shadow:-8px 0 30px rgba(0,0,0,.15);padding:18px;overflow:auto;transform:translateX(105%);transition:transform .2s}
+.detail.open{transform:none}
+.detail .x{position:absolute;right:14px;top:12px;border:0;background:var(--chip);border-radius:99px;width:30px;height:30px;cursor:pointer;color:var(--ink);font-size:16px}
+.detail svg{width:100%;height:auto;max-height:440px}
+.detail h2{margin:0 0 4px;font-size:18px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px;margin:10px 0}
+.kv b{color:var(--mute);font-weight:500}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td{padding:3px 6px;border-bottom:1px solid var(--line)}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--mute);margin:6px 0;flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
+.mono{font:12px/1.4 ui-monospace,Consolas,monospace;word-break:break-all;color:var(--mute)}
+.toggle{display:flex;gap:6px;margin:8px 0}
+.empty{color:var(--mute);padding:40px;text-align:center}
+@media (max-width:760px){.wrap{grid-template-columns:1fr;padding:0 16px 16px}aside{position:static;max-height:none}header{padding:16px}}
+</style>
+</head>
+<body>
+<header><h1>База планировок IND</h1><span class="cnt" id="cnt"></span>
+<span class="cnt">Квартиры из проектов IND. Прошли автоматические проверки, архитекторы их не оценивали.</span>
+<span class="cnt" style="margin-left:auto"><a href="../">← IND PLAN</a> · скачать: <a href="library_llm.json" download>для нейронки</a> · <a href="library.json" download>полная база</a></span></header>
+<div class="wrap">
+<aside id="f">
+ <h3>Поиск</h3><input type="search" id="q" placeholder="id, помещение, связь…">
+ <h3>Проект</h3><div class="chips" id="fProj"></div>
+ <h3>Тип</h3><div class="chips" id="fType"></div>
+ <h3>Площадь, м²</h3><div class="row2"><input type="number" id="aMin" placeholder="от"><input type="number" id="aMax" placeholder="до"></div>
+ <h3>Ширина по фасаду, м</h3><div class="row2"><input type="number" id="wMin" placeholder="от" step="0.1"><input type="number" id="wMax" placeholder="до" step="0.1"></div>
+ <h3>Вход</h3><div class="chips" id="fEntry"></div>
+ <h3>Есть в квартире</h3><div id="fMust"></div>
+ <h3>Геометрия</h3><div class="chips" id="fGeom"></div>
+ <h3>Сортировка</h3><select id="sort"><option value="area">по площади</option><option value="count">по частоте в проектах</option><option value="id">по id</option></select>
+ <button class="reset" id="reset">Сбросить фильтры</button>
+</aside>
+<main><div class="grid" id="grid"></div></main>
+</div>
+<div class="detail" id="det"><button class="x" id="close" aria-label="Закрыть">×</button><div id="detBody"></div></div>
+<script>
+const DATA = /*DATA*/[];
+const ROLE_COL = {kg:'#f3c6a5',kitchen:'#f3c6a5',living:'#f6d9b8',bedroom:'#bcd7f0',master:'#a9c8ec',kids:'#c9e3c1',hall:'#e7e1cf',corridor:'#e7e1cf',
+ bath:'#b9e4e0',wc:'#b9e4e0',wardrobe:'#dccdeb',laundry:'#cfe7ec',storage:'#e2dccb',loggia:'#e9efe1',balcony:'#e9efe1',patio:'#e9efe1',study:'#e9d3df'};
+const MUST = [['wardrobe','гардеробная'],['master_bath','мастер-санузел'],['laundry','постирочная'],['separate_kitchen','отдельная кухня'],['kids','детская'],['risers','стояки отмечены']];
+const ENTRY = {hall:'в прихожую',corridor:'в коридор',corr:'в коридор',kg:'в КГ',kl:'в КГ'};
+const proj = r => (r.source && r.source.project) || '—';
+const st = {q:'',proj:new Set(),type:new Set(),entry:new Set(),geom:new Set(),must:new Set(),aMin:null,aMax:null,wMin:null,wMax:null,sort:'area',sel:null};
+const $ = id => document.getElementById(id);
+
+function chips(el, values, set, label){
+  el.innerHTML='';
+  values.forEach(v=>{const b=document.createElement('button');b.className='chip';b.textContent=(label?label(v):v)+' '+DATA.filter(r=>v===r._f[el.id]).length;
+   b.onclick=()=>{set.has(v)?set.delete(v):set.add(v);b.classList.toggle('on');render()};el.appendChild(b)});
+}
+DATA.forEach(r=>{r._f={fProj:proj(r),fType:r.kind,fEntry:(r.key&&r.key.entry_type)||'—',fGeom:r.geom};
+  r._txt=(r.id+' '+r.graph+' '+(r.rooms||[]).map(x=>x.name_src).join(' ')+' '+(r.why||'')).toLowerCase()});
+const uniq = k => [...new Set(DATA.map(r=>r._f[k]))].sort();
+chips($('fProj'),uniq('fProj'),st.proj);
+chips($('fType'),['ST','1E','2E','3E','4E','5E'].filter(t=>DATA.some(r=>r.kind===t)).concat(uniq('fType').filter(t=>!/^(ST|\dE)$/.test(t))),st.type);
+chips($('fEntry'),uniq('fEntry'),st.entry,v=>ENTRY[v]||v);
+chips($('fGeom'),uniq('fGeom'),st.geom,v=>v==='ok'?'точная':v==='approx'?'приблизительная':v);
+MUST.forEach(([k,l])=>{const n=DATA.filter(r=>r.key&&r.key[k]).length;const w=document.createElement('label');w.className='ck';
+ w.innerHTML=`<input type="checkbox"> ${l} <span class="cnt">${n}</span>`;w.querySelector('input').onchange=e=>{e.target.checked?st.must.add(k):st.must.delete(k);render()};$('fMust').appendChild(w)});
+const num = id => {const v=parseFloat($(id).value);return isNaN(v)?null:v};
+['aMin','aMax','wMin','wMax'].forEach(id=>$(id).oninput=()=>{st[id]=num(id);render()});
+$('q').oninput=e=>{st.q=e.target.value.trim().toLowerCase();render()};
+$('sort').onchange=e=>{st.sort=e.target.value;render()};
+$('reset').onclick=()=>{['proj','type','entry','geom','must'].forEach(k=>st[k].clear());['aMin','aMax','wMin','wMax','q'].forEach(id=>{$(id).value='';st[id]=null});st.q='';
+ document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));document.querySelectorAll('#fMust input').forEach(c=>c.checked=false);render()};
+$('close').onclick=()=>{$('det').classList.remove('open');st.sel=null;render()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('close').onclick()});
+
+function pass(r){
+  const k=r.key||{};
+  if(st.proj.size&&!st.proj.has(r._f.fProj))return false;
+  if(st.type.size&&!st.type.has(r.kind))return false;
+  if(st.entry.size&&!st.entry.has(r._f.fEntry))return false;
+  if(st.geom.size&&!st.geom.has(r.geom))return false;
+  for(const m of st.must)if(!k[m])return false;
+  if(st.aMin!=null&&r.area<st.aMin)return false; if(st.aMax!=null&&r.area>st.aMax)return false;
+  const w=(k.facade_width_mm||k.w||0)/1000;
+  if(st.wMin!=null&&w<st.wMin)return false; if(st.wMax!=null&&w>st.wMax)return false;
+  if(st.q&&!r._txt.includes(st.q))return false;
+  return true;
+}
+
+// ---- рисование плана + графа
+function centroid(room){let A=0,X=0,Y=0;(room.rects||[]).forEach(([x1,y1,x2,y2])=>{const a=(x2-x1)*(y2-y1);A+=a;X+=a*(x1+x2)/2;Y+=a*(y1+y2)/2});
+  if(!A)return null;// центр самого большого прямоугольника, если центр масс вне помещения
+  let c=[X/A,Y/A];const inside=(room.rects||[]).some(([x1,y1,x2,y2])=>c[0]>=x1&&c[0]<=x2&&c[1]>=y1&&c[1]<=y2);
+  if(!inside){const b=[...room.rects].sort((p,q)=>(q[2]-q[0])*(q[3]-q[1])-(p[2]-p[0])*(p[3]-p[1]))[0];c=[(b[0]+b[2])/2,(b[1]+b[3])/2]}
+  return c}
+function svgPlan(r,opt){
+  const rooms=r.rooms||[],outer=(r.plan&&r.plan.outer)||[];
+  const xs=[],ys=[];rooms.forEach(m=>(m.rects||[]).forEach(([a,b,c,d])=>{xs.push(a,c);ys.push(b,d)}));outer.forEach(([x,y])=>{xs.push(x);ys.push(y)});
+  if(!xs.length)return '<svg></svg>';
+  const pad=400,x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
+  const H=y1-y0,fy=y=>y1-(y-y0)-y0+y0, T=(x,y)=>[x-x0,y1-y];
+  let s=`<svg viewBox="0 0 ${x1-x0} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+  // прямоугольники комнаты сливаются: обводка своим цветом закрывает щели сглаживания между полосами
+  rooms.forEach(m=>{const col=ROLE_COL[m.role]||'#ddd';s+=`<g fill="${col}" stroke="${col}" stroke-width="40" stroke-linejoin="miter" shape-rendering="crispEdges">`;
+    (m.rects||[]).forEach(([a,b,c,d])=>{const [px,py]=T(a,d);s+=`<rect x="${px}" y="${py}" width="${c-a}" height="${d-b}"/>`});s+='</g>'});
+  if(outer.length)s+=`<polygon points="${outer.map(p=>T(p[0],p[1]).join(',')).join(' ')}" fill="none" stroke="var(--wall)" stroke-width="${opt.big?60:90}" stroke-linejoin="round"/>`;
+  (r.plan&&r.plan.windows||[]).forEach(w=>{if(!w.at)return;const [px,py]=T(w.at[0],w.at[1]);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?110:150}" fill="#4aa3ff" opacity=".8"/>`});
+  if(opt.graph){
+    const C={};rooms.forEach(m=>C[m.id]=centroid(m));
+    const hall=rooms.find(m=>/hall|corr/.test(m.role||m.id))||rooms[0];
+    (r.edges||[]).forEach(e=>{const [a,b]=e.between;const t=e.type||(a==='MOP'||b==='MOP'?'entry':'door');
+      if(t==='entry'){const k=a==='MOP'?b:a;if(!C[k])return;const [px,py]=T(...C[k]);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?330:420}" fill="none" stroke="var(--entry)" stroke-width="${opt.big?70:110}"/>`;return}
+      if(!C[a]||!C[b])return;const [ax,ay]=T(...C[a]),[bx,by]=T(...C[b]);
+      s+=`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${t==='open'?'var(--open)':'var(--door)'}" stroke-width="${opt.big?60:100}" ${t==='open'?`stroke-dasharray="${opt.big?'160 110':'220 150'}"`:''} stroke-linecap="round"/>`});
+    rooms.forEach(m=>{const c=C[m.id];if(!c)return;const [px,py]=T(...c);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?150:220}" fill="var(--ink)"/>`;
+      if(opt.big)s+=`<text x="${px}" y="${py-260}" text-anchor="middle" font-size="300" fill="var(--ink)" style="paint-order:stroke;stroke:var(--panel);stroke-width:80">${m.name_src} ${m.area??''}</text>`});
+  }
+  return s+'</svg>';
+}
+
+let G=true;
+function render(){
+  let rs=DATA.filter(pass);
+  rs.sort(st.sort==='area'?(a,b)=>a.area-b.area:st.sort==='count'?(a,b)=>(b.count||1)-(a.count||1)||a.area-b.area:(a,b)=>a.id.localeCompare(b.id));
+  $('cnt').textContent=`${rs.length} из ${DATA.length}`;
+  const g=$('grid');
+  if(!rs.length){g.innerHTML='<div class="empty">Ничего не подходит под фильтры</div>';return}
+  g.innerHTML=rs.map(r=>{const k=r.key||{};const tags=MUST.filter(([m])=>k[m]&&m!=='risers').map(([,l])=>`<span class="tag">${l}</span>`).join('');
+    return `<div class="card${st.sel===r.id?' sel':''}" data-id="${r.id}">${svgPlan(r,{graph:true})}
+    <div class="t"><span>${r.kind} · ${r.area} м²</span><span class="cnt">${r.id}</span></div>
+    <div class="s">${proj(r)}${(r.count||1)>1?' · встречается '+r.count+'×':''}</div><div class="tags">${tags}${r.geom==='approx'?'<span class="tag">геом. приблизит.</span>':''}</div></div>`}).join('');
+  g.querySelectorAll('.card').forEach(c=>c.onclick=()=>open(c.dataset.id));
+}
+function open(id){
+  const r=DATA.find(x=>x.id===id);st.sel=id;const k=r.key||{},src=r.source||{};
+  const rooms=(r.rooms||[]).slice().sort((a,b)=>(b.area||0)-(a.area||0));
+  const ch=r.checks||{};
+  $('detBody').innerHTML=`<h2>${r.kind} · ${r.area} м²</h2><div class="cnt">${r.id} · ${proj(r)}</div>
+   <div class="toggle"><button class="chip${G?' on':''}" id="tg">граф поверх плана</button></div>
+   <div id="big">${svgPlan(r,{graph:G,big:true})}</div>
+   <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#4aa3ff;height:8px;width:8px;border-radius:9px"></i>окно</span></div>
+   <div class="kv"><b>Граф</b><span>${r.graph}</span><b>Чем характерна</b><span>${r.why||'—'}</span>
+   <b>Габарит</b><span>${(k.w/1000).toFixed(2)} × ${(k.d/1000).toFixed(2)} м, фасадов ${k.facades??'—'}</span>
+   <b>Вход</b><span>${ENTRY[k.entry_type]||k.entry_type||'—'}</span><b>Спален / с/у</b><span>${k.bedrooms??'—'} / ${k.bathrooms??'—'}</span>
+   <b>Геометрия</b><span>${r.geom==='ok'?'точная (заливки)':'приблизительная, площади из подписей'}</span>
+   <b>Проверки</b><span>${ch.ok?'пройдены':'не пройдены'}: входов ${ch.entries??'—'}, без окна ${(ch.no_window||[]).length}, площадь ${ch.area_total_ok?'сошлась':'нет'}</span>
+   <b>Повторов</b><span>${r.count||1}</span></div>
+   <table>${rooms.map(m=>`<tr><td>${m.name_src}</td><td class="cnt">${m.role||''}</td><td class="n">${m.area??''}</td></tr>`).join('')}</table>
+   <div class="kv"><b>Лист</b><span>${src.floor||''}</span><b>PDF</b><span class="mono">${src.file||''}</span>
+   ${(src.copies||[]).length?`<b>Повторы</b><span>${src.copies.map(c=>c.floor).join(', ')}</span>`:''}</div>
+   ${r.llm?`<h3 style="font-size:14px;margin:16px 0 6px">JSON для нейронки <span class="cnt">${JSON.stringify(r.llm).length} симв.</span></h3>
+   <button class="chip" id="cp">Копировать</button>
+   <pre class="mono" style="white-space:pre-wrap;background:var(--chip);padding:10px;border-radius:8px;max-height:260px;overflow:auto">${JSON.stringify(r.llm).replace(/</g,'&lt;')}</pre>`:''}`;
+  $('tg').onclick=()=>{G=!G;open(id)};
+  if(r.llm)$('cp').onclick=()=>{navigator.clipboard.writeText(JSON.stringify(r.llm)).then(()=>{$('cp').textContent='Скопировано'},()=>{$('cp').textContent='Не удалось — выделите текст ниже'})};
+  $('det').classList.add('open');render();
+}
+render();
+</script>
+</body>
+</html>
