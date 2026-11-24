@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "IND extracted apartment plan",
   "type": "object",
-  "required": ["schema_version", "id", "kind", "area", "src", "geom", "graph", "areas", "key", "checks", "source", "rooms", "edges", "plan", "count"],
+  "required": ["schema_version", "id", "kind", "area", "src", "geom", "graph", "areas", "key", "checks", "source", "rooms", "outline_graph", "furniture", "edges", "plan", "count"],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "id": {"type": "string", "minLength": 1},
     "kind": {"type": "string"},
     "area": {"type": "number", "exclusiveMinimum": 0},
@@ -38,7 +38,16 @@
         "section": {"type": ["string", "null"]}, "sheets": {"type": "array", "items": {"type": "string"}}
       }
     },
-    "rooms": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["id", "role", "name_src", "area", "rects"]}},
+    "rooms": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["id", "role", "name_src", "area", "rings", "geometry_source", "rects"], "properties": {"rings": {"type": "array", "items": {"type": "object", "required": ["outer", "holes"]}}}}},
+    "outline_graph": {"type": "object", "required": ["Nodes", "Edges", "Spaces", "Geometry", "Validation"]},
+    "furniture": {"type": "array", "items": {"type": "object", "required": ["id", "kind", "room_id", "footprint", "pose", "height_mm", "source"], "properties": {
+      "id": {"type": "string", "minLength": 1}, "kind": {"type": "string", "minLength": 1},
+      "room_id": {"type": "string", "minLength": 1},
+      "pose": {"type": "object", "required": ["x", "y", "rotation_deg", "z"], "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "rotation_deg": {"type": "number"}, "z": {"type": "number"}}},
+      "footprint": {"type": "array", "minItems": 3, "items": {"type": "array", "prefixItems": [{"type": "number"}, {"type": "number"}], "minItems": 2, "maxItems": 2}},
+      "height_mm": {"type": "number", "exclusiveMinimum": 0},
+      "clearance": {"type": "array"}, "source": {"type": "object", "required": ["kind"]}
+    }}},
     "edges": {"type": "array", "items": {"type": "object", "required": ["between"]}},
     "plan": {"type": "object", "required": ["outer", "windows", "risers", "rooms", "doors"]}
   }

@@ -7,6 +7,8 @@ import json
 import re
 import sqlite3
 from pathlib import Path
+from contour_graph import compact_rings, rings_from_rects, segment_graph
+from shapely.geometry import Polygon
 
 ROOT = Path(__file__).resolve().parent
 ROLE = {
@@ -66,6 +68,9 @@ def match_raw(entry: dict, index: dict):
         for source, apartment in index.get(sheet, []):
             candidate = sorted((r['id'], round(r['area'], 2)) for r in apartment['rooms'])
             if candidate == signature:
+                raw_rooms = {r['id']: r for r in apartment['rooms']}
+                if apartment.get('checks', {}).get('ok') and all(r['id'] in raw_rooms and r['rects'] == raw_rooms[r['id']]['rects'] for r in rooms):
+                    return source, apartment
                 # зеркальные близнецы на одном листе: брать ту копию, что прошла проверки
                 if apartment.get('checks', {}).get('ok'):
                     return source, apartment
@@ -89,9 +94,16 @@ def normalize(entry: dict, index: dict, engine_entry: dict) -> dict:
                facade_width_mm=facade_width(entry),
                entry_type=key.get('entry'), risers=bool(entry['contour'].get('risers')), levels=1)
     room_data = []
+    raw_rooms = {r['id']: r for r in raw.get('rooms', [])} if raw else {}
     for room in rooms:
+        original = raw_rooms.get(room['id'])
+        direct = (original and original.get('rects') == room['rects'] and original.get('rings')
+                  and all(len(q['outer']) >= 3 and Polygon(q['outer'], q.get('holes', [])).is_valid
+                          and Polygon(q['outer'], q.get('holes', [])).area > 0 for q in original['rings']))
         room_data.append({'id': room['id'], 'role': role(room),
                           'name_src': room.get('fn', room['id']), 'area': entry['areas'].get(room['id']),
+                          'rings': compact_rings(original['rings']) if direct else rings_from_rects(room['rects']),
+                          'geometry_source': 'pdf_fill' if direct else 'rect_union_simplified',
                           'rects': room['rects']})
     checks = raw.get('checks') if raw else {'ok': True, 'origin': 'validated_legacy_library'}
     if not checks.get('ok'):
@@ -101,14 +113,20 @@ def normalize(entry: dict, index: dict, engine_entry: dict) -> dict:
         source_file, page = source_file.rsplit('#', 1)
         page = int(page)
     sheet = entry['sheet'][0] if entry['sheet'] else None
-    return {'schema_version': 1, 'id': entry['id'], 'kind': entry['key']['type'],
+    names = {r['id']: r['name_src'] for r in room_data}
+    balcony_links = [f"{names.get(a, a)}–{names.get(b, b)} (балкон)"
+                     for link in entry['plan']['doors'] if link.get('type') == 'balcony'
+                     for a, b in [link['between']]]
+    full_graph = ', '.join(filter(None, [engine_entry['graph'], *balcony_links]))
+    return {'schema_version': 2, 'id': entry['id'], 'kind': entry['key']['type'],
             'area': entry['key']['area'], 'src': 'проект IND (не оценено)', 'geom': entry['geom'],
             'why': '; '.join(entry['traits']) or 'планировка из проекта IND',
-            'graph': engine_entry['graph'], 'areas': engine_entry['areas'], 'key': key,
+            'graph': full_graph, 'areas': engine_entry['areas'], 'key': key,
             'checks': checks, 'count': entry['copies'],
             'source': {'project': entry['project'], 'file': source_file, 'page': page,
                        'floor': sheet, 'section': None, 'sheets': entry['sheet']},
-            'rooms': room_data, 'edges': entry['plan']['doors'],
+            'rooms': room_data, 'outline_graph': segment_graph(room_data),
+            'furniture': [], 'edges': entry['plan']['doors'],
             'plan': {**engine_entry['plan'], 'doors': entry['plan']['doors']}}
 
 
@@ -160,7 +178,7 @@ def llm_record(p: dict) -> dict:
     return {'id': p['id'], 'type': p['kind'], 'area': p['area'], 'why': p['why'], 'graph': p['graph'],
             'areas': {r['id']: r['area'] for r in p['rooms']},
             'plan': {'outer': pl.get('outer'),
-                     'rooms': [{'id': r['id'], 'fn': r['name_src'], 'rects': clean_rects(r['rects'])} for r in p['rooms']],
+                     'rooms': [{'id': r['id'], 'fn': r['name_src'], 'rings': r['rings']} for r in p['rooms']],
                      'doors': [{k: v for k, v in d.items() if k in ('between', 'type', 'w')} for d in p['edges']],
                      'windows': [{'room': w.get('room'), 'at': w.get('at'), 'w': w.get('w')} for w in pl.get('windows') or []]}}
 

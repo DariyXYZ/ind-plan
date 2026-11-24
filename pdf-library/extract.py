@@ -401,11 +401,14 @@ def extract(pdf, pno=0, extra_wall_axes=None):
             rid_of[r['k']] = base if cnt[base] == 1 else f'{base}{cnt[base]}'
         for r in rs:
             rects = []
+            rings = []
             for p in r['polys']:
                 q = [(round((to_mm(v)[0] - ox) / 10) * 10, round((to_mm(v)[1] - oy) / 10) * 10) for v in p]
                 rects += poly_to_rects(q)
+                if len(set(q)) >= 3:
+                    rings.append({'outer': [list(v) for v in q], 'holes': []})
             out_rooms.append({'id': rid_of[r['k']], 'fn': r['lab']['fn'], 'area': r['lab']['area'], **({'merged': r['lab']['merged']} if 'merged' in r['lab'] else {}),
-                              'area_geom': round(r['area_calc'], 2), 'rects': rects})
+                              'area_geom': round(r['area_calc'], 2), 'rings': rings, 'rects': rects})
         es = []
         for a, b, kind, w in edges:
             if a == 'MOP' and b in rid_of: es.append({'between': ['MOP', rid_of[b]], 'type': kind})

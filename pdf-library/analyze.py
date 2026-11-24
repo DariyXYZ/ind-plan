@@ -134,7 +134,7 @@ for a in sorted(Uok, key=lambda a: (a['pref'], a['f']['type'], a['area_rooms']))
     cnt_p[a['pref']] += 1; i = cnt_p[a['pref']] - 1
     f = a['f']
     graph = ', '.join(f"{l['between'][0]}–{l['between'][1]}" + ('(проём)' if l['type'] == 'open' else '')
-                      for l in a['links'] if l['type'] in ('door', 'open'))
+                      for l in a['links'] if l['type'] in ('door', 'open', 'balcony'))
     lib.append({
         'id': f"{a['pref']}_{i + 1:03d}", 'project': a['project'], 'geom': a['geom'], 'sheet': a['sheets'], 'copies': a['copies'],
         'status': 'из проекта IND, архитекторы не оценивали',
@@ -146,8 +146,8 @@ for a in sorted(Uok, key=lambda a: (a['pref'], a['f']['type'], a['area_rooms']))
                                   ('спальня через КГ', bool(f['bed_via_kl'])), ('санузел из КГ', f['bath_from_kl'] > 0)) if v],
         'contour': a['contour'],
         'plan': {'rooms': [{'id': r['id'], 'fn': r['fn'], 'rects': r['rects']} for r in a['rooms']],
-                 'doors': [{'between': l['between'], **({'type': 'open'} if l['type'] == 'open' else {}), **({'w': l['w']} if 'w' in l else {})}
-                           for l in a['links'] if l['type'] in ('door', 'open', 'entry')]},
+                  'doors': [{'between': l['between'], **({'type': l['type']} if l['type'] in ('open', 'balcony') else {}), **({'w': l['w']} if 'w' in l else {})}
+                            for l in a['links'] if l['type'] in ('door', 'open', 'entry', 'balcony')]},
     })
 json.dump(lib, open(os.path.join(D, '_library.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 json.dump(rep, open(os.path.join(D, '_report.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
@@ -169,7 +169,7 @@ def nm(i):
 eng = []
 for e in lib:
     rooms = {nm(r['id']): r['rects'] for r in e['plan']['rooms'] if not r['id'].startswith(('balcony', 'patio'))}
-    links = [d_ for d_ in e['plan']['doors'] if 'MOP' not in d_['between']]
+    links = [d_ for d_ in e['plan']['doors'] if 'MOP' not in d_['between'] and d_.get('type') != 'balcony']
     eng.append({'id': e['id'], 'cid': None, 'kind': K.get(e['key']['type'], e['key']['type']), 'area': e['key']['area'], 'src': 'проект IND (не оценено)',
                 'geom': e['geom'], 'why': '; '.join(e['traits']) or 'типовая схема',
                 'graph': ', '.join(nm(d_['between'][0]) + '–' + nm(d_['between'][1]) + ('(проём)' if d_.get('type') == 'open' else '') for d_ in links),

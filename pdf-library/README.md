@@ -8,6 +8,8 @@ python -X utf8 pdf-library/rebuild.py
 
 Команда берёт листовые JSON из источников в `sources.json`, заново собирает библиотеку в `out_rebuilt`, затем создаёт `pdf-library/db/plans.sqlite`, `db/library.json`, `db/library_engine.json` и `coverage.md`. Старые `out_*` не меняются. Формат описан в `SCHEMA.md`; пример поиска:
 
+В версии 2 комнаты дополнительно представлены полилиниями `rings` и направленными обходами `outline_graph`. Каталог рисует контуры; `rects` сохранены для генератора. Разбор ограничений ContourGraph и схема мебели — в `CONTOUR_GRAPH_REVIEW.md`. Проверка после пересборки: `python -X utf8 pdf-library/validate_outline_graph.py`.
+
 ```powershell
 python -X utf8 pdf-library/query.py --type 2E --w 6000 --d 7000 --must wardrobe -k 5
 ```

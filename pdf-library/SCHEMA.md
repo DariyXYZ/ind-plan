@@ -1,13 +1,14 @@
-# Схема библиотеки планировок, версия 1
+# Схема библиотеки планировок, версия 2
 
 `rebuild.py` пересобирает варианты из листовых JSON, перечисленных в `sources.json`, в `out_rebuilt`. Затем `build_db.py` читает `_library.json` и совместимый с движком `library_ind_projects.json` в этой папке. Он подтягивает исходные `checks` и ссылку на PDF из листовых JSON в `out_barkhatnaya` и `out_fotieva`, валидирует каждую запись по `library.schema.json` и создаёт `db/plans.sqlite`, `db/library.json`, `db/library_engine.json`. Исходные папки `out_*` скрипт не меняет.
 
 В `db/library.json` одна запись — один уникальный вариант:
 
-- `schema_version: 1`, `id`, `kind`, `area` (м²), `count` (число повторений на листах), `src: "проект IND (не оценено)"`.
+- `schema_version: 2`, `id`, `kind`, `area` (м²), `count` (число повторений на листах), `src: "проект IND (не оценено)"`.
 - `geom: ok|approx` — качество геометрии; `checks` — исходные проверки экстрактора. Запись с `checks.ok = false` не попадает в базу.
 - `source: {project, file, page, floor, section, sheets}` — путь к исходному PDF и листы. `page = null` означает первую страницу или неизвестный номер; `floor` сейчас берётся из имени листа. Часть PDF не содержит явно выделенной секции.
-- `rooms[]: {id, role, name_src, area, rects}`. `role` берётся из словаря ролей; `name_src` хранит точную подпись с чертежа. Площади — из подписей экстрактора, прямоугольники в миллиметрах.
+- `rooms[]: {id, role, name_src, area, rings, geometry_source, rects}`. `rings` хранит внешние полилинии и отверстия в миллиметрах; `geometry_source` отмечает исходную заливку PDF или восстановление из прямоугольников. `rects` оставлены для старого генератора. Площади взяты из подписей экстрактора.
+- `outline_graph: {Nodes, Edges, Spaces, Geometry, Validation}` — индексированные отрезки и направленные обходы помещений по геометрии пола. Это поднабор ContourGraph 2.0, `Validation: unverified`; он не содержит выдуманных осей или толщин стен. `furniture` — отдельный массив объектов, пока пустой.
 - `edges[]` — связи комнат, `plan` — контур, окна, стояки, прямоугольники помещений и двери. В `plan.rooms`, `graph` и `areas` имена русские для совместимости с `engine/fit.py`.
 - `key` — признаки поиска: `type`, `area`, `w`, `d`, `facades`, `entry`, `bedrooms`, `wardrobe`, `kids`, `master_bath`, `laundry`, `separate_kitchen`, `bathrooms`, `facade_width_mm`, `entry_type`, `risers`, `levels`.
 

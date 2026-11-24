@@ -6,7 +6,7 @@
 <title>База планировок IND</title>
 <style>
 :root{--bg:#f6f6f4;--panel:#fff;--ink:#161616;--mute:#6b6b6b;--line:#e2e2de;--chip:#ececea;--acc:#161616;
---door:#d33b2f;--open:#2f6fd3;--entry:#1f9d55;--wall:#2a2a2a}
+ --door:#d33b2f;--open:#2f6fd3;--entry:#1f9d55;--balcony:#8a6db1;--wall:#2a2a2a}
 @media (prefers-color-scheme:dark){:root{--bg:#131313;--panel:#1c1c1c;--ink:#ececec;--mute:#9a9a9a;--line:#2e2e2e;--chip:#2a2a2a;--acc:#ececec;--wall:#d8d8d8}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -126,14 +126,14 @@ function centroid(room){let A=0,X=0,Y=0;(room.rects||[]).forEach(([x1,y1,x2,y2])
   return c}
 function svgPlan(r,opt){
   const rooms=r.rooms||[],outer=(r.plan&&r.plan.outer)||[];
-  const xs=[],ys=[];rooms.forEach(m=>(m.rects||[]).forEach(([a,b,c,d])=>{xs.push(a,c);ys.push(b,d)}));outer.forEach(([x,y])=>{xs.push(x);ys.push(y)});
+  const xs=[],ys=[];rooms.forEach(m=>{if(m.rings?.length)m.rings.forEach(q=>[q.outer,...q.holes].forEach(loop=>loop.forEach(([x,y])=>{xs.push(x);ys.push(y)})));else (m.rects||[]).forEach(([a,b,c,d])=>{xs.push(a,c);ys.push(b,d)})});outer.forEach(([x,y])=>{xs.push(x);ys.push(y)});
   if(!xs.length)return '<svg></svg>';
   const pad=400,x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
   const H=y1-y0,fy=y=>y1-(y-y0)-y0+y0, T=(x,y)=>[x-x0,y1-y];
   let s=`<svg viewBox="0 0 ${x1-x0} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  // прямоугольники комнаты сливаются: обводка своим цветом закрывает щели сглаживания между полосами
-  rooms.forEach(m=>{const col=ROLE_COL[m.role]||'#ddd';s+=`<g fill="${col}" stroke="${col}" stroke-width="40" stroke-linejoin="miter" shape-rendering="crispEdges">`;
-    (m.rects||[]).forEach(([a,b,c,d])=>{const [px,py]=T(a,d);s+=`<rect x="${px}" y="${py}" width="${c-a}" height="${d-b}"/>`});s+='</g>'});
+  rooms.forEach(m=>{const col=ROLE_COL[m.role]||'#ddd';
+    if(m.rings?.length){m.rings.forEach(q=>{const loops=[q.outer,...q.holes];const path=loops.map(loop=>loop.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z').join(' ');s+=`<path d="${path}" fill="${col}" fill-rule="evenodd"/>`})}
+    else (m.rects||[]).forEach(([a,b,c,d])=>{const [px,py]=T(a,d);s+=`<rect x="${px}" y="${py}" width="${c-a}" height="${d-b}" fill="${col}"/>`})});
   if(outer.length)s+=`<polygon points="${outer.map(p=>T(p[0],p[1]).join(',')).join(' ')}" fill="none" stroke="var(--wall)" stroke-width="${opt.big?60:90}" stroke-linejoin="round"/>`;
   (r.plan&&r.plan.windows||[]).forEach(w=>{if(!w.at)return;const [px,py]=T(w.at[0],w.at[1]);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?110:150}" fill="#4aa3ff" opacity=".8"/>`});
   if(opt.graph){
@@ -142,7 +142,7 @@ function svgPlan(r,opt){
     (r.edges||[]).forEach(e=>{const [a,b]=e.between;const t=e.type||(a==='MOP'||b==='MOP'?'entry':'door');
       if(t==='entry'){const k=a==='MOP'?b:a;if(!C[k])return;const [px,py]=T(...C[k]);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?330:420}" fill="none" stroke="var(--entry)" stroke-width="${opt.big?70:110}"/>`;return}
       if(!C[a]||!C[b])return;const [ax,ay]=T(...C[a]),[bx,by]=T(...C[b]);
-      s+=`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${t==='open'?'var(--open)':'var(--door)'}" stroke-width="${opt.big?60:100}" ${t==='open'?`stroke-dasharray="${opt.big?'160 110':'220 150'}"`:''} stroke-linecap="round"/>`});
+       s+=`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${t==='open'?'var(--open)':t==='balcony'?'var(--balcony)':'var(--door)'}" stroke-width="${opt.big?60:100}" ${t==='open'?`stroke-dasharray="${opt.big?'160 110':'220 150'}"`:''} stroke-linecap="round"/>`});
     rooms.forEach(m=>{const c=C[m.id];if(!c)return;const [px,py]=T(...c);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?150:220}" fill="var(--ink)"/>`;
       if(opt.big)s+=`<text x="${px}" y="${py-260}" text-anchor="middle" font-size="300" fill="var(--ink)" style="paint-order:stroke;stroke:var(--panel);stroke-width:80">${m.name_src} ${m.area??''}</text>`});
   }
@@ -169,7 +169,7 @@ function open(id){
   $('detBody').innerHTML=`<h2>${r.kind} · ${r.area} м²</h2><div class="cnt">${r.id} · ${proj(r)}</div>
    <div class="toggle"><button class="chip${G?' on':''}" id="tg">граф поверх плана</button></div>
    <div id="big">${svgPlan(r,{graph:G,big:true})}</div>
-   <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#4aa3ff;height:8px;width:8px;border-radius:9px"></i>окно</span></div>
+    <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#4aa3ff;height:8px;width:8px;border-radius:9px"></i>окно</span></div>
    <div class="kv"><b>Граф</b><span>${r.graph}</span><b>Чем характерна</b><span>${r.why||'—'}</span>
    <b>Габарит</b><span>${(k.w/1000).toFixed(2)} × ${(k.d/1000).toFixed(2)} м, фасадов ${k.facades??'—'}</span>
    <b>Вход</b><span>${ENTRY[k.entry_type]||k.entry_type||'—'}</span><b>Спален / с/у</b><span>${k.bedrooms??'—'} / ${k.bathrooms??'—'}</span>
