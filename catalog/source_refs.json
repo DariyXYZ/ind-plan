@@ -79,56 +79,23 @@
         "area": null
       },
       {
-        "id": "kitchen",
-        "name_src": "Кухня",
-        "role": "kitchen",
-        "label_at": [
-          6400,
-          3100
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5480,
-                4600
-              ],
-              [
-                7650,
-                4600
-              ],
-              [
-                7650,
-                1890
-              ],
-              [
-                5480,
-                1890
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
         "id": "hall",
-        "name_src": "Прихожая",
+        "name_src": "Кухня-прихожая",
         "role": "hall",
         "label_at": [
-          6700,
-          1300
+          6650,
+          2960
         ],
         "rings": [
           {
             "outer": [
               [
-                6120,
-                1880
+                5480,
+                4600
               ],
               [
                 7650,
-                1880
+                4600
               ],
               [
                 7650,
@@ -137,6 +104,14 @@
               [
                 6120,
                 800
+              ],
+              [
+                6120,
+                1620
+              ],
+              [
+                5480,
+                1620
               ]
             ],
             "holes": []
@@ -189,20 +164,13 @@
       {
         "between": [
           "hall",
-          "kitchen"
-        ],
-        "type": "open"
-      },
-      {
-        "between": [
-          "hall",
           "bath"
         ],
         "type": "door"
       },
       {
         "between": [
-          "kitchen",
+          "hall",
           "living"
         ],
         "type": "open"
@@ -217,7 +185,12 @@
     ],
     "geom": "approx",
     "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
-    "graph": "MOP—hall (entry) · hall—kitchen (open) · hall—bath (door) · kitchen—living (open) · living—balcony (balcony)"
+    "graph": "MOP—hall (entry) · hall—bath (door) · hall—living (open) · living—balcony (balcony)",
+    "trace_canvas_height_px": 1180,
+    "source_image_size_px": [
+      1668,
+      1179
+    ]
   },
   {
     "id": "qube_a2_1br",
@@ -237,7 +210,7 @@
         "name_src": "Прихожая",
         "role": "hall",
         "label_at": [
-          8000,
+          8100,
           16250
         ],
         "rings": [
@@ -245,23 +218,23 @@
             "outer": [
               [
                 7730,
-                18800
+                19000
               ],
               [
                 10200,
-                17550
+                17650
               ],
               [
-                9050,
+                9020,
                 15400
               ],
               [
-                6800,
-                14100
+                8090,
+                13600
               ],
               [
-                5000,
-                14550
+                5560,
+                14870
               ]
             ],
             "holes": []
@@ -271,34 +244,34 @@
       },
       {
         "id": "bath",
-        "name_src": "С/У",
+        "name_src": "С/У 1",
         "role": "bath",
         "label_at": [
           10000,
-          13900
+          14150
         ],
         "rings": [
           {
             "outer": [
               [
                 9420,
-                16360
+                16400
               ],
               [
-                11350,
-                15400
+                11370,
+                15430
               ],
               [
-                11350,
-                12800
+                11370,
+                12840
               ],
               [
-                10400,
-                12300
+                10470,
+                12240
               ],
               [
-                8260,
-                13500
+                8150,
+                13460
               ]
             ],
             "holes": []
@@ -311,31 +284,39 @@
         "name_src": "Гостиная",
         "role": "living",
         "label_at": [
-          5700,
-          10400
+          6200,
+          9800
         ],
         "rings": [
           {
             "outer": [
               [
-                4510,
-                14800
+                5560,
+                14850
               ],
               [
-                8030,
-                13000
+                8090,
+                13600
               ],
               [
-                10300,
+                8150,
+                13460
+              ],
+              [
+                10470,
+                12240
+              ],
+              [
+                10570,
                 12100
               ],
               [
-                10500,
-                7000
+                10570,
+                5100
               ],
               [
                 7100,
-                6000
+                5100
               ],
               [
                 1630,
@@ -352,8 +333,8 @@
         "name_src": "Кухня-столовая",
         "role": "kitchen",
         "label_at": [
-          11000,
-          9000
+          11400,
+          8700
         ],
         "rings": [
           {
@@ -385,27 +366,60 @@
         "name_src": "Спальня",
         "role": "bedroom",
         "label_at": [
-          8800,
+          9400,
           2800
         ],
         "rings": [
           {
             "outer": [
               [
-                5950,
-                4700
+                5960,
+                4800
               ],
               [
-                12570,
-                4700
+                12590,
+                4800
               ],
               [
-                12570,
-                600
+                12590,
+                420
               ],
               [
-                5950,
-                600
+                5960,
+                420
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath2",
+        "name_src": "С/У 2",
+        "role": "bath",
+        "label_at": [
+          14500,
+          2400
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                12950,
+                4020
+              ],
+              [
+                16250,
+                4020
+              ],
+              [
+                16250,
+                420
+              ],
+              [
+                12950,
+                420
               ]
             ],
             "holes": []
@@ -418,27 +432,31 @@
         "name_src": "Балкон",
         "role": "balcony",
         "label_at": [
-          3000,
-          4000
+          2950,
+          3500
         ],
         "rings": [
           {
             "outer": [
               [
+                1630,
+                8660
+              ],
+              [
+                5350,
+                6750
+              ],
+              [
+                5350,
+                400
+              ],
+              [
+                1290,
+                400
+              ],
+              [
                 250,
-                6800
-              ],
-              [
-                5030,
-                6800
-              ],
-              [
-                5030,
-                400
-              ],
-              [
-                1250,
-                400
+                6150
               ]
             ],
             "holes": []
@@ -485,6 +503,13 @@
       },
       {
         "between": [
+          "bedroom",
+          "bath2"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
           "living",
           "balcony"
         ],
@@ -493,7 +518,12 @@
     ],
     "geom": "approx",
     "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
-    "graph": "MOP—hall (entry) · hall—bath (door) · hall—living (open) · living—kitchen (open) · living—bedroom (door) · living—balcony (balcony)"
+    "graph": "MOP—hall (entry) · hall—bath (door) · hall—living (open) · living—kitchen (open) · living—bedroom (door) · bedroom—bath2 (door) · living—balcony (balcony)",
+    "trace_canvas_height_px": 2150,
+    "source_image_size_px": [
+      1668,
+      2358
+    ]
   },
   {
     "id": "qube_a1_2br",
@@ -513,8 +543,8 @@
         "name_src": "Балкон",
         "role": "balcony",
         "label_at": [
-          7150,
-          8950
+          7100,
+          8610
         ],
         "rings": [
           {
@@ -532,16 +562,24 @@
                 10190
               ],
               [
-                11720,
-                9900
+                11800,
+                9600
+              ],
+              [
+                9950,
+                7750
               ],
               [
                 8360,
-                7950
+                6800
               ],
               [
-                4850,
-                9700
+                6350,
+                7000
+              ],
+              [
+                4500,
+                8800
               ]
             ],
             "holes": []
@@ -632,7 +670,7 @@
               ],
               [
                 8460,
-                7840
+                7400
               ],
               [
                 10300,
@@ -864,7 +902,12 @@
     ],
     "geom": "approx",
     "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
-    "graph": "MOP—hall (entry) · hall—bath2 (door) · hall—kitchen (open) · kitchen—living (open) · living—bed1 (door) · bed1—bath1 (door) · living—bed2 (door) · bed2—bath2 (door) · living—balcony (balcony)"
+    "graph": "MOP—hall (entry) · hall—bath2 (door) · hall—kitchen (open) · kitchen—living (open) · living—bed1 (door) · bed1—bath1 (door) · living—bed2 (door) · bed2—bath2 (door) · living—balcony (balcony)",
+    "trace_canvas_height_px": 1180,
+    "source_image_size_px": [
+      1668,
+      1179
+    ]
   },
   {
     "id": "qube_a6_3br",
@@ -884,27 +927,35 @@
         "name_src": "Прихожая / коридор",
         "role": "hall",
         "label_at": [
-          7100,
-          8600
+          7050,
+          7750
         ],
         "rings": [
           {
             "outer": [
               [
-                3830,
-                10520
+                3820,
+                8420
               ],
               [
                 10100,
-                10520
+                8420
               ],
               [
                 10100,
-                7350
+                7250
               ],
               [
-                3830,
-                7350
+                4800,
+                7250
+              ],
+              [
+                4800,
+                4700
+              ],
+              [
+                3820,
+                4700
               ]
             ],
             "holes": []
@@ -917,27 +968,60 @@
         "name_src": "Гостевой С/У",
         "role": "bath",
         "label_at": [
-          2980,
-          8650
+          3000,
+          7650
         ],
         "rings": [
           {
             "outer": [
               [
-                2240,
-                10250
+                2250,
+                8420
               ],
               [
                 3700,
-                10250
+                8420
               ],
               [
                 3700,
-                7350
+                7090
               ],
               [
-                2240,
-                7350
+                2250,
+                7090
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath2",
+        "name_src": "С/У 2",
+        "role": "bath",
+        "label_at": [
+          3000,
+          5700
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                2250,
+                7080
+              ],
+              [
+                3700,
+                7080
+              ],
+              [
+                3700,
+                4500
+              ],
+              [
+                2250,
+                4500
               ]
             ],
             "holes": []
@@ -951,26 +1035,59 @@
         "role": "bedroom",
         "label_at": [
           3500,
-          3000
+          2700
         ],
         "rings": [
           {
             "outer": [
               [
-                2260,
-                4500
+                2250,
+                4480
               ],
               [
-                4680,
-                4500
+                4700,
+                4480
               ],
               [
-                4680,
-                800
+                4700,
+                600
               ],
               [
-                2260,
-                800
+                2250,
+                600
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "kitchen",
+        "name_src": "Кухня-столовая",
+        "role": "kitchen",
+        "label_at": [
+          7350,
+          6300
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                5180,
+                7080
+              ],
+              [
+                10000,
+                7080
+              ],
+              [
+                10000,
+                5680
+              ],
+              [
+                5180,
+                5680
               ]
             ],
             "holes": []
@@ -984,59 +1101,26 @@
         "role": "living",
         "label_at": [
           7600,
-          4200
+          3800
         ],
         "rings": [
           {
             "outer": [
               [
                 5180,
-                7080
+                5670
               ],
               [
                 10000,
-                7080
+                5670
               ],
               [
                 10000,
-                2300
+                2230
               ],
               [
                 5180,
-                2300
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "kitchen",
-        "name_src": "Кухня-столовая",
-        "role": "kitchen",
-        "label_at": [
-          7300,
-          6100
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5180,
-                7070
-              ],
-              [
-                10000,
-                7070
-              ],
-              [
-                10000,
-                5100
-              ],
-              [
-                5180,
-                5100
+                2230
               ]
             ],
             "holes": []
@@ -1057,11 +1141,11 @@
             "outer": [
               [
                 5150,
-                2100
+                2150
               ],
               [
                 9900,
-                2100
+                2150
               ],
               [
                 9900,
@@ -1078,26 +1162,59 @@
         "area": null
       },
       {
-        "id": "bath2",
-        "name_src": "С/У 2",
+        "id": "laundry",
+        "name_src": "Постирочная",
+        "role": "laundry",
+        "label_at": [
+          6980,
+          9600
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                4770,
+                10640
+              ],
+              [
+                10100,
+                10640
+              ],
+              [
+                10100,
+                8450
+              ],
+              [
+                4770,
+                8450
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath3",
+        "name_src": "С/У 3",
         "role": "bath",
         "label_at": [
-          10850,
-          8920
+          10800,
+          9000
         ],
         "rings": [
           {
             "outer": [
               [
                 10170,
-                10590
+                10640
               ],
               [
-                11700,
-                10590
+                11680,
+                10640
               ],
               [
-                11700,
+                11680,
                 7330
               ],
               [
@@ -1116,18 +1233,18 @@
         "role": "bedroom",
         "label_at": [
           13200,
-          8200
+          8550
         ],
         "rings": [
           {
             "outer": [
               [
                 11800,
-                10590
+                10640
               ],
               [
                 14600,
-                10590
+                10640
               ],
               [
                 14600,
@@ -1144,12 +1261,45 @@
         "area": null
       },
       {
-        "id": "bath3",
-        "name_src": "С/У 3",
+        "id": "corr",
+        "name_src": "Коридор",
+        "role": "corridor",
+        "label_at": [
+          10800,
+          5400
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                10170,
+                7250
+              ],
+              [
+                11660,
+                7250
+              ],
+              [
+                11660,
+                3520
+              ],
+              [
+                10170,
+                3520
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath4",
+        "name_src": "С/У 4",
         "role": "bath",
         "label_at": [
-          12700,
-          5000
+          12600,
+          5050
         ],
         "rings": [
           {
@@ -1164,11 +1314,11 @@
               ],
               [
                 13700,
-                4020
+                4030
               ],
               [
                 11720,
-                4020
+                4030
               ]
             ],
             "holes": []
@@ -1181,8 +1331,8 @@
         "name_src": "Спальня 3",
         "role": "bedroom",
         "label_at": [
-          11700,
-          2290
+          11800,
+          2300
         ],
         "rings": [
           {
@@ -1235,44 +1385,65 @@
       {
         "between": [
           "hall",
-          "living"
+          "laundry"
         ],
-        "type": "open"
+        "type": "door"
       },
       {
         "between": [
           "hall",
-          "bed2"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "living",
-          "bed1"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "living",
-          "bed3"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "bed3",
           "bath3"
         ],
         "type": "door"
       },
       {
         "between": [
-          "living",
+          "hall",
           "kitchen"
         ],
         "type": "open"
+      },
+      {
+        "between": [
+          "hall",
+          "bed1"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "kitchen",
+          "living"
+        ],
+        "type": "open"
+      },
+      {
+        "between": [
+          "living",
+          "corr"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "corr",
+          "bed2"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "corr",
+          "bath4"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "corr",
+          "bed3"
+        ],
+        "type": "door"
       },
       {
         "between": [
@@ -1284,6 +1455,11 @@
     ],
     "geom": "approx",
     "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
-    "graph": "MOP—hall (entry) · hall—bath1 (door) · hall—bath2 (door) · hall—living (open) · hall—bed2 (door) · living—bed1 (door) · living—bed3 (door) · bed3—bath3 (door) · living—kitchen (open) · living—balcony (balcony)"
+    "graph": "MOP—hall (entry) · hall—bath1 (door) · hall—bath2 (door) · hall—laundry (door) · hall—bath3 (door) · hall—kitchen (open) · hall—bed1 (door) · kitchen—living (open) · living—corr (door) · corr—bed2 (door) · corr—bath4 (door) · corr—bed3 (door) · living—balcony (balcony)",
+    "trace_canvas_height_px": 1090,
+    "source_image_size_px": [
+      1668,
+      1179
+    ]
   }
 ]
