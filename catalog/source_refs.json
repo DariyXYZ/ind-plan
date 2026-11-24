@@ -3,40 +3,1287 @@
     "id": "qube_a3_studio",
     "kind": "ST",
     "title": "Студия · A3",
-    "source": {"project": "3-3-2026 QUBE Residential Dubai", "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A3 STUDIO_PR plan_pr (1).pdf"},
+    "source": {
+      "project": "3-3-2026 QUBE Residential Dubai",
+      "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A3 STUDIO_PR plan_pr (1).pdf"
+    },
     "pdf": "qube/qube_a3_studio.pdf",
     "preview": "qube/qube_a3_studio.webp",
     "status": "source_only",
-    "area": null
+    "area": null,
+    "rooms": [
+      {
+        "id": "balcony",
+        "name_src": "Балкон",
+        "role": "balcony",
+        "label_at": [
+          7700,
+          10350
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                5600,
+                11250
+              ],
+              [
+                10180,
+                11250
+              ],
+              [
+                10180,
+                9530
+              ],
+              [
+                5600,
+                9530
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "living",
+        "name_src": "Жилая комната",
+        "role": "living",
+        "label_at": [
+          7900,
+          7000
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                5480,
+                9160
+              ],
+              [
+                9940,
+                9160
+              ],
+              [
+                9940,
+                4620
+              ],
+              [
+                5480,
+                4620
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "kitchen",
+        "name_src": "Кухня",
+        "role": "kitchen",
+        "label_at": [
+          6400,
+          3100
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                5480,
+                4600
+              ],
+              [
+                7650,
+                4600
+              ],
+              [
+                7650,
+                1890
+              ],
+              [
+                5480,
+                1890
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "hall",
+        "name_src": "Прихожая",
+        "role": "hall",
+        "label_at": [
+          6700,
+          1300
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                6120,
+                1880
+              ],
+              [
+                7650,
+                1880
+              ],
+              [
+                7650,
+                800
+              ],
+              [
+                6120,
+                800
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath",
+        "name_src": "С/У",
+        "role": "bath",
+        "label_at": [
+          8850,
+          2500
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                7770,
+                3750
+              ],
+              [
+                9940,
+                3750
+              ],
+              [
+                9940,
+                810
+              ],
+              [
+                7770,
+                810
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      }
+    ],
+    "edges": [
+      {
+        "between": [
+          "MOP",
+          "hall"
+        ],
+        "type": "entry"
+      },
+      {
+        "between": [
+          "hall",
+          "kitchen"
+        ],
+        "type": "open"
+      },
+      {
+        "between": [
+          "hall",
+          "bath"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "kitchen",
+          "living"
+        ],
+        "type": "open"
+      },
+      {
+        "between": [
+          "living",
+          "balcony"
+        ],
+        "type": "balcony"
+      }
+    ],
+    "geom": "approx",
+    "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
+    "graph": "MOP—hall (entry) · hall—kitchen (open) · hall—bath (door) · kitchen—living (open) · living—balcony (balcony)"
   },
   {
     "id": "qube_a2_1br",
     "kind": "2E",
     "title": "1 спальня · A2",
-    "source": {"project": "3-3-2026 QUBE Residential Dubai", "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A2_1BR_PR Model 2.pdf"},
+    "source": {
+      "project": "3-3-2026 QUBE Residential Dubai",
+      "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A2_1BR_PR Model 2.pdf"
+    },
     "pdf": "qube/qube_a2_1br.pdf",
     "preview": "qube/qube_a2_1br.webp",
     "status": "source_only",
-    "area": null
+    "area": null,
+    "rooms": [
+      {
+        "id": "hall",
+        "name_src": "Прихожая",
+        "role": "hall",
+        "label_at": [
+          8000,
+          16250
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                7730,
+                18800
+              ],
+              [
+                10200,
+                17550
+              ],
+              [
+                9050,
+                15400
+              ],
+              [
+                6800,
+                14100
+              ],
+              [
+                5000,
+                14550
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath",
+        "name_src": "С/У",
+        "role": "bath",
+        "label_at": [
+          10000,
+          13900
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                9420,
+                16360
+              ],
+              [
+                11350,
+                15400
+              ],
+              [
+                11350,
+                12800
+              ],
+              [
+                10400,
+                12300
+              ],
+              [
+                8260,
+                13500
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "living",
+        "name_src": "Гостиная",
+        "role": "living",
+        "label_at": [
+          5700,
+          10400
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                4510,
+                14800
+              ],
+              [
+                8030,
+                13000
+              ],
+              [
+                10300,
+                12100
+              ],
+              [
+                10500,
+                7000
+              ],
+              [
+                7100,
+                6000
+              ],
+              [
+                1630,
+                8660
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "kitchen",
+        "name_src": "Кухня-столовая",
+        "role": "kitchen",
+        "label_at": [
+          11000,
+          9000
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                10570,
+                12100
+              ],
+              [
+                12800,
+                12100
+              ],
+              [
+                12800,
+                5000
+              ],
+              [
+                10570,
+                5000
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bedroom",
+        "name_src": "Спальня",
+        "role": "bedroom",
+        "label_at": [
+          8800,
+          2800
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                5950,
+                4700
+              ],
+              [
+                12570,
+                4700
+              ],
+              [
+                12570,
+                600
+              ],
+              [
+                5950,
+                600
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "balcony",
+        "name_src": "Балкон",
+        "role": "balcony",
+        "label_at": [
+          3000,
+          4000
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                250,
+                6800
+              ],
+              [
+                5030,
+                6800
+              ],
+              [
+                5030,
+                400
+              ],
+              [
+                1250,
+                400
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      }
+    ],
+    "edges": [
+      {
+        "between": [
+          "MOP",
+          "hall"
+        ],
+        "type": "entry"
+      },
+      {
+        "between": [
+          "hall",
+          "bath"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "hall",
+          "living"
+        ],
+        "type": "open"
+      },
+      {
+        "between": [
+          "living",
+          "kitchen"
+        ],
+        "type": "open"
+      },
+      {
+        "between": [
+          "living",
+          "bedroom"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "living",
+          "balcony"
+        ],
+        "type": "balcony"
+      }
+    ],
+    "geom": "approx",
+    "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
+    "graph": "MOP—hall (entry) · hall—bath (door) · hall—living (open) · living—kitchen (open) · living—bedroom (door) · living—balcony (balcony)"
   },
   {
     "id": "qube_a1_2br",
     "kind": "3E",
     "title": "2 спальни · A1",
-    "source": {"project": "3-3-2026 QUBE Residential Dubai", "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A1 2BR_05_PR_new Model (1).pdf"},
+    "source": {
+      "project": "3-3-2026 QUBE Residential Dubai",
+      "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A1 2BR_05_PR_new Model (1).pdf"
+    },
     "pdf": "qube/qube_a1_2br.pdf",
     "preview": "qube/qube_a1_2br.webp",
     "status": "source_only",
-    "area": null
+    "area": null,
+    "rooms": [
+      {
+        "id": "balcony",
+        "name_src": "Балкон",
+        "role": "balcony",
+        "label_at": [
+          7150,
+          8950
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                5000,
+                9980
+              ],
+              [
+                8340,
+                8300
+              ],
+              [
+                11540,
+                10190
+              ],
+              [
+                11720,
+                9900
+              ],
+              [
+                8360,
+                7950
+              ],
+              [
+                4850,
+                9700
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bed1",
+        "name_src": "Спальня 1",
+        "role": "bedroom",
+        "label_at": [
+          4200,
+          6750
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                4000,
+                8400
+              ],
+              [
+                6310,
+                7020
+              ],
+              [
+                5270,
+                4890
+              ],
+              [
+                2580,
+                5660
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath1",
+        "name_src": "С/У 1",
+        "role": "bath",
+        "label_at": [
+          3000,
+          3980
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                2400,
+                5340
+              ],
+              [
+                4930,
+                4200
+              ],
+              [
+                3860,
+                2110
+              ],
+              [
+                1260,
+                3740
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "living",
+        "name_src": "Гостиная",
+        "role": "living",
+        "label_at": [
+          8220,
+          5600
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                6340,
+                7020
+              ],
+              [
+                8460,
+                7840
+              ],
+              [
+                10300,
+                7300
+              ],
+              [
+                11350,
+                5050
+              ],
+              [
+                10000,
+                3850
+              ],
+              [
+                5300,
+                4200
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bed2",
+        "name_src": "Спальня 2",
+        "role": "bedroom",
+        "label_at": [
+          11600,
+          7900
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                9850,
+                8360
+              ],
+              [
+                11800,
+                9700
+              ],
+              [
+                13370,
+                6960
+              ],
+              [
+                11650,
+                5940
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath2",
+        "name_src": "С/У 2",
+        "role": "bath",
+        "label_at": [
+          12700,
+          5500
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                11800,
+                6250
+              ],
+              [
+                13500,
+                6860
+              ],
+              [
+                14370,
+                5230
+              ],
+              [
+                12800,
+                4490
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "kitchen",
+        "name_src": "Кухня-столовая",
+        "role": "kitchen",
+        "label_at": [
+          11000,
+          3500
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                10000,
+                3850
+              ],
+              [
+                11350,
+                5050
+              ],
+              [
+                12800,
+                4490
+              ],
+              [
+                13200,
+                2000
+              ],
+              [
+                11560,
+                1520
+              ],
+              [
+                9900,
+                1520
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "hall",
+        "name_src": "Прихожая",
+        "role": "hall",
+        "label_at": [
+          13600,
+          3200
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                12800,
+                4490
+              ],
+              [
+                14370,
+                5230
+              ],
+              [
+                15200,
+                3700
+              ],
+              [
+                13200,
+                2000
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      }
+    ],
+    "edges": [
+      {
+        "between": [
+          "MOP",
+          "hall"
+        ],
+        "type": "entry"
+      },
+      {
+        "between": [
+          "hall",
+          "bath2"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "hall",
+          "kitchen"
+        ],
+        "type": "open"
+      },
+      {
+        "between": [
+          "kitchen",
+          "living"
+        ],
+        "type": "open"
+      },
+      {
+        "between": [
+          "living",
+          "bed1"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "bed1",
+          "bath1"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "living",
+          "bed2"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "bed2",
+          "bath2"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "living",
+          "balcony"
+        ],
+        "type": "balcony"
+      }
+    ],
+    "geom": "approx",
+    "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
+    "graph": "MOP—hall (entry) · hall—bath2 (door) · hall—kitchen (open) · kitchen—living (open) · living—bed1 (door) · bed1—bath1 (door) · living—bed2 (door) · bed2—bath2 (door) · living—balcony (balcony)"
   },
   {
     "id": "qube_a6_3br",
     "kind": "4E",
     "title": "3 спальни · A6",
-    "source": {"project": "3-3-2026 QUBE Residential Dubai", "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A6_3BR_PR Model (1).pdf"},
+    "source": {
+      "project": "3-3-2026 QUBE Residential Dubai",
+      "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A6_3BR_PR Model (1).pdf"
+    },
     "pdf": "qube/qube_a6_3br.pdf",
     "preview": "qube/qube_a6_3br.webp",
     "status": "source_only",
-    "area": null
+    "area": null,
+    "rooms": [
+      {
+        "id": "hall",
+        "name_src": "Прихожая / коридор",
+        "role": "hall",
+        "label_at": [
+          7100,
+          8600
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                3830,
+                10520
+              ],
+              [
+                10100,
+                10520
+              ],
+              [
+                10100,
+                7350
+              ],
+              [
+                3830,
+                7350
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath1",
+        "name_src": "Гостевой С/У",
+        "role": "bath",
+        "label_at": [
+          2980,
+          8650
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                2240,
+                10250
+              ],
+              [
+                3700,
+                10250
+              ],
+              [
+                3700,
+                7350
+              ],
+              [
+                2240,
+                7350
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bed1",
+        "name_src": "Спальня 1",
+        "role": "bedroom",
+        "label_at": [
+          3500,
+          3000
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                2260,
+                4500
+              ],
+              [
+                4680,
+                4500
+              ],
+              [
+                4680,
+                800
+              ],
+              [
+                2260,
+                800
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "living",
+        "name_src": "Гостиная",
+        "role": "living",
+        "label_at": [
+          7600,
+          4200
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                5180,
+                7080
+              ],
+              [
+                10000,
+                7080
+              ],
+              [
+                10000,
+                2300
+              ],
+              [
+                5180,
+                2300
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "kitchen",
+        "name_src": "Кухня-столовая",
+        "role": "kitchen",
+        "label_at": [
+          7300,
+          6100
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                5180,
+                7070
+              ],
+              [
+                10000,
+                7070
+              ],
+              [
+                10000,
+                5100
+              ],
+              [
+                5180,
+                5100
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "balcony",
+        "name_src": "Балкон",
+        "role": "balcony",
+        "label_at": [
+          7500,
+          1400
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                5150,
+                2100
+              ],
+              [
+                9900,
+                2100
+              ],
+              [
+                9900,
+                590
+              ],
+              [
+                5150,
+                590
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath2",
+        "name_src": "С/У 2",
+        "role": "bath",
+        "label_at": [
+          10850,
+          8920
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                10170,
+                10590
+              ],
+              [
+                11700,
+                10590
+              ],
+              [
+                11700,
+                7330
+              ],
+              [
+                10170,
+                7330
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bed2",
+        "name_src": "Спальня 2",
+        "role": "bedroom",
+        "label_at": [
+          13200,
+          8200
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                11800,
+                10590
+              ],
+              [
+                14600,
+                10590
+              ],
+              [
+                14600,
+                6260
+              ],
+              [
+                11800,
+                6260
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bath3",
+        "name_src": "С/У 3",
+        "role": "bath",
+        "label_at": [
+          12700,
+          5000
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                11720,
+                6080
+              ],
+              [
+                13700,
+                6080
+              ],
+              [
+                13700,
+                4020
+              ],
+              [
+                11720,
+                4020
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      },
+      {
+        "id": "bed3",
+        "name_src": "Спальня 3",
+        "role": "bedroom",
+        "label_at": [
+          11700,
+          2290
+        ],
+        "rings": [
+          {
+            "outer": [
+              [
+                10180,
+                3510
+              ],
+              [
+                13700,
+                3510
+              ],
+              [
+                13700,
+                600
+              ],
+              [
+                10180,
+                600
+              ]
+            ],
+            "holes": []
+          }
+        ],
+        "area": null
+      }
+    ],
+    "edges": [
+      {
+        "between": [
+          "MOP",
+          "hall"
+        ],
+        "type": "entry"
+      },
+      {
+        "between": [
+          "hall",
+          "bath1"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "hall",
+          "bath2"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "hall",
+          "living"
+        ],
+        "type": "open"
+      },
+      {
+        "between": [
+          "hall",
+          "bed2"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "living",
+          "bed1"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "living",
+          "bed3"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "bed3",
+          "bath3"
+        ],
+        "type": "door"
+      },
+      {
+        "between": [
+          "living",
+          "kitchen"
+        ],
+        "type": "open"
+      },
+      {
+        "between": [
+          "living",
+          "balcony"
+        ],
+        "type": "balcony"
+      }
+    ],
+    "geom": "approx",
+    "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
+    "graph": "MOP—hall (entry) · hall—bath1 (door) · hall—bath2 (door) · hall—living (open) · hall—bed2 (door) · living—bed1 (door) · living—bed3 (door) · bed3—bath3 (door) · living—kitchen (open) · living—balcony (balcony)"
   }
 ]
