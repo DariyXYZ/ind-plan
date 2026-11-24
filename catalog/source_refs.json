@@ -9,188 +9,48 @@
     },
     "pdf": "qube/qube_a3_studio.pdf",
     "preview": "qube/qube_a3_studio.webp",
-    "status": "source_only",
+    "status": "cad_geometry_pending",
     "area": null,
-    "rooms": [
-      {
-        "id": "balcony",
-        "name_src": "Балкон",
-        "role": "balcony",
-        "label_at": [
-          7700,
-          10350
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5600,
-                11250
-              ],
-              [
-                10180,
-                11250
-              ],
-              [
-                10180,
-                9530
-              ],
-              [
-                5600,
-                9530
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "living",
-        "name_src": "Жилая комната",
-        "role": "living",
-        "label_at": [
-          7900,
-          7000
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5480,
-                9160
-              ],
-              [
-                9940,
-                9160
-              ],
-              [
-                9940,
-                4620
-              ],
-              [
-                5480,
-                4620
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "hall",
-        "name_src": "Кухня-прихожая",
-        "role": "hall",
-        "label_at": [
-          6650,
-          2960
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5480,
-                4600
-              ],
-              [
-                7650,
-                4600
-              ],
-              [
-                7650,
-                800
-              ],
-              [
-                6120,
-                800
-              ],
-              [
-                6120,
-                1620
-              ],
-              [
-                5480,
-                1620
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bath",
-        "name_src": "С/У",
-        "role": "bath",
-        "label_at": [
-          8850,
-          2500
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                7770,
-                3750
-              ],
-              [
-                9940,
-                3750
-              ],
-              [
-                9940,
-                810
-              ],
-              [
-                7770,
-                810
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      }
-    ],
-    "edges": [
-      {
-        "between": [
-          "MOP",
-          "hall"
-        ],
-        "type": "entry"
-      },
-      {
-        "between": [
-          "hall",
-          "bath"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "hall",
-          "living"
-        ],
-        "type": "open"
-      },
-      {
-        "between": [
-          "living",
-          "balcony"
-        ],
-        "type": "balcony"
-      }
-    ],
-    "geom": "approx",
-    "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
-    "graph": "MOP—hall (entry) · hall—bath (door) · hall—living (open) · living—balcony (balcony)",
-    "trace_canvas_height_px": 1180,
-    "source_image_size_px": [
-      1668,
-      1179
-    ]
+    "cad": {
+      "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/DWG_PR/A3 STUDIO_PR.dwg",
+      "units": "mm",
+      "source_layer": "0_ANNO",
+      "rooms": [
+        {
+          "name_src": "TERRACE",
+          "area_m2": 6.02,
+          "cad_label_xy_mm": [
+            3735.01,
+            10866.45
+          ]
+        },
+        {
+          "name_src": "LIVING ROOM",
+          "area_m2": 18.04,
+          "cad_label_xy_mm": [
+            2852.13,
+            7304.14
+          ]
+        },
+        {
+          "name_src": "ENTRY",
+          "area_m2": 6.64,
+          "cad_label_xy_mm": [
+            2887.61,
+            4137.42
+          ]
+        },
+        {
+          "name_src": "BATHROOM",
+          "area_m2": 4.81,
+          "cad_label_xy_mm": [
+            4180.84,
+            3705.92
+          ]
+        }
+      ],
+      "boundary_status": "not extracted"
+    }
   },
   {
     "id": "qube_a2_1br",
@@ -202,328 +62,72 @@
     },
     "pdf": "qube/qube_a2_1br.pdf",
     "preview": "qube/qube_a2_1br.webp",
-    "status": "source_only",
+    "status": "cad_geometry_pending",
     "area": null,
-    "rooms": [
-      {
-        "id": "hall",
-        "name_src": "Прихожая",
-        "role": "hall",
-        "label_at": [
-          8100,
-          16250
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                7730,
-                19000
-              ],
-              [
-                10200,
-                17650
-              ],
-              [
-                9020,
-                15400
-              ],
-              [
-                8090,
-                13600
-              ],
-              [
-                5560,
-                14870
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bath",
-        "name_src": "С/У 1",
-        "role": "bath",
-        "label_at": [
-          10000,
-          14150
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                9420,
-                16400
-              ],
-              [
-                11370,
-                15430
-              ],
-              [
-                11370,
-                12840
-              ],
-              [
-                10470,
-                12240
-              ],
-              [
-                8150,
-                13460
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "living",
-        "name_src": "Гостиная",
-        "role": "living",
-        "label_at": [
-          6200,
-          9800
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5560,
-                14850
-              ],
-              [
-                8090,
-                13600
-              ],
-              [
-                8150,
-                13460
-              ],
-              [
-                10470,
-                12240
-              ],
-              [
-                10570,
-                12100
-              ],
-              [
-                10570,
-                5100
-              ],
-              [
-                7100,
-                5100
-              ],
-              [
-                1630,
-                8660
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "kitchen",
-        "name_src": "Кухня-столовая",
-        "role": "kitchen",
-        "label_at": [
-          11400,
-          8700
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                10570,
-                12100
-              ],
-              [
-                12800,
-                12100
-              ],
-              [
-                12800,
-                5000
-              ],
-              [
-                10570,
-                5000
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bedroom",
-        "name_src": "Спальня",
-        "role": "bedroom",
-        "label_at": [
-          9400,
-          2800
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5960,
-                4800
-              ],
-              [
-                12590,
-                4800
-              ],
-              [
-                12590,
-                420
-              ],
-              [
-                5960,
-                420
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bath2",
-        "name_src": "С/У 2",
-        "role": "bath",
-        "label_at": [
-          14500,
-          2400
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                12950,
-                4020
-              ],
-              [
-                16250,
-                4020
-              ],
-              [
-                16250,
-                420
-              ],
-              [
-                12950,
-                420
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "balcony",
-        "name_src": "Балкон",
-        "role": "balcony",
-        "label_at": [
-          2950,
-          3500
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                1630,
-                8660
-              ],
-              [
-                5350,
-                6750
-              ],
-              [
-                5350,
-                400
-              ],
-              [
-                1290,
-                400
-              ],
-              [
-                250,
-                6150
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      }
-    ],
-    "edges": [
-      {
-        "between": [
-          "MOP",
-          "hall"
-        ],
-        "type": "entry"
-      },
-      {
-        "between": [
-          "hall",
-          "bath"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "hall",
-          "living"
-        ],
-        "type": "open"
-      },
-      {
-        "between": [
-          "living",
-          "kitchen"
-        ],
-        "type": "open"
-      },
-      {
-        "between": [
-          "living",
-          "bedroom"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "bedroom",
-          "bath2"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "living",
-          "balcony"
-        ],
-        "type": "balcony"
-      }
-    ],
-    "geom": "approx",
-    "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
-    "graph": "MOP—hall (entry) · hall—bath (door) · hall—living (open) · living—kitchen (open) · living—bedroom (door) · bedroom—bath2 (door) · living—balcony (balcony)",
-    "trace_canvas_height_px": 2150,
-    "source_image_size_px": [
-      1668,
-      2358
-    ]
+    "cad": {
+      "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/DWG_PR/A2_1BR_PR.dwg",
+      "units": "mm",
+      "source_layer": "0_ANNO",
+      "rooms": [
+        {
+          "name_src": "BATHROOM",
+          "area_m2": 4.41,
+          "cad_label_xy_mm": [
+            13579.7,
+            10287.39
+          ]
+        },
+        {
+          "name_src": "POWDER",
+          "area_m2": 3.96,
+          "cad_label_xy_mm": [
+            5458.27,
+            8050.25
+          ]
+        },
+        {
+          "name_src": "BEDROOM",
+          "area_m2": 14.39,
+          "cad_label_xy_mm": [
+            13455.44,
+            6602.6
+          ]
+        },
+        {
+          "name_src": "ENTRY",
+          "area_m2": 5.8,
+          "cad_label_xy_mm": [
+            3928.09,
+            6670.56
+          ]
+        },
+        {
+          "name_src": "LIVING ROOM",
+          "area_m2": 26.05,
+          "cad_label_xy_mm": [
+            9435.16,
+            6033.38
+          ]
+        },
+        {
+          "name_src": "KITCHEN",
+          "area_m2": 7.34,
+          "cad_label_xy_mm": [
+            9701.92,
+            8796.92
+          ]
+        },
+        {
+          "name_src": "TERRACE",
+          "area_m2": 10.22,
+          "cad_label_xy_mm": [
+            13043.83,
+            3658.89
+          ]
+        }
+      ],
+      "boundary_status": "not extracted"
+    }
   },
   {
     "id": "qube_a1_2br",
@@ -535,379 +139,104 @@
     },
     "pdf": "qube/qube_a1_2br.pdf",
     "preview": "qube/qube_a1_2br.webp",
-    "status": "source_only",
+    "status": "cad_geometry_pending",
     "area": null,
-    "rooms": [
-      {
-        "id": "balcony",
-        "name_src": "Балкон",
-        "role": "balcony",
-        "label_at": [
-          7100,
-          8610
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5000,
-                9980
-              ],
-              [
-                8340,
-                8300
-              ],
-              [
-                11540,
-                10190
-              ],
-              [
-                11800,
-                9600
-              ],
-              [
-                9950,
-                7750
-              ],
-              [
-                8360,
-                6800
-              ],
-              [
-                6350,
-                7000
-              ],
-              [
-                4500,
-                8800
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bed1",
-        "name_src": "Спальня 1",
-        "role": "bedroom",
-        "label_at": [
-          4200,
-          6750
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                4000,
-                8400
-              ],
-              [
-                6310,
-                7020
-              ],
-              [
-                5270,
-                4890
-              ],
-              [
-                2580,
-                5660
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bath1",
-        "name_src": "С/У 1",
-        "role": "bath",
-        "label_at": [
-          3000,
-          3980
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                2400,
-                5340
-              ],
-              [
-                4930,
-                4200
-              ],
-              [
-                3860,
-                2110
-              ],
-              [
-                1260,
-                3740
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "living",
-        "name_src": "Гостиная",
-        "role": "living",
-        "label_at": [
-          8220,
-          5600
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                6340,
-                7020
-              ],
-              [
-                8460,
-                7400
-              ],
-              [
-                10300,
-                7300
-              ],
-              [
-                11350,
-                5050
-              ],
-              [
-                10000,
-                3850
-              ],
-              [
-                5300,
-                4200
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bed2",
-        "name_src": "Спальня 2",
-        "role": "bedroom",
-        "label_at": [
-          11600,
-          7900
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                9850,
-                8360
-              ],
-              [
-                11800,
-                9700
-              ],
-              [
-                13370,
-                6960
-              ],
-              [
-                11650,
-                5940
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bath2",
-        "name_src": "С/У 2",
-        "role": "bath",
-        "label_at": [
-          12700,
-          5500
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                11800,
-                6250
-              ],
-              [
-                13500,
-                6860
-              ],
-              [
-                14370,
-                5230
-              ],
-              [
-                12800,
-                4490
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "kitchen",
-        "name_src": "Кухня-столовая",
-        "role": "kitchen",
-        "label_at": [
-          11000,
-          3500
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                10000,
-                3850
-              ],
-              [
-                11350,
-                5050
-              ],
-              [
-                12800,
-                4490
-              ],
-              [
-                13200,
-                2000
-              ],
-              [
-                11560,
-                1520
-              ],
-              [
-                9900,
-                1520
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "hall",
-        "name_src": "Прихожая",
-        "role": "hall",
-        "label_at": [
-          13600,
-          3200
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                12800,
-                4490
-              ],
-              [
-                14370,
-                5230
-              ],
-              [
-                15200,
-                3700
-              ],
-              [
-                13200,
-                2000
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      }
-    ],
-    "edges": [
-      {
-        "between": [
-          "MOP",
-          "hall"
-        ],
-        "type": "entry"
-      },
-      {
-        "between": [
-          "hall",
-          "bath2"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "hall",
-          "kitchen"
-        ],
-        "type": "open"
-      },
-      {
-        "between": [
-          "kitchen",
-          "living"
-        ],
-        "type": "open"
-      },
-      {
-        "between": [
-          "living",
-          "bed1"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "bed1",
-          "bath1"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "living",
-          "bed2"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "bed2",
-          "bath2"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "living",
-          "balcony"
-        ],
-        "type": "balcony"
-      }
-    ],
-    "geom": "approx",
-    "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
-    "graph": "MOP—hall (entry) · hall—bath2 (door) · hall—kitchen (open) · kitchen—living (open) · living—bed1 (door) · bed1—bath1 (door) · living—bed2 (door) · bed2—bath2 (door) · living—balcony (balcony)",
-    "trace_canvas_height_px": 1180,
-    "source_image_size_px": [
-      1668,
-      1179
-    ]
+    "cad": {
+      "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/DWG_PR/A1 2BR_05_PR_new.dwg",
+      "units": "mm",
+      "source_layer": "0_ANNO",
+      "rooms": [
+        {
+          "name_src": "LAUNDRY",
+          "area_m2": 2.1,
+          "cad_label_xy_mm": [
+            18468.1,
+            5485.83
+          ]
+        },
+        {
+          "name_src": "CLOSET",
+          "area_m2": 4.24,
+          "cad_label_xy_mm": [
+            4890.04,
+            5865.17
+          ]
+        },
+        {
+          "name_src": "LIVING ROOM",
+          "area_m2": 27.92,
+          "cad_label_xy_mm": [
+            10629.41,
+            7740.99
+          ]
+        },
+        {
+          "name_src": "MASTER",
+          "area_m2": 13.99,
+          "cad_label_xy_mm": [
+            5939.59,
+            8194.93
+          ]
+        },
+        {
+          "name_src": "BALCONY",
+          "area_m2": 10.98,
+          "cad_label_xy_mm": [
+            8488.01,
+            10726.65
+          ]
+        },
+        {
+          "name_src": "ENTRY",
+          "area_m2": 7.78,
+          "cad_label_xy_mm": [
+            16488.06,
+            4641.6
+          ]
+        },
+        {
+          "name_src": "KITCHEN",
+          "area_m2": 7.81,
+          "cad_label_xy_mm": [
+            14900.26,
+            3380.97
+          ]
+        },
+        {
+          "name_src": "BATHROOM",
+          "area_m2": 4.15,
+          "cad_label_xy_mm": [
+            17342.63,
+            7252.92
+          ]
+        },
+        {
+          "name_src": "BEDROOM",
+          "area_m2": 13.71,
+          "cad_label_xy_mm": [
+            15675.69,
+            9568.43
+          ]
+        },
+        {
+          "name_src": "POWDER",
+          "area_m2": 3.96,
+          "cad_label_xy_mm": [
+            19048.28,
+            4295.38
+          ]
+        },
+        {
+          "name_src": "BATHROOM",
+          "area_m2": 6.11,
+          "cad_label_xy_mm": [
+            4442.04,
+            4533.13
+          ]
+        }
+      ],
+      "boundary_status": "not extracted"
+    }
   },
   {
     "id": "qube_a6_3br",
@@ -919,547 +248,135 @@
     },
     "pdf": "qube/qube_a6_3br.pdf",
     "preview": "qube/qube_a6_3br.webp",
-    "status": "source_only",
+    "status": "cad_geometry_pending",
     "area": null,
-    "rooms": [
-      {
-        "id": "hall",
-        "name_src": "Прихожая / коридор",
-        "role": "hall",
-        "label_at": [
-          7050,
-          7750
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                3820,
-                8420
-              ],
-              [
-                10100,
-                8420
-              ],
-              [
-                10100,
-                7250
-              ],
-              [
-                4800,
-                7250
-              ],
-              [
-                4800,
-                4700
-              ],
-              [
-                3820,
-                4700
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bath1",
-        "name_src": "Гостевой С/У",
-        "role": "bath",
-        "label_at": [
-          3000,
-          7650
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                2250,
-                8420
-              ],
-              [
-                3700,
-                8420
-              ],
-              [
-                3700,
-                7090
-              ],
-              [
-                2250,
-                7090
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bath2",
-        "name_src": "С/У 2",
-        "role": "bath",
-        "label_at": [
-          3000,
-          5700
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                2250,
-                7080
-              ],
-              [
-                3700,
-                7080
-              ],
-              [
-                3700,
-                4500
-              ],
-              [
-                2250,
-                4500
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bed1",
-        "name_src": "Спальня 1",
-        "role": "bedroom",
-        "label_at": [
-          3500,
-          2700
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                2250,
-                4480
-              ],
-              [
-                4700,
-                4480
-              ],
-              [
-                4700,
-                600
-              ],
-              [
-                2250,
-                600
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "kitchen",
-        "name_src": "Кухня-столовая",
-        "role": "kitchen",
-        "label_at": [
-          7350,
-          6300
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5180,
-                7080
-              ],
-              [
-                10000,
-                7080
-              ],
-              [
-                10000,
-                5680
-              ],
-              [
-                5180,
-                5680
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "living",
-        "name_src": "Гостиная",
-        "role": "living",
-        "label_at": [
-          7600,
-          3800
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5180,
-                5670
-              ],
-              [
-                10000,
-                5670
-              ],
-              [
-                10000,
-                2230
-              ],
-              [
-                5180,
-                2230
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "balcony",
-        "name_src": "Балкон",
-        "role": "balcony",
-        "label_at": [
-          7500,
-          1400
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                5150,
-                2150
-              ],
-              [
-                9900,
-                2150
-              ],
-              [
-                9900,
-                590
-              ],
-              [
-                5150,
-                590
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "laundry",
-        "name_src": "Постирочная",
-        "role": "laundry",
-        "label_at": [
-          6980,
-          9600
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                4770,
-                10640
-              ],
-              [
-                10100,
-                10640
-              ],
-              [
-                10100,
-                8450
-              ],
-              [
-                4770,
-                8450
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bath3",
-        "name_src": "С/У 3",
-        "role": "bath",
-        "label_at": [
-          10800,
-          9000
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                10170,
-                10640
-              ],
-              [
-                11680,
-                10640
-              ],
-              [
-                11680,
-                7330
-              ],
-              [
-                10170,
-                7330
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bed2",
-        "name_src": "Спальня 2",
-        "role": "bedroom",
-        "label_at": [
-          13200,
-          8550
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                11800,
-                10640
-              ],
-              [
-                14600,
-                10640
-              ],
-              [
-                14600,
-                6260
-              ],
-              [
-                11800,
-                6260
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "corr",
-        "name_src": "Коридор",
-        "role": "corridor",
-        "label_at": [
-          10800,
-          5400
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                10170,
-                7250
-              ],
-              [
-                11660,
-                7250
-              ],
-              [
-                11660,
-                3520
-              ],
-              [
-                10170,
-                3520
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bath4",
-        "name_src": "С/У 4",
-        "role": "bath",
-        "label_at": [
-          12600,
-          5050
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                11720,
-                6080
-              ],
-              [
-                13700,
-                6080
-              ],
-              [
-                13700,
-                4030
-              ],
-              [
-                11720,
-                4030
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      },
-      {
-        "id": "bed3",
-        "name_src": "Спальня 3",
-        "role": "bedroom",
-        "label_at": [
-          11800,
-          2300
-        ],
-        "rings": [
-          {
-            "outer": [
-              [
-                10180,
-                3510
-              ],
-              [
-                13700,
-                3510
-              ],
-              [
-                13700,
-                600
-              ],
-              [
-                10180,
-                600
-              ]
-            ],
-            "holes": []
-          }
-        ],
-        "area": null
-      }
-    ],
-    "edges": [
-      {
-        "between": [
-          "MOP",
-          "hall"
-        ],
-        "type": "entry"
-      },
-      {
-        "between": [
-          "hall",
-          "bath1"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "hall",
-          "bath2"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "hall",
-          "laundry"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "hall",
-          "bath3"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "hall",
-          "kitchen"
-        ],
-        "type": "open"
-      },
-      {
-        "between": [
-          "hall",
-          "bed1"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "kitchen",
-          "living"
-        ],
-        "type": "open"
-      },
-      {
-        "between": [
-          "living",
-          "corr"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "corr",
-          "bed2"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "corr",
-          "bath4"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "corr",
-          "bed3"
-        ],
-        "type": "door"
-      },
-      {
-        "between": [
-          "living",
-          "balcony"
-        ],
-        "type": "balcony"
-      }
-    ],
-    "geom": "approx",
-    "trace": "schematic hand trace of September interior PDF; coordinates are not millimetres",
-    "graph": "MOP—hall (entry) · hall—bath1 (door) · hall—bath2 (door) · hall—laundry (door) · hall—bath3 (door) · hall—kitchen (open) · hall—bed1 (door) · kitchen—living (open) · living—corr (door) · corr—bed2 (door) · corr—bath4 (door) · corr—bed3 (door) · living—balcony (balcony)",
-    "trace_canvas_height_px": 1090,
-    "source_image_size_px": [
-      1668,
-      1179
-    ]
+    "cad": {
+      "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/DWG_PR/A6_3BR_PR.dwg",
+      "units": "mm",
+      "source_layer": "0_ANNO",
+      "rooms": [
+        {
+          "name_src": "TERRACE",
+          "area_m2": 9.62,
+          "cad_label_xy_mm": [
+            7319.24,
+            1954.81
+          ]
+        },
+        {
+          "name_src": "POWDER",
+          "area_m2": 2.39,
+          "cad_label_xy_mm": [
+            1968.26,
+            9691.9
+          ]
+        },
+        {
+          "name_src": "KITCHEN",
+          "area_m2": 7.42,
+          "cad_label_xy_mm": [
+            6739.62,
+            7615.56
+          ]
+        },
+        {
+          "name_src": "MAID",
+          "area_m2": 5.88,
+          "cad_label_xy_mm": [
+            7787.16,
+            9935.93
+          ]
+        },
+        {
+          "name_src": "BATHROOM",
+          "area_m2": 3.31,
+          "cad_label_xy_mm": [
+            9497.7,
+            9722.44
+          ]
+        },
+        {
+          "name_src": "LAUNDRY",
+          "area_m2": 4.74,
+          "cad_label_xy_mm": [
+            5004.1,
+            9560.96
+          ]
+        },
+        {
+          "name_src": "BATHROOM",
+          "area_m2": 3.88,
+          "cad_label_xy_mm": [
+            13134.0,
+            5875.68
+          ]
+        },
+        {
+          "name_src": "LIVING ROOM",
+          "area_m2": 24.79,
+          "cad_label_xy_mm": [
+            7672.65,
+            5738.65
+          ]
+        },
+        {
+          "name_src": "CORRIDOR",
+          "area_m2": 5.7,
+          "cad_label_xy_mm": [
+            10855.61,
+            7959.54
+          ]
+        },
+        {
+          "name_src": "ENTRY",
+          "area_m2": 6.91,
+          "cad_label_xy_mm": [
+            3247.26,
+            8262.2
+          ]
+        },
+        {
+          "name_src": "MASTER BEDROOM",
+          "area_m2": 15.53,
+          "cad_label_xy_mm": [
+            2194.12,
+            2753.61
+          ]
+        },
+        {
+          "name_src": "BATHROOM",
+          "area_m2": 4.87,
+          "cad_label_xy_mm": [
+            1876.75,
+            7238.54
+          ]
+        },
+        {
+          "name_src": "BATHROOM",
+          "area_m2": 4.14,
+          "cad_label_xy_mm": [
+            11593.32,
+            9716.06
+          ]
+        },
+        {
+          "name_src": "MASTER",
+          "area_m2": 18.74,
+          "cad_label_xy_mm": [
+            13412.52,
+            2723.28
+          ]
+        },
+        {
+          "name_src": "BEDROOM",
+          "area_m2": 16.72,
+          "cad_label_xy_mm": [
+            14314.53,
+            8204.58
+          ]
+        }
+      ],
+      "boundary_status": "not extracted"
+    }
   }
 ]
