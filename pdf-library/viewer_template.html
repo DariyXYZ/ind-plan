@@ -29,6 +29,10 @@ label.ck{display:flex;gap:8px;align-items:center;padding:3px 0;cursor:pointer}
 .card:hover{border-color:var(--line)}
 .card.sel{border-color:var(--acc)}
 .card svg{width:100%;height:190px;display:block}
+.card.source-card img{width:100%;height:190px;display:block;object-fit:contain;background:#fff}
+.source-preview{width:100%;max-height:550px;display:block;object-fit:contain;background:#fff;border:1px solid var(--line);margin:14px 0}
+.source-action{display:inline-block;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink);text-decoration:none;font-weight:600}
+.source-action:hover{background:var(--chip)}
 .card .t{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-weight:600}
 .card .s{color:var(--mute);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
@@ -53,8 +57,8 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 </head>
 <body>
 <header><h1>База планировок IND</h1><span class="cnt" id="cnt"></span>
-<span class="cnt">Квартиры из проектов IND. Прошли автоматические проверки, архитекторы их не оценивали.</span>
-<span class="cnt" style="margin-left:auto"><a href="../">← IND PLAN</a> · скачать: <a href="library_llm.json" download>для нейронки</a> · <a href="library.json" download>полная база</a></span></header>
+<span class="cnt">Проверенные планы и исходные листы. Архитекторы их не оценивали.</span>
+<span class="cnt" style="margin-left:auto"><a href="../">← IND PLAN</a> · скачать: <a href="library_llm.json" download>для нейронки</a> · <a href="library.json" download>проверенная база</a> · <a href="source_refs.json" download>листы PDF</a></span></header>
 <div class="wrap">
 <aside id="f">
  <h3>Поиск</h3><input type="search" id="q" placeholder="id, помещение, связь…">
@@ -72,7 +76,9 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 </div>
 <div class="detail" id="det"><button class="x" id="close" aria-label="Закрыть">×</button><div id="detBody"></div></div>
 <script>
-const DATA = /*DATA*/[];
+const PLANS = /*DATA*/[];
+const SOURCES = /*SOURCES*/[];
+const DATA = [...PLANS, ...SOURCES];
 const ROLE_COL = {kg:'#f3c6a5',kitchen:'#f3c6a5',living:'#f6d9b8',bedroom:'#bcd7f0',master:'#a9c8ec',kids:'#c9e3c1',hall:'#e7e1cf',corridor:'#e7e1cf',
  bath:'#b9e4e0',wc:'#b9e4e0',wardrobe:'#dccdeb',laundry:'#cfe7ec',storage:'#e2dccb',loggia:'#e9efe1',balcony:'#e9efe1',patio:'#e9efe1',study:'#e9d3df'};
 const MUST = [['wardrobe','гардеробная'],['master_bath','мастер-санузел'],['laundry','постирочная'],['separate_kitchen','отдельная кухня'],['kids','детская'],['risers','стояки отмечены']];
@@ -86,13 +92,13 @@ function chips(el, values, set, label){
   values.forEach(v=>{const b=document.createElement('button');b.className='chip';b.textContent=(label?label(v):v)+' '+DATA.filter(r=>v===r._f[el.id]).length;
    b.onclick=()=>{set.has(v)?set.delete(v):set.add(v);b.classList.toggle('on');render()};el.appendChild(b)});
 }
-DATA.forEach(r=>{r._f={fProj:proj(r),fType:r.kind,fEntry:(r.key&&r.key.entry_type)||'—',fGeom:r.geom};
-  r._txt=(r.id+' '+r.graph+' '+(r.rooms||[]).map(x=>x.name_src).join(' ')+' '+(r.why||'')).toLowerCase()});
+DATA.forEach(r=>{r._f={fProj:proj(r),fType:r.kind,fEntry:(r.key&&r.key.entry_type)||'—',fGeom:r.status==='source_only'?'source_only':r.geom};
+  r._txt=(r.id+' '+(r.title||'')+' '+proj(r)+' '+(r.graph||'')+' '+(r.rooms||[]).map(x=>x.name_src).join(' ')+' '+(r.why||'')).toLowerCase()});
 const uniq = k => [...new Set(DATA.map(r=>r._f[k]))].sort();
 chips($('fProj'),uniq('fProj'),st.proj);
 chips($('fType'),['ST','1E','2E','3E','4E','5E'].filter(t=>DATA.some(r=>r.kind===t)).concat(uniq('fType').filter(t=>!/^(ST|\dE)$/.test(t))),st.type);
 chips($('fEntry'),uniq('fEntry'),st.entry,v=>ENTRY[v]||v);
-chips($('fGeom'),uniq('fGeom'),st.geom,v=>v==='ok'?'точная':v==='approx'?'приблизительная':v);
+chips($('fGeom'),uniq('fGeom'),st.geom,v=>v==='ok'?'точная':v==='approx'?'приблизительная':v==='source_only'?'исходный PDF':v);
 MUST.forEach(([k,l])=>{const n=DATA.filter(r=>r.key&&r.key[k]).length;const w=document.createElement('label');w.className='ck';
  w.innerHTML=`<input type="checkbox"> ${l} <span class="cnt">${n}</span>`;w.querySelector('input').onchange=e=>{e.target.checked?st.must.add(k):st.must.delete(k);render()};$('fMust').appendChild(w)});
 const num = id => {const v=parseFloat($(id).value);return isNaN(v)?null:v};
@@ -111,8 +117,10 @@ function pass(r){
   if(st.entry.size&&!st.entry.has(r._f.fEntry))return false;
   if(st.geom.size&&!st.geom.has(r.geom))return false;
   for(const m of st.must)if(!k[m])return false;
+  if((st.aMin!=null||st.aMax!=null)&&r.area==null)return false;
   if(st.aMin!=null&&r.area<st.aMin)return false; if(st.aMax!=null&&r.area>st.aMax)return false;
   const w=(k.facade_width_mm||k.w||0)/1000;
+  if((st.wMin!=null||st.wMax!=null)&&r.status==='source_only')return false;
   if(st.wMin!=null&&w<st.wMin)return false; if(st.wMax!=null&&w>st.wMax)return false;
   if(st.q&&!r._txt.includes(st.q))return false;
   return true;
@@ -152,11 +160,12 @@ function svgPlan(r,opt){
 let G=true;
 function render(){
   let rs=DATA.filter(pass);
-  rs.sort(st.sort==='area'?(a,b)=>a.area-b.area:st.sort==='count'?(a,b)=>(b.count||1)-(a.count||1)||a.area-b.area:(a,b)=>a.id.localeCompare(b.id));
+  rs.sort(st.sort==='area'?(a,b)=>(a.area??Infinity)-(b.area??Infinity):st.sort==='count'?(a,b)=>(b.count||1)-(a.count||1)||(a.area??Infinity)-(b.area??Infinity):(a,b)=>a.id.localeCompare(b.id));
   $('cnt').textContent=`${rs.length} из ${DATA.length}`;
   const g=$('grid');
   if(!rs.length){g.innerHTML='<div class="empty">Ничего не подходит под фильтры</div>';return}
-  g.innerHTML=rs.map(r=>{const k=r.key||{};const tags=MUST.filter(([m])=>k[m]&&m!=='risers').map(([,l])=>`<span class="tag">${l}</span>`).join('');
+  g.innerHTML=rs.map(r=>{if(r.status==='source_only')return `<div class="card source-card${st.sel===r.id?' sel':''}" data-id="${r.id}"><img src="${r.preview}" alt="План ${r.title}" loading="lazy"><div class="t"><span>${r.title}</span><span class="cnt">${r.id}</span></div><div class="s">${proj(r)}</div><div class="tags"><span class="tag">Исходный PDF · размеры не сверены</span></div></div>`;
+    const k=r.key||{};const tags=MUST.filter(([m])=>k[m]&&m!=='risers').map(([,l])=>`<span class="tag">${l}</span>`).join('');
     return `<div class="card${st.sel===r.id?' sel':''}" data-id="${r.id}">${svgPlan(r,{graph:true})}
     <div class="t"><span>${r.kind} · ${r.area} м²</span><span class="cnt">${r.id}</span></div>
     <div class="s">${proj(r)}${(r.count||1)>1?' · встречается '+r.count+'×':''}</div><div class="tags">${tags}${r.geom==='approx'?'<span class="tag">геом. приблизит.</span>':''}</div></div>`}).join('');
@@ -164,6 +173,10 @@ function render(){
 }
 function open(id){
   const r=DATA.find(x=>x.id===id);st.sel=id;const k=r.key||{},src=r.source||{};
+   if(r.status==='source_only'){
+     $('detBody').innerHTML=`<h2>${r.title}</h2><div class="cnt">${r.id} · ${proj(r)}</div><img class="source-preview" src="${r.preview}" alt="План ${r.title}"><p>Исходный лист проекта. Площадь и геометрия в миллиметрах пока не сверены; запись не входит в базу генератора.</p><p style="margin:16px 0"><a class="source-action" href="${r.pdf}" target="_blank" rel="noopener">Открыть PDF ↗</a></p><div class="kv"><b>Файл</b><span class="mono">${src.file||''}</span></div>`;
+     $('det').classList.add('open');render();return;
+   }
   const rooms=(r.rooms||[]).slice().sort((a,b)=>(b.area||0)-(a.area||0));
   const ch=r.checks||{};
   $('detBody').innerHTML=`<h2>${r.kind} · ${r.area} м²</h2><div class="cnt">${r.id} · ${proj(r)}</div>
@@ -186,6 +199,8 @@ function open(id){
   if(r.llm)$('cp').onclick=()=>{navigator.clipboard.writeText(JSON.stringify(r.llm)).then(()=>{$('cp').textContent='Скопировано'},()=>{$('cp').textContent='Не удалось — выделите текст ниже'})};
   $('det').classList.add('open');render();
 }
+const initialQuery=new URLSearchParams(location.search).get('q');
+if(initialQuery){$('q').value=initialQuery;st.q=initialQuery.trim().toLowerCase()}
 render();
 </script>
 </body>

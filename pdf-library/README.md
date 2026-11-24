@@ -10,6 +10,8 @@ python -X utf8 pdf-library/rebuild.py
 
 В версии 2 комнаты дополнительно представлены полилиниями `rings` и направленными обходами `outline_graph`. Каталог рисует контуры; `rects` сохранены для генератора. Разбор ограничений ContourGraph и схема мебели — в `CONTOUR_GRAPH_REVIEW.md`. Проверка после пересборки: `python -X utf8 pdf-library/validate_outline_graph.py`.
 
+Непромеренные исходные планы хранятся отдельно в `catalog/source_refs.json` и показываются в каталоге с PDF и предпросмотром. Они не входят в `db/library.json` и не используются генератором. Для QUBE Residential Dubai добавлены четыре таких листа: A3, A2, A1, A6. Их PDF не содержит площади и масштабной сетки, поэтому размерную геометрию из них пока нельзя считать проверенной.
+
 ```powershell
 python -X utf8 pdf-library/query.py --type 2E --w 6000 --d 7000 --must wardrobe -k 5
 ```

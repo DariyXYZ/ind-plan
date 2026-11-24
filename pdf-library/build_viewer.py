@@ -1,6 +1,7 @@
 # Собирает db/viewer.html — просмотр базы планировок с фильтрами (данные встроены, открывается без сервера).
 # Запуск: python -X utf8 build_viewer.py [папка_db]   (после rebuild.py; по умолчанию db/)
 import json, os, sys
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DB = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, 'db')  # папка с library.json
@@ -15,6 +16,9 @@ for r in lib:
     keep.append(k)
 tpl = open(os.path.join(HERE, 'viewer_template.html'), encoding='utf-8').read()
 out = tpl.replace('/*DATA*/[]', json.dumps(keep, ensure_ascii=False, separators=(',', ':')))
+sources_path = Path(OUT).parent / 'source_refs.json'
+sources = json.loads(sources_path.read_text(encoding='utf-8')) if sources_path.exists() else []
+out = out.replace('/*SOURCES*/[]', json.dumps(sources, ensure_ascii=False, separators=(',', ':')))
 p = OUT
 open(p, 'w', encoding='utf-8').write(out)
-print(p, len(keep), 'планировок', round(len(out) / 1e6, 2), 'МБ')
+print(p, len(keep), 'проверенных планировок,', len(sources), 'исходных листа,', round(len(out) / 1e6, 2), 'МБ')

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "qube_a3_studio",
+    "kind": "ST",
+    "title": "Студия · A3",
+    "source": {"project": "3-3-2026 QUBE Residential Dubai", "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A3 STUDIO_PR plan_pr (1).pdf"},
+    "pdf": "qube/qube_a3_studio.pdf",
+    "preview": "qube/qube_a3_studio.webp",
+    "status": "source_only",
+    "area": null
+  },
+  {
+    "id": "qube_a2_1br",
+    "kind": "2E",
+    "title": "1 спальня · A2",
+    "source": {"project": "3-3-2026 QUBE Residential Dubai", "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A2_1BR_PR Model 2.pdf"},
+    "pdf": "qube/qube_a2_1br.pdf",
+    "preview": "qube/qube_a2_1br.webp",
+    "status": "source_only",
+    "area": null
+  },
+  {
+    "id": "qube_a1_2br",
+    "kind": "3E",
+    "title": "2 спальни · A1",
+    "source": {"project": "3-3-2026 QUBE Residential Dubai", "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A1 2BR_05_PR_new Model (1).pdf"},
+    "pdf": "qube/qube_a1_2br.pdf",
+    "preview": "qube/qube_a1_2br.webp",
+    "status": "source_only",
+    "area": null
+  },
+  {
+    "id": "qube_a6_3br",
+    "kind": "4E",
+    "title": "3 спальни · A6",
+    "source": {"project": "3-3-2026 QUBE Residential Dubai", "file": "X:/2026/3-Интерьеры/3-3-2026 QUBE Residential Dubai/01-Рабочая/03-АИ/2026-09-18 Планировки обновленные/A6_3BR_PR Model (1).pdf"},
+    "pdf": "qube/qube_a6_3br.pdf",
+    "preview": "qube/qube_a6_3br.webp",
+    "status": "source_only",
+    "area": null
+  }
+]
