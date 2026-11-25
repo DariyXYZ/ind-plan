@@ -141,7 +141,7 @@ function svgPlan(r,opt){
   const H=y1-y0,fy=y=>y1-(y-y0)-y0+y0, T=(x,y)=>[x-x0,y1-y];
   let s=`<svg viewBox="0 0 ${x1-x0} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
   rooms.forEach(m=>{const col=ROLE_COL[m.role]||'#ddd';
-    if(m.rings?.length){m.rings.forEach(q=>{const loops=[q.outer,...q.holes];const path=loops.map(loop=>loop.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z').join(' ');s+=`<path d="${path}" fill="${col}" fill-rule="evenodd" ${r.status==='source_only'?'stroke="var(--wall)" stroke-width="35" stroke-linejoin="round"':''}/>`})}
+    if(m.rings?.length){m.rings.forEach(q=>{const loops=[q.outer,...q.holes];const path=loops.map(loop=>loop.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z').join(' ');s+=`<path d="${path}" fill="${col}" fill-rule="evenodd" stroke="var(--wall)" stroke-width="${opt.big?30:45}" stroke-linejoin="miter"/>`})}
     else (m.rects||[]).forEach(([a,b,c,d])=>{const [px,py]=T(a,d);s+=`<rect x="${px}" y="${py}" width="${c-a}" height="${d-b}" fill="${col}"/>`})});
   if(outer.length)s+=`<polygon points="${outer.map(p=>T(p[0],p[1]).join(',')).join(' ')}" fill="none" stroke="var(--wall)" stroke-width="${opt.big?60:90}" stroke-linejoin="round"/>`;
   (r.plan&&r.plan.windows||[]).forEach(w=>{if(!w.at)return;const [px,py]=T(w.at[0],w.at[1]);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?110:150}" fill="#4aa3ff" opacity=".8"/>`});

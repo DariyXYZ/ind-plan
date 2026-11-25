@@ -103,3 +103,36 @@ def segment_graph(rooms):
                            'InnerLoops': [loop(h, False) for h in ring['holes']]})
     return {'Nodes': nodes, 'Edges': edges, 'Spaces': spaces,
             'Geometry': 'floor_face_boundaries', 'Validation': 'unverified'}
+
+
+def regularize_rooms(rooms, gap=60, min_piece=0.3e6, tol=30):
+    """Clean room polylines as one partition: no overlaps, no slivers/teeth < 2*gap,
+    near-collinear jogs removed. Smaller rooms win overlaps (a terrace ring that
+    swallows the apartment gives way to the rooms inside it)."""
+    from shapely.geometry import JOIN_STYLE
+    mitre = dict(join_style=JOIN_STYLE.mitre, mitre_limit=3)
+    def geom(room):
+        parts = [Polygon(q['outer'], q.get('holes', [])).buffer(0) for q in room.get('rings', []) if len(q['outer']) >= 3]
+        return unary_union(parts) if parts else Polygon()
+    order = sorted(rooms, key=lambda r: geom(r).area)
+    taken = Polygon()
+    for room in order:
+        g = geom(room)
+        if g.is_empty:
+            continue
+        g = g.difference(taken)
+        # закрыть щели и зубцы, потом срезать выступы-иголки
+        g = g.buffer(gap, **mitre).buffer(-gap, **mitre).difference(taken)
+        g = g.buffer(-gap, **mitre).buffer(gap, **mitre).intersection(geom(room).buffer(gap, **mitre))
+        pieces = [p for p in _pieces(g) if p.area >= min_piece] or sorted(_pieces(g), key=lambda p: -p.area)[:1]
+        rings = []
+        for part in sorted(pieces, key=lambda p: -p.area):
+            part = part.simplify(tol, preserve_topology=True)
+            outer = _clean_ring(part.exterior.coords)
+            if len(outer) >= 3:
+                rings.append({'outer': outer, 'holes': [h for h in (_clean_ring(i.coords) for i in part.interiors) if len(h) >= 3]})
+        if rings:
+            room['rings'] = rings
+            room['geometry_source'] += '+regularized'
+            taken = taken.union(unary_union(pieces))
+    return rooms

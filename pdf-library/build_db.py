@@ -7,7 +7,7 @@ import json
 import re
 import sqlite3
 from pathlib import Path
-from contour_graph import compact_rings, rings_from_rects, segment_graph
+from contour_graph import compact_rings, regularize_rooms, rings_from_rects, segment_graph
 from shapely.geometry import Polygon
 
 ROOT = Path(__file__).resolve().parent
@@ -105,6 +105,7 @@ def normalize(entry: dict, index: dict, engine_entry: dict) -> dict:
                           'rings': compact_rings(original['rings']) if direct else rings_from_rects(room['rects']),
                           'geometry_source': 'pdf_fill' if direct else 'rect_union_simplified',
                           'rects': room['rects']})
+    regularize_rooms(room_data)
     checks = raw.get('checks') if raw else {'ok': True, 'origin': 'validated_legacy_library'}
     if not checks.get('ok'):
         raise ValueError(f"Legacy source failed checks: {entry['id']}")
