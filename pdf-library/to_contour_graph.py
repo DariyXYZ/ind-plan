@@ -217,7 +217,7 @@ def convert(plan, snap=40, ang=5):
         if left == 0:  # периметр: квартира слева
             path = path[::-1]
             left, right = right, left
-        for t in ((tol * 2.5, tol, tol / 3, 0) if right == 0 else (tol, tol / 3, 0)):
+        for t in ((tol * 4, tol * 2.5, tol, tol / 3, 0) if right == 0 else (tol, tol / 3, 0)):
             simp = dp(path, t) if t else path
             ids = []
             for v in simp:
