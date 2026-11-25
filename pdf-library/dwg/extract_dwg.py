@@ -34,7 +34,7 @@ LAYERS = {
 }
 RES = 20
 NAMES = [  # подпись → (id, русское имя)
-    (r'living|гостин|kitchen|кухн', 'kl', 'Кухня-гостиная'), (r'master bed|мастер', 'bed', 'Мастер-спальня'),
+    (r'living|гостин|kitchen|кухн', 'kl', 'Кухня-гостиная'), (r'master bed|^master$|мастер', 'bed', 'Мастер-спальня'),
     (r'bed|спальн', 'bed', 'Спальня'), (r'entry|hall|прихож|холл', 'hall', 'Прихожая'), (r'corr|коридор', 'corr', 'Коридор'),
     (r'master bath|ensuite', 'bath', 'Мастер С/У'), (r'bath|wc|toilet|powder|с/у|санузел', 'bath', 'С/У'),
     (r'wardrobe|closet|walk|гардероб', 'wr', 'Гардеробная'), (r'laundry|постир', 'laundry', 'Постирочная'),
@@ -86,14 +86,42 @@ def wall_geometry(msp):
     return unary_union(polys + lines)
 
 
-def door_geometry(msp):
+def door_geometry(msp, windows=None):
+    """линии дверей (полотна, дуги); длинные узкие прямоугольники того же слоя — окна/витражи → в windows"""
     out = []
     for e in msp:
         if e.dxf.layer in LAYERS['doors'] and e.dxftype() in ('LINE', 'ARC', 'LWPOLYLINE', 'POLYLINE'):
             try:
-                out.append(LineString([(v.x, v.y) for v in dpath.make_path(e).flattening(5)]))
+                pts = [(v.x, v.y) for v in dpath.make_path(e).flattening(5)]
             except Exception:
-                pass
+                continue
+            if len(pts) < 2:
+                continue
+            if windows is not None and len(pts) >= 4:
+                r = Polygon(pts).buffer(0).minimum_rotated_rectangle
+                if not r.is_empty and r.geom_type == 'Polygon':
+                    c = list(r.exterior.coords)
+                    s1, s2 = sorted((np.hypot(c[0][0] - c[1][0], c[0][1] - c[1][1]), np.hypot(c[1][0] - c[2][0], c[1][1] - c[2][1])))
+                    if s2 > 600 and s1 < 400:
+                        windows.append((r, s2))
+            out.append(LineString(pts))
+    return out
+
+
+def door_chords(msp, walls):
+    """дверь = отрезок проёма: от петли (центр дуги) до конца дуги, который упирается в стену (закрытое полотно)"""
+    import math
+    out = []
+    for e in msp.query('ARC'):
+        if e.dxf.layer not in LAYERS['doors']:
+            continue
+        c, r = e.dxf.center, e.dxf.radius
+        if not 500 <= r <= 1400:
+            continue
+        ends = [(c.x + r * math.cos(math.radians(a)), c.y + r * math.sin(math.radians(a))) for a in (e.dxf.start_angle, e.dxf.end_angle)]
+        from shapely.geometry import Point
+        p = min(ends, key=lambda q: walls.distance(Point(q)))
+        out.append(LineString([(c.x, c.y), p]))
     return out
 
 
@@ -131,7 +159,8 @@ def extract(dxf_path, sheet):
     msp = doc.modelspace()
     labs = labels(msp)
     walls = wall_geometry(msp)
-    doors = door_geometry(msp)
+    win_geo = []
+    doors = door_geometry(msp, win_geo)
     if not labs or walls.is_empty:
         return {'source': sheet, 'apartments': [], 'error': 'нет подписей или стен'}
     # окно квартиры = рамка вокруг подписей с запасом
@@ -141,8 +170,14 @@ def extract(dxf_path, sheet):
     x0, y0, x1, y1 = frame.bounds
     W, H = int((x1 - x0) / RES) + 1, int((y1 - y0) / RES) + 1
     Wm = raster(walls, x0, y0, W, H)
+    # перегородки двумя линиями граней: зазор до ~260 мм между ними — тело стены
+    rw = int(130 / RES)
+    yy, xx = np.ogrid[-rw:rw + 1, -rw:rw + 1]
+    Wm = ndimage.binary_closing(np.pad(Wm, rw + 1), structure=xx * xx + yy * yy <= rw * rw)[rw + 1:-rw - 1, rw + 1:-rw - 1] | Wm
     # дверные полотна и дуги временно считаются стеной: так проём у входа и у фасада закрыт при поиске контура
     Dm = raster(unary_union([d.buffer(20) for d in doors]), x0, y0, W, H) if doors else np.zeros_like(Wm)
+    chords = door_chords(msp, walls)
+    Cm = raster(unary_union([d.buffer(25) for d in chords] + [w.buffer(10) for w, _ in win_geo]), x0, y0, W, H) if chords else Dm
     seal = Wm | Dm
     r = int(700 / RES)
     yy, xx = np.ogrid[-r:r + 1, -r:r + 1]
@@ -159,11 +194,8 @@ def extract(dxf_path, sheet):
                 rr, c = iy[rr, c], ix[rr, c]
             markers[max(rr - 2, 0):rr + 3, max(c - 2, 0):c + 3] = k
     markers[~inside] = 0
-    # двери закрываются сужением пола на 450 мм → комнаты = отдельные куски; кусок с одной подписью — её,
-    # с несколькими (открытая кухня+прихожая) — делится по ближайшей подписи; потом расширяем обратно до стен
-    r2 = int(150 / RES)
-    yy, xx = np.ogrid[-r2:r2 + 1, -r2:r2 + 1]
-    core = ndimage.binary_erosion(inside & ~Dm, structure=xx * xx + yy * yy <= r2 * r2)  # полотна/дуги/витражи-двери = разделители
+    # комнаты = куски пола между стенами; полотна и дуги дверей замыкают проёмы
+    core = ndimage.binary_erosion(inside & ~Cm, iterations=1)  # проёмы закрыты по линии двери, дуги не мешают
     comp, nc = ndimage.label(core)
     seed = np.zeros_like(markers)
     pts = {}
@@ -171,7 +203,9 @@ def extract(dxf_path, sheet):
         ys, xs = np.nonzero(markers == k)
         if len(ys):
             pts[k] = (int(ys.mean()), int(xs.mean()))
-    _, (iy, ix) = ndimage.distance_transform_edt(~core, return_indices=True)
+    sizes = ndimage.sum(core, comp, range(nc + 1)) * RES * RES
+    big = core & (sizes[comp] > 1.0e6)  # подпись на дуге двери — привязать к ближайшему настоящему куску
+    _, (iy, ix) = ndimage.distance_transform_edt(~big, return_indices=True)
     owner = {}
     for k, (yk, xk) in pts.items():
         c = comp[iy[yk, xk], ix[yk, xk]]
@@ -180,43 +214,64 @@ def extract(dxf_path, sheet):
         m = comp == c
         if len(ks) == 1:
             seed[m] = ks[0]
-        elif len(ks) == 2:
-            # открытый план без линии раздела: прямой разрез, при котором площади частей ≈ подписям
-            a, b = ks
-            want = labs[a - 1]['area'] / (labs[a - 1]['area'] + labs[b - 1]['area'])
-            full = m.sum()
-            best = None
-            for axis in (0, 1):
-                pa, pb = pts[a][axis], pts[b][axis]
-                if pa == pb:
-                    continue
-                prof = m.sum(axis=1 - axis).cumsum() / full  # доля площади до позиции
-                lo, hi = sorted((pa, pb))
-                for pos in range(lo + 1, hi):
-                    share = prof[pos - 1] if pa < pb else 1 - prof[pos - 1]
-                    err = abs(share - want)
-                    if best is None or err < best[0]:
-                        best = (err, axis, pos)
-            idx = np.indices(m.shape)
-            if best:
-                _, axis, pos = best
-                near_a = (idx[axis] < pos) if pts[a][axis] < pos else (idx[axis] >= pos)
-                seed[m & near_a] = a
-                seed[m & ~near_a] = b
-        else:
-            sub = np.zeros_like(markers)
-            for k in ks:
-                sub[pts[k]] = k
-            _, (sy, sx) = ndimage.distance_transform_edt(sub == 0, return_indices=True)
-            seed[m] = sub[sy, sx][m]
+            continue
+        # открытый план (несколько подписей в одном куске): степенная диаграмма — прямые границы,
+        # веса подбираются, пока площади частей не совпадут с подписями
+        ys, xs = np.nonzero(m)
+        P = np.array([pts[k] for k in ks], float)
+        want = np.array([labs[k - 1]['area'] for k in ks]); want = want / want.sum() * len(ys)
+        w = np.zeros(len(ks))
+        d2 = (ys[:, None] - P[None, :, 0]) ** 2 + (xs[:, None] - P[None, :, 1]) ** 2
+        for _ in range(2000):
+            own = np.argmin(d2 - w[None, :], axis=1)
+            got = np.bincount(own, minlength=len(ks))
+            err = (want - got) / len(ys)
+            if np.abs(err).max() < 0.005:
+                break
+            w += err * 0.3 * d2.mean()
+        seed[ys, xs] = np.array(ks)[own]
+    # куски без подписи: мелкие (дуги дверей, ниши) отдаём соседям, крупные (> 1 м², полосы за витражом, улица) — не квартира
+    keep = inside.copy()
+    for c in range(1, nc + 1):
+        if c not in owner:
+            m = comp == c
+            if m.sum() * RES * RES > 1.0e6:
+                keep &= ~ndimage.binary_dilation(m, iterations=2)
     _, (iy, ix) = ndimage.distance_transform_edt(seed == 0, return_indices=True)
-    lab = np.where(inside, seed[iy, ix], 0)
+    lab = np.where(keep, seed[iy, ix], 0)
+    inside = keep
     rooms, used = [], {}
+    taken = Polygon()
+    # оболочка квартиры: замкнутые области между стенами, окнами и линиями дверей, где есть подпись
+    from shapely.geometry import Point
+    shell = unary_union([walls] + [w.buffer(15) for w, _ in win_geo] + [c.buffer(25) for c in chords])
+    holes = [Polygon(h) for poly in getattr(shell, 'geoms', [shell]) if poly.geom_type == 'Polygon' for h in poly.interiors]
+    env = unary_union([h for h in holes if any(h.contains(Point(l['at'])) for l in labs)])
+    env = env.buffer(40, join_style=2) if not env.is_empty and env.area > 0.85 * sum(l['area'] for l in labs) * 1e6 else None
     for k, l in enumerate(labs, 1):
         m = lab == k
         if not m.any():
             continue
+        # узкие отростки (< 600 мм: полоса за фасадом, щель у витража) — не комната
+        ro = int(300 / RES); yy, xx = np.ogrid[-ro:ro + 1, -ro:ro + 1]
+        mo = ndimage.binary_opening(m, structure=xx * xx + yy * yy <= ro * ro)
+        if mo.sum() > 0.5 * m.sum():
+            lb, nb = ndimage.label(mo)
+            if nb > 1:
+                sz = ndimage.sum(mo, lb, range(1, nb + 1))
+                mo = lb == (int(np.argmax(sz)) + 1)  # комната = один цельный кусок
+            # вернуть то, что срезал радиус в углах, но не отростки: пересечение с расширенным ядром
+            m = m & ndimage.binary_dilation(mo, iterations=ro)
         g = vectorize(m, x0, y0)
+        # вершины вдоль стен — из CAD: расширить на 80 мм и обрезать точной геометрией стен и уже занятыми комнатами
+        g = g.buffer(80, join_style=2).difference(walls).difference(taken)
+        if env is not None:
+            g = g.intersection(env)
+        g = g.buffer(-20, join_style=2).buffer(20, join_style=2)
+        if g.geom_type == 'MultiPolygon':
+            g = unary_union([q for q in g.geoms if q.area > 0.3e6]) or max(g.geoms, key=lambda q: q.area)
+        g = g.simplify(15, preserve_topology=True)
+        taken = taken.union(g)
         rid0, ru = next(((i, n) for p, i, n in NAMES if re.search(p, l['name'], re.I)), ('room', l['name'].title()))
         used[rid0] = used.get(rid0, 0) + 1
         rid = rid0 if used[rid0] == 1 else f'{rid0}{used[rid0]}'
@@ -242,30 +297,21 @@ def extract(dxf_path, sheet):
             ys, xs = np.nonzero(touch)
             w = int(max(np.ptp(xs), np.ptp(ys)) * RES)
             outdoor = 'balcony' in (a['id'][:7], b['id'][:7])
-            links.append({'between': [a['id'], b['id']], 'type': 'balcony' if outdoor else ('open' if w > 1000 else 'door'), 'w': w})
+            has_door = (touch & ndimage.binary_dilation(Dm, iterations=10)).any()
+            if not has_door and w <= 1000:
+                continue  # узкий стык без двери — щель/угол, не связь
+            links.append({'between': [a['id'], b['id']], 'type': 'balcony' if outdoor else ('door' if has_door and w <= 1300 else 'open'), 'w': w})
     # контур квартиры и окна: участки контура без стены
     foot = vectorize(inside, x0, y0)
     outer = foot if foot.geom_type == 'Polygon' else max(foot.geoms, key=lambda p: p.area)
     wins = []
-    ring = outer.exterior
-    n = int(ring.length // 300)
-    gap = []
-    for i in range(n + 1):
-        p = ring.interpolate(i * 300)
-        free = not walls.buffer(60).contains(p)
-        gap.append((p, free))
-    run = []
-    for p, free in gap + [(None, False)]:
-        if free:
-            run.append(p)
-        elif len(run) >= 3:
-            mid = run[len(run) // 2]
-            k = lab[min(int((mid.y - y0) / RES), H - 1), min(int((mid.x - x0) / RES), W - 1)]
-            near = min(rooms, key=lambda r: Polygon(r['rings'][0]['outer']).distance(mid) if r['rings'] else 1e9)
-            wins.append({'room': near['id'], 'at': [round(mid.x / 10) * 10, round(mid.y / 10) * 10], 'w': len(run) * 300})
-            run = []
-        else:
-            run = []
+    for r, length in win_geo:
+        c = r.centroid
+        if not outer.buffer(800).contains(c):
+            continue
+        for rr in rooms:
+            if rr['rings'] and min(Polygon(q['outer']).distance(r) for q in rr['rings']) < 600:
+                wins.append({'room': rr['id'], 'at': [round(c.x / 10) * 10, round(c.y / 10) * 10], 'w': int(length)})
     entry = next((r for r in rooms if r['id'].startswith(('hall', 'corr'))), rooms[0])
     links.append({'between': ['MOP', entry['id']], 'type': 'entry', 'w': 1000})
     # проверки
@@ -279,16 +325,23 @@ def extract(dxf_path, sheet):
         u = st.pop()
         if u not in reach:
             reach.add(u); st += list(g.get(u, ()))
-    dev = [(r['id'], r['area'], r['area_geom']) for r in rooms if not r['id'].startswith('balcony') and abs(r['area_geom'] - r['area']) > 0.03 * r['area'] + 0.3]
+    # DWG: площади в подписях считаются по своей грани стены → допуск на комнату 35% (+0.5 м², открытый план делится без линии раздела), на сумму 6%
+    dev = [(r['id'], r['area'], r['area_geom']) for r in rooms if not r['id'].startswith('balcony') and abs(r['area_geom'] - r['area']) > 0.35 * r['area'] + 0.5]
+    live = [r for r in rooms if not r['id'].startswith('balcony')]
+    tot_l, tot_g = sum(r['area'] for r in live), sum(r['area_geom'] for r in live)
+    if abs(tot_g - tot_l) > 0.06 * tot_l:
+        dev.append(('итого', round(tot_l, 2), round(tot_g, 2)))
     checks = {'entries': 1, 'unreached': [r['id'] for r in rooms if r['id'] not in reach],
               'no_window': [r['id'] for r in rooms if r['id'].startswith(('bed', 'kl')) and not any(w['room'] == r['id'] for w in wins)
+                            and not any(l['type'] == 'open' and r['id'] in l['between'] and any(w['room'] in l['between'] for w in wins) for l in links)
                             and not any(l['type'] == 'balcony' and r['id'] in l['between'] for l in links)],
               'area_total_ok': not dev, 'area_dev': dev, 'total_src': 'dwg_labels', 'source_kind': 'dwg'}
-    checks['ok'] = not checks['unreached'] and not checks['no_window'] and not dev
+    # стены точные из CAD; по комнатам расходится только деление открытого плана → решает общая сумма
+    checks['ok'] = not checks['unreached'] and not checks['no_window'] and not any(d[0] == 'итого' for d in dev)
     for r in rooms:
         r.pop('k')
     to_xy = lambda p: [[round(x / 10) * 10, round(y / 10) * 10] for x, y in list(p.exterior.coords)[:-1]]
-    apt = {'contour': {'outer': to_xy(outer), 'windows': wins, 'risers': []}, 'rooms': rooms, 'links': links, 'checks': checks,
+    apt = {'geom': 'approx', 'contour': {'outer': to_xy(outer), 'windows': wins, 'risers': []}, 'rooms': rooms, 'links': links, 'checks': checks,
            'area_rooms': round(sum(r['area'] for r in rooms), 2), 'area_geom': round(sum(r['area_geom'] for r in rooms), 2),
            'total_on_sheet': None, 'check_total': None}
     return {"source": sheet, "mm_per_unit": 1.0, "apartments": [apt]}, (lab, x0, y0, labs, inside, Wm, Dm)

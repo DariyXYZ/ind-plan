@@ -18,5 +18,10 @@
   "directory": "out_touch_checked",
   "prefix": "tch",
   "project": "1-41-2024 Touch Dovzhenko (Москва)"
+ },
+ {
+  "directory": "out_qube_dwg",
+  "prefix": "qube",
+  "project": "3-3-2026 QUBE Residential Dubai"
  }
 ]
