@@ -26,7 +26,8 @@ from shapely.ops import unary_union
 
 RES = 20            # мм на ячейку
 CLOSE_MM = 260      # закрываем зазоры до ~2*260 мм (стены внутри квартиры)
-SIMPL_MM = 35       # спрямление цепочек
+SIMPL_MM = 35
+SMOOTH_MM = 150    # полуразмер квадрата спрямления контура       # спрямление цепочек
 EXT_WALL = 300      # наружная стена по умолчанию (нет в PDF)
 MOP_WALL = 250
 NS = uuid.UUID('6f1d2a40-1c3b-4e7a-9b1e-1a2b3c4d5e6f')
@@ -80,6 +81,11 @@ def partition(L):
     for h, sl in enumerate(ndimage.find_objects(holes), 1):
         if min(sl[0].stop - sl[0].start, sl[1].stop - sl[1].start) * RES <= 760:
             F |= holes == h
+    # спрямить контур квартиры: выступы/впадины мельче 30 см (заливка в оконных и дверных проёмах) — прочь, прямые углы целы
+    k = int(SMOOTH_MM / RES) * 2 + 1
+    sq = np.ones((k, k), bool)
+    F = ndimage.binary_closing(np.pad(F, k), structure=sq)[k:-k, k:-k]
+    F = ndimage.binary_opening(F, structure=sq)
     _, (iy, ix) = ndimage.distance_transform_edt(~occ, return_indices=True)
     P = np.where(F, L[iy, ix], 0)
     return P, int(n)
@@ -460,7 +466,7 @@ def convert(plan, snap=40, ang=5):
             'Assumptions': ['ось стены = середина зазора между заливками пола (PDF)',
                             f'толщина периметра снаружи не известна: улица {EXT_WALL}, остальное {MOP_WALL} мм',
                             'OutsideSpaceType: Exterior там, где окно; CommonArea — глухое ребро прихожей; иначе null',
-                            'двери — по середине общего ребра; высоты проёмов типовые', 'узкие дыры (≤760 мм) считаются мебелью и отданы комнате', 'стены до 5° выправлены по осям, толщины приведены к 80/100/120/150/200/250/300'],
+                            'двери — по середине общего ребра; высоты проёмов типовые', 'выступы и впадины наружного контура мельче 30 см спрямлены', 'узкие дыры (≤760 мм) считаются мебелью и отданы комнате', 'стены до 5° выправлены по осям, толщины приведены к 80/100/120/150/200/250/300'],
             'Issues': issues}
 
 
