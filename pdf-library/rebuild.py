@@ -22,4 +22,7 @@ if __name__ == '__main__':
     print(result.stdout.splitlines()[-1])
     plans = build(output / '_library.json')
     coverage()
+    import to_contour_graph
+    sys.argv = [sys.argv[0], str(ROOT / 'db' / 'library.json')]
+    to_contour_graph.main()
     print(f'Rebuilt {len(plans)} plans and coverage.md')

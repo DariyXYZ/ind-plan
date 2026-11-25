@@ -486,6 +486,25 @@ def main():
         if g:
             out.append(g)
             bad += bool(g['Issues'])
+    # чистые контуры комнат (по осям стен, без артефактов заливки) — обратно в базу и в JSON для нейронки
+    def clean_rings(g):
+        N, E = g['Nodes'], g['Edges']
+        pts = lambda lp: [[N[E[k]['EndNodeIndex'] if rv else E[k]['StartNodeIndex']]['X'], N[E[k]['EndNodeIndex'] if rv else E[k]['StartNodeIndex']]['Y']] for k, rv in lp]
+        return {s['RoomId']: [{'outer': pts(s['OuterLoop']), 'holes': [pts(h) for h in s['InnerLoops']]}] for s in g['Spaces']}
+    cg = {g['Id']: clean_rings(g) for g in out if 'Spaces' in g}
+    for p in L:
+        for r in p['rooms']:
+            if r['id'] in cg.get(p['id'], {}):
+                r['axis_rings'] = cg[p['id']][r['id']]  # исходные полы (rings) не трогаем — из них строится граф
+    src.write_text(json.dumps(L, ensure_ascii=False, indent=1), encoding='utf-8')
+    llm_p = src.with_name('library_llm.json')
+    if llm_p.exists():
+        llm = json.loads(llm_p.read_text(encoding='utf-8'))
+        for x in llm:
+            for r in x['plan']['rooms']:
+                if r['id'] in cg.get(x['id'], {}):
+                    r['rings'] = cg[x['id']][r['id']]
+        llm_p.write_text(json.dumps(llm, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     dst = src.with_name('contour_graphs.json')
     dst.write_text(json.dumps(out, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     print(dst, len(out), 'квартир, с замечаниями', bad)
