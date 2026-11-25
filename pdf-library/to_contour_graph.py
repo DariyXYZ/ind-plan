@@ -74,6 +74,12 @@ def partition(L):
         sizes = ndimage.sum(F, lab, range(1, n + 1))
         keep = [i + 1 for i, s in enumerate(sizes) if s >= 0.02 * sizes.max()]
         F = np.isin(lab, keep)
+    # дыры внутри квартиры: шахта отделена от полов стеной; дыра, вплотную касающаяся пола, — мебель/короб поверх заливки
+    # узкая (≤760 мм — глубина гарнитура/короба) дыра — мебель поверх заливки, отдаём комнате; шахты и колонны шире — остаются дырами
+    holes, nh = ndimage.label(ndimage.binary_fill_holes(F) & ~F)
+    for h, sl in enumerate(ndimage.find_objects(holes), 1):
+        if min(sl[0].stop - sl[0].start, sl[1].stop - sl[1].start) * RES <= 760:
+            F |= holes == h
     _, (iy, ix) = ndimage.distance_transform_edt(~occ, return_indices=True)
     P = np.where(F, L[iy, ix], 0)
     return P, int(n)
@@ -285,6 +291,29 @@ def convert(plan, snap=40, ang=5):
         ds = sorted(0 if g.contains(p) else g.distance(p) for p in pts)
         return int(round(ds[1] / 10) * 10)
 
+    # периметр: цепочка против часовой (квартира слева)
+    per = [k for k, e in enumerate(edges) if e['R'] == 0]
+    nxt = defaultdict(list)
+    for k in per:
+        nxt[edges[k]['i']].append(k)
+    loops, left = [], set(per)
+    while left:
+        k = min(left)
+        loop = []
+        while k in left:
+            left.discard(k)
+            loop.append(k)
+            cands = [c for c in nxt[edges[k]['j']] if c in left]
+            if not cands:
+                break
+            k = cands[0]
+        loops.append(loop)
+    loops.sort(key=lambda lp: -abs(signed_area([[nodes[edges[k]['i']]['X'], nodes[edges[k]['i']]['Y']] for k in lp])))
+    area_of = lambda lp: signed_area([[nodes[edges[k]['i']]['X'], nodes[edges[k]['i']]['Y']] for k in lp])
+    perimeter = loops[0] if loops else []
+    holes = [lp for lp in loops[1:] if area_of(lp) < 0]      # шахты, колонны внутри квартиры
+    extra = [lp for lp in loops[1:] if area_of(lp) >= 0]     # отдельные куски — ошибка
+    hole_edges = [k for lp in holes for k in lp]
     # окна → ближайшее периметровое ребро своей комнаты
     rid = {i + 1: r['id'] for i, r in enumerate(rooms)}
     lab_of = {r['id']: i + 1 for i, r in enumerate(rooms)}
@@ -296,9 +325,10 @@ def convert(plan, snap=40, ang=5):
             continue
         lab = lab_of.get(w.get('room'))
         outdoor = {i + 1 for i, r in enumerate(rooms) if r.get('role') == 'loggia'}
-        cands = [(k, e) for k, e in enumerate(edges) if lab is not None and lab in (e['L'], e['R'])
+        hole_e = set(hole_edges)
+        cands = [(k, e) for k, e in enumerate(edges) if k not in hole_e and lab is not None and lab in (e['L'], e['R'])
                  and ({e['L'], e['R']} - {lab}) <= ({0} | outdoor)] or \
-                [(k, e) for k, e in enumerate(edges) if e['R'] == 0]
+                [(k, e) for k, e in enumerate(edges) if e['R'] == 0 and k not in hole_e]
         if not cands:
             continue
         p = Point(*w['at'])
@@ -346,29 +376,6 @@ def convert(plan, snap=40, ang=5):
         openings.append({'Kind': 'Door', 'EdgeIndex': k, 't': 0.5, 'WidthMm': min(w, int(ln)),
                          'BottomMm': 0, 'HeightMm': 2100})
 
-    # периметр: цепочка против часовой (квартира слева)
-    per = [k for k, e in enumerate(edges) if e['R'] == 0]
-    nxt = defaultdict(list)
-    for k in per:
-        nxt[edges[k]['i']].append(k)
-    loops, left = [], set(per)
-    while left:
-        k = min(left)
-        loop = []
-        while k in left:
-            left.discard(k)
-            loop.append(k)
-            cands = [c for c in nxt[edges[k]['j']] if c in left]
-            if not cands:
-                break
-            k = cands[0]
-        loops.append(loop)
-    loops.sort(key=lambda lp: -abs(signed_area([[nodes[edges[k]['i']]['X'], nodes[edges[k]['i']]['Y']] for k in lp])))
-    area_of = lambda lp: signed_area([[nodes[edges[k]['i']]['X'], nodes[edges[k]['i']]['Y']] for k in lp])
-    perimeter = loops[0] if loops else []
-    holes = [lp for lp in loops[1:] if area_of(lp) < 0]      # шахты, колонны внутри квартиры
-    extra = [lp for lp in loops[1:] if area_of(lp) >= 0]     # отдельные куски — ошибка
-    hole_edges = [k for lp in holes for k in lp]
     # порядок рёбер: периметр первым по ходу обхода, потом остальные
     order = perimeter + hole_edges + [k for k in range(len(edges)) if k not in set(perimeter) | set(hole_edges)]
     remap = {old: new for new, old in enumerate(order)}
@@ -453,7 +460,7 @@ def convert(plan, snap=40, ang=5):
             'Assumptions': ['ось стены = середина зазора между заливками пола (PDF)',
                             f'толщина периметра снаружи не известна: улица {EXT_WALL}, остальное {MOP_WALL} мм',
                             'OutsideSpaceType: Exterior там, где окно; CommonArea — глухое ребро прихожей; иначе null',
-                            'двери — по середине общего ребра; высоты проёмов типовые', 'стены до 5° выправлены по осям, толщины приведены к 80/100/120/150/200/250/300'],
+                            'двери — по середине общего ребра; высоты проёмов типовые', 'узкие дыры (≤760 мм) считаются мебелью и отданы комнате', 'стены до 5° выправлены по осям, толщины приведены к 80/100/120/150/200/250/300'],
             'Issues': issues}
 
 
