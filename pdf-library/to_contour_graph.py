@@ -63,7 +63,7 @@ def rasterize(rooms):
     return np.array(img, dtype=np.int32), x0, y0, geoms
 
 
-def partition(L):
+def partition(L, smooth=True):
     occ = L > 0
     r = int(CLOSE_MM / RES)
     yy, xx = np.ogrid[-r:r + 1, -r:r + 1]
@@ -85,10 +85,11 @@ def partition(L):
             F |= holes == h
             F[sl] = False
     # спрямить контур квартиры: выступы/впадины мельче 30 см (заливка в оконных и дверных проёмах) — прочь, прямые углы целы
-    k = int(SMOOTH_MM / RES) * 2 + 1
-    sq = np.ones((k, k), bool)
-    F = ndimage.binary_closing(np.pad(F, k), structure=sq)[k:-k, k:-k]
-    F = ndimage.binary_opening(F, structure=sq)
+    if smooth:
+        k = int(SMOOTH_MM / RES) * 2 + 1
+        sq = np.ones((k, k), bool)
+        F = ndimage.binary_closing(np.pad(F, k), structure=sq)[k:-k, k:-k]
+        F = ndimage.binary_opening(F, structure=sq)
     _, (iy, ix) = ndimage.distance_transform_edt(~occ, return_indices=True)
     P = np.where(F, L[iy, ix], 0)
     return P, int(n)
@@ -186,7 +187,10 @@ def convert(plan, snap=40, ang=15):
     if not rooms:
         return None
     L, x0, y0, geoms = rasterize(rooms)
-    P, comps = partition(L)
+    cad = str((plan.get('source') or {}).get('file') or '').lower().endswith('.dwg')  # CAD уже точный: без выправки и спрямления
+    if cad:
+        ang = 0
+    P, comps = partition(L, smooth=not cad)
     paths, Q = chains(P)
     tol = SIMPL_MM / RES
     to_mm = lambda v: [int(round((x0 + (v[0] - 1) * RES) / 10) * 10), int(round((y0 + (v[1] - 1) * RES) / 10) * 10)]
