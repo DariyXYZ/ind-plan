@@ -133,6 +133,26 @@ function centroid(room){if(room.label_at)return room.label_at;let A=0,X=0,Y=0;(r
   let c=[X/A,Y/A];const inside=(room.rects||[]).some(([x1,y1,x2,y2])=>c[0]>=x1&&c[0]<=x2&&c[1]>=y1&&c[1]<=y2);
   if(!inside){const b=[...room.rects].sort((p,q)=>(q[2]-q[0])*(q[3]-q[1])-(p[2]-p[0])*(p[3]-p[1]))[0];c=[(b[0]+b[2])/2,(b[1]+b[3])/2]}
   return c}
+// граф стен (ContourGraph): пространства по обходам, стены с толщиной, проёмы на рёбрах
+function drawCG(r,T,opt){
+  const g=r.cg,N=g.Nodes,E=g.Edges,role={};(r.rooms||[]).forEach(m=>role[m.id]=m.role);
+  const P=i=>[N[i].X,N[i].Y];let s='';
+  g.Spaces.forEach(sp=>{const pts=sp.OuterLoop.map(([k,rv])=>P(rv?E[k].EndNodeIndex:E[k].StartNodeIndex));
+    const loops=[pts,...(sp.InnerLoops||[]).map(l=>l.map(([k,rv])=>P(rv?E[k].EndNodeIndex:E[k].StartNodeIndex)))];
+    s+=`<path d="${loops.map(l=>l.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z').join(' ')}" fill="${ROLE_COL[role[sp.RoomId]]||'#ddd'}" fill-rule="evenodd"/>`});
+  const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,x2,y2,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
+  let walls='';
+  E.forEach(e=>{const q=geo(e);if(e.FillType==='Empty'){const [a,b]=[T(q.x1,q.y1),T(q.x2,q.y2)];s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="var(--wall)" stroke-width="${opt.big?18:30}" stroke-dasharray="60 60" opacity=".55"/>`;return}
+    const lo=e.LeftOffset,ro=e.RightOffset,m=Math.min(lo,ro,150);
+    const ax=q.x1-q.ux*m,ay=q.y1-q.uy*m,bx=q.x2+q.ux*m,by=q.y2+q.uy*m;
+    const pts=[[ax+q.nx*lo,ay+q.ny*lo],[bx+q.nx*lo,by+q.ny*lo],[bx-q.nx*ro,by-q.ny*ro],[ax-q.nx*ro,ay-q.ny*ro]];
+    walls+='M'+pts.map(p=>T(...p).join(' ')).join('L')+'Z'});
+  s+=`<path d="${walls}" fill="var(--wall)" stroke="var(--wall)" stroke-width="12" stroke-linejoin="round"/>`;
+  (g.Openings||[]).forEach(o=>{const e=E[o.EdgeIndex],q=geo(e),c=[q.x1+q.ux*q.L*o.t,q.y1+q.uy*q.L*o.t],h=o.WidthMm/2,lo=e.LeftOffset+25,ro=e.RightOffset+25;
+    const pts=[[c[0]-q.ux*h+q.nx*lo,c[1]-q.uy*h+q.ny*lo],[c[0]+q.ux*h+q.nx*lo,c[1]+q.uy*h+q.ny*lo],[c[0]+q.ux*h-q.nx*ro,c[1]+q.uy*h-q.ny*ro],[c[0]-q.ux*h-q.nx*ro,c[1]-q.uy*h-q.ny*ro]];
+    s+=`<path d="M${pts.map(p=>T(...p).join(' ')).join('L')}Z" fill="${o.Kind==='Window'?'#dff0ff':'var(--panel)'}"/>`;
+    if(o.Kind==='Window'){const a=T(c[0]-q.ux*h,c[1]-q.uy*h),b=T(c[0]+q.ux*h,c[1]+q.uy*h);s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#3a8fff" stroke-width="${opt.big?25:40}"/>`}});
+  return s}
 function svgPlan(r,opt){
   const rooms=r.rooms||[],outer=(r.plan&&r.plan.outer)||[];
   const xs=[],ys=[];rooms.forEach(m=>{if(m.rings?.length)m.rings.forEach(q=>[q.outer,...q.holes].forEach(loop=>loop.forEach(([x,y])=>{xs.push(x);ys.push(y)})));else (m.rects||[]).forEach(([a,b,c,d])=>{xs.push(a,c);ys.push(b,d)})});outer.forEach(([x,y])=>{xs.push(x);ys.push(y)});
@@ -140,11 +160,13 @@ function svgPlan(r,opt){
   const pad=400,x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
   const H=y1-y0,fy=y=>y1-(y-y0)-y0+y0, T=(x,y)=>[x-x0,y1-y];
   let s=`<svg viewBox="0 0 ${x1-x0} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+  if(r.cg)s+=drawCG(r,T,opt);else{
   rooms.forEach(m=>{const col=ROLE_COL[m.role]||'#ddd';
     if(m.rings?.length){m.rings.forEach(q=>{const loops=[q.outer,...q.holes];const path=loops.map(loop=>loop.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z').join(' ');s+=`<path d="${path}" fill="${col}" fill-rule="evenodd" stroke="var(--wall)" stroke-width="${opt.big?30:45}" stroke-linejoin="miter"/>`})}
     else (m.rects||[]).forEach(([a,b,c,d])=>{const [px,py]=T(a,d);s+=`<rect x="${px}" y="${py}" width="${c-a}" height="${d-b}" fill="${col}"/>`})});
   if(outer.length)s+=`<polygon points="${outer.map(p=>T(p[0],p[1]).join(',')).join(' ')}" fill="none" stroke="var(--wall)" stroke-width="${opt.big?60:90}" stroke-linejoin="round"/>`;
   (r.plan&&r.plan.windows||[]).forEach(w=>{if(!w.at)return;const [px,py]=T(w.at[0],w.at[1]);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?110:150}" fill="#4aa3ff" opacity=".8"/>`});
+  }
   if(opt.graph){
     const C={};rooms.forEach(m=>C[m.id]=centroid(m));
     const hall=rooms.find(m=>/hall|corr/.test(m.role||m.id))||rooms[0];

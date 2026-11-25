@@ -32,3 +32,6 @@ python -X utf8 analyze.py <папка_вывода>                # призн�
 Пилот 2026-11-20: ЖК Бархатная (1-25-2023), 23 листа → 300 квартир, 236 прошли, 100 уникальных.
 `out_barkhatnaya/library_ind_projects.json` — в схеме engine/library.json (не подключено к refs.py).
 Отчёт: https://claude.ai/artifact/U1AqDtMsWJ3N6RiensMU3F
+
+## Граф стен (ContourGraph, драфт PLAN AI 2.0)
+`python -X utf8 to_contour_graph.py` → `db/contour_graphs.json` (после `rebuild.py`). Ось стены = середина зазора между заливками пола; толщина = зазор; дыры периметра (шахты, колонны) — в `PerimeterHoles` (в драфте такого поля нет). Допущения записаны в `Assumptions` каждой квартиры. Каталог рисует планы по этому графу.
