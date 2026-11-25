@@ -133,24 +133,23 @@ function centroid(room){if(room.label_at)return room.label_at;let A=0,X=0,Y=0;(r
   let c=[X/A,Y/A];const inside=(room.rects||[]).some(([x1,y1,x2,y2])=>c[0]>=x1&&c[0]<=x2&&c[1]>=y1&&c[1]<=y2);
   if(!inside){const b=[...room.rects].sort((p,q)=>(q[2]-q[0])*(q[3]-q[1])-(p[2]-p[0])*(p[3]-p[1]))[0];c=[(b[0]+b[2])/2,(b[1]+b[3])/2]}
   return c}
-// граф стен (ContourGraph): полы по обходам пространств, стены — линии своей толщины, проёмы поверх
+// граф стен (ContourGraph), тонкие линии: заливка комнат + контур 1px, периметр 2px, двери — разрыв, окна — голубая двойная линия
 function drawCG(r,T,opt){
   const g=r.cg,N=g.Nodes,E=g.Edges,role={};(r.rooms||[]).forEach(m=>role[m.id]=m.role);
   const P=i=>[N[i].X,N[i].Y],path=l=>l.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z';
   const loopPts=l=>l.map(([k,rv])=>P(rv?E[k].EndNodeIndex:E[k].StartNodeIndex));
-  const col=sp=>ROLE_COL[role[sp.RoomId]]||'#ddd';let s='';
+  const col=sp=>ROLE_COL[role[sp.RoomId]]||'#ddd',NS='vector-effect="non-scaling-stroke"';let s='';
   g.Spaces.forEach(sp=>{s+=`<path d="${[sp.OuterLoop,...(sp.InnerLoops||[])].map(l=>path(loopPts(l))).join(' ')}" fill="${col(sp)}" fill-rule="evenodd"/>`});
-  (g.PerimeterHoles||[]).forEach(l=>{s+=`<path d="${path(loopPts(l))}" fill="var(--wall)"/>`});
-  const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,x2,y2,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
-  const line=(q,c,a,b,w,st,extra='')=>{const p1=T(q.x1+q.ux*a+q.nx*c,q.y1+q.uy*a+q.ny*c),p2=T(q.x1+q.ux*b+q.nx*c,q.y1+q.uy*b+q.ny*c);
-    return `<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="${st}" stroke-width="${w}" ${extra}/>`};
-  E.forEach(e=>{const q=geo(e);
-    if(e.FillType==='Empty'){s+=line(q,0,0,q.L,opt.big?18:30,'var(--wall)','stroke-dasharray="60 60" opacity=".5"');return}
-    const w=e.LeftOffset+e.RightOffset;s+=line(q,(e.LeftOffset-e.RightOffset)/2,0,q.L,w,'var(--wall)','stroke-linecap="square"')});
-  const spaceCol=k=>{const sp=g.Spaces.find(sp=>sp.OuterLoop.some(([i])=>i===k));return sp?col(sp):'var(--panel)'};
-  (g.Openings||[]).forEach(o=>{const e=E[o.EdgeIndex],q=geo(e),c=q.L*o.t,h=o.WidthMm/2,w=e.LeftOffset+e.RightOffset,m=(e.LeftOffset-e.RightOffset)/2;
-    if(o.Kind==='Window'){s+=line(q,m,c-h,c+h,w+4,'#e3f1ff')+line(q,m,c-h,c+h,opt.big?25:40,'#3a8fff')}
-    else s+=line(q,m,c-h,c+h,w+40,spaceCol(o.EdgeIndex))});
+  (g.PerimeterHoles||[]).forEach(l=>{s+=`<path d="${path(loopPts(l))}" fill="var(--panel)" stroke="var(--wall)" stroke-width="1" ${NS}/>`});
+  const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
+  const pt=(q,a,c=0)=>T(q.x1+q.ux*a+q.nx*c,q.y1+q.uy*a+q.ny*c);
+  // разрывы под проёмы
+  const gaps={};(g.Openings||[]).forEach(o=>{const q=geo(E[o.EdgeIndex]),c=q.L*o.t,h=o.WidthMm/2;(gaps[o.EdgeIndex]=gaps[o.EdgeIndex]||[]).push([Math.max(0,c-h),Math.min(q.L,c+h),o.Kind])});
+  E.forEach((e,k)=>{const q=geo(e),per=e.LocationType==='Perimeter',empty=e.FillType==='Empty';
+    const w=per?(opt.big?2:1.6):1,st=`stroke="var(--wall)" stroke-width="${w}" ${NS} stroke-linecap="round"${empty?' stroke-dasharray="3 3" opacity=".45"':''}`;
+    let cur=0;const seg=[];(gaps[k]||[]).sort((a,b)=>a[0]-b[0]).forEach(([a,b])=>{if(a>cur)seg.push([cur,a]);cur=Math.max(cur,b)});if(cur<q.L)seg.push([cur,q.L]);
+    seg.forEach(([a,b])=>{const p1=pt(q,a),p2=pt(q,b);s+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" ${st}/>`});
+    (gaps[k]||[]).forEach(([a,b,kind])=>{if(kind!=='Window')return;const d=per?-60:0;[d-45,d+45].forEach(c=>{const p1=pt(q,a,c),p2=pt(q,b,c);s+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="#3a8fff" stroke-width="1" ${NS}/>`})})});
   return s}
 function svgPlan(r,opt){
   const rooms=r.rooms||[],outer=(r.plan&&r.plan.outer)||[];
