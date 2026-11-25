@@ -178,6 +178,27 @@ def dp(points, tol):
     return dp(points[:i + 1], tol)[:-1] + dp(points[i:], tol)
 
 
+def unstair(pts, coarse=450 / RES, min_len=2000 / RES):
+    """лесенка → наклон: грубое спрямление; длинный косой (20–70°) отрезок заменяет ступени между концами"""
+    if len(pts) < 5:
+        return pts
+    cp = dp(pts, coarse)
+    idx, k = [], 0
+    for q in cp:
+        while pts[k] != q:
+            k += 1
+        idx.append(k)
+    out = [pts[0]]
+    for a_, b_ in zip(idx, idx[1:]):
+        (x1, y1), (x2, y2) = pts[a_], pts[b_]
+        ang = math.degrees(math.atan2(abs(y2 - y1), abs(x2 - x1)))
+        if math.hypot(x2 - x1, y2 - y1) >= min_len and 20 <= ang <= 70 and b_ - a_ >= 4:
+            out.append(pts[b_])
+        else:
+            out += pts[a_ + 1:b_ + 1]
+    return out
+
+
 def signed_area(pts):
     return sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(pts, pts[1:] + pts[:1])) / 2
 
@@ -226,6 +247,8 @@ def convert(plan, snap=40, ang=15):
             left, right = right, left
         for t in ((tol * 4, tol * 2.5, tol, tol / 3, 0) if right == 0 else (tol, tol / 3, 0)):
             simp = dp(path, t) if t else path
+            if right == 0:
+                simp = unstair(simp)
             ids = []
             for v in simp:
                 k = node(to_mm(v))
