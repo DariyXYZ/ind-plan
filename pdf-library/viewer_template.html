@@ -151,6 +151,9 @@ function drawCG(r,T,opt){
     seg.forEach(([a,b])=>{const p1=pt(q,a),p2=pt(q,b);s+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" ${st}/>`});
     (gaps[k]||[]).forEach(([a,b,kind])=>{if(kind!=='Window')return;const d=per?-60:0;[d-45,d+45].forEach(c=>{const p1=pt(q,a,c),p2=pt(q,b,c);s+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="#3a8fff" stroke-width="1" ${NS}/>`})})});
   return s}
+// чертёж из DWG как есть: стены заливкой, двери линиями, подписи
+function cadSvg(c,big){if(!c)return '';const fs=big?260:340;
+  return `<svg viewBox="0 0 ${c.w} ${c.h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${big?'auto':'190px'};display:block"><rect width="${c.w}" height="${c.h}" fill="#f6f3ec"/><path d="${c.doors}" fill="none" stroke="var(--mute)" stroke-width="1" vector-effect="non-scaling-stroke"/><path d="${c.walls}" fill="var(--wall)" fill-rule="evenodd"/>${big?c.labels.map(l=>`<text x="${l.x}" y="${l.y}" text-anchor="middle" font-size="${fs}" fill="var(--ink)" style="paint-order:stroke;stroke:#f6f3ec;stroke-width:70">${l.name} ${String(l.area).replace('.',',')}</text>`).join(''):''}</svg>`}
 function svgPlan(r,opt){
   const rooms=r.rooms||[],outer=(r.plan&&r.plan.outer)||[];
   const xs=[],ys=[];rooms.forEach(m=>{if(m.rings?.length)m.rings.forEach(q=>[q.outer,...q.holes].forEach(loop=>loop.forEach(([x,y])=>{xs.push(x);ys.push(y)})));else (m.rects||[]).forEach(([a,b,c,d])=>{xs.push(a,c);ys.push(b,d)})});outer.forEach(([x,y])=>{xs.push(x);ys.push(y)});
@@ -185,7 +188,7 @@ function render(){
   $('cnt').textContent=`${rs.length} из ${DATA.length}`;
   const g=$('grid');
   if(!rs.length){g.innerHTML='<div class="empty">Ничего не подходит под фильтры</div>';return}
-  g.innerHTML=rs.map(r=>{if(r.status==='cad_geometry_pending')return `<div class="card source-card${st.sel===r.id?' sel':''}" data-id="${r.id}"><div class="pending-plan">Контур по DWG на проверке<br>Обводка скрыта</div><div class="t"><span>${r.title}</span><span class="cnt">${r.id}</span></div><div class="s">${proj(r)}</div><div class="tags"><span class="tag">Площади из DWG · границы не извлечены</span></div></div>`;
+  g.innerHTML=rs.map(r=>{if(r.status==='cad_geometry_pending')return `<div class="card source-card${st.sel===r.id?' sel':''}" data-id="${r.id}">${r.cad_svg?cadSvg(r.cad_svg):`<div class="pending-plan">Контур по DWG на проверке<br>Обводка скрыта</div>`}<div class="t"><span>${r.title}</span><span class="cnt">${r.id}</span></div><div class="s">${proj(r)}</div><div class="tags"><span class="tag">чертёж DWG · комнаты на проверке</span></div></div>`;
     if(r.status==='source_only')return `<div class="card source-card${st.sel===r.id?' sel':''}" data-id="${r.id}"><div class="pending-plan">Исходный лист<br>Геометрия не извлечена</div><div class="t"><span>${r.title}</span><span class="cnt">${r.id}</span></div><div class="s">${proj(r)}</div></div>`;
     const k=r.key||{};const tags=MUST.filter(([m])=>k[m]&&m!=='risers').map(([,l])=>`<span class="tag">${l}</span>`).join('');
     return `<div class="card${st.sel===r.id?' sel':''}" data-id="${r.id}">${svgPlan(r,{graph:true})}
@@ -197,7 +200,7 @@ function open(id){
   const r=DATA.find(x=>x.id===id);st.sel=id;const k=r.key||{},src=r.source||{};
    if(r.status==='cad_geometry_pending'){
      const rooms=(r.cad&&r.cad.rooms)||[];
-     $('detBody').innerHTML=`<h2>${r.title}</h2><div class="cnt">${r.id} · ${proj(r)}</div><p>Исходный DWG содержит стены, двери и подписи помещений с площадями. Проверенные замкнутые контуры пока не извлечены, поэтому схема и граф скрыты.</p><table>${rooms.map(m=>`<tr><td>${m.name_src}</td><td class="n">${m.area_m2.toFixed(2)} м²</td></tr>`).join('')}</table><div class="kv"><b>DWG</b><span class="mono">${r.cad.file}</span><b>Единицы</b><span>миллиметры</span></div><p style="margin:16px 0"><a class="source-action" href="${r.pdf}" target="_blank" rel="noopener">Открыть исходный PDF ↗</a></p>`;
+     $('detBody').innerHTML=`<h2>${r.title}</h2><div class="cnt">${r.id} · ${proj(r)}</div><p>Исходный DWG содержит стены, двери и подписи помещений с площадями. Комнаты и граф ещё на проверке (площади не сошлись), ниже — чертёж из DWG как есть.</p>${cadSvg(r.cad_svg,true)}<table>${rooms.map(m=>`<tr><td>${m.name_src}</td><td class="n">${m.area_m2.toFixed(2)} м²</td></tr>`).join('')}</table><div class="kv"><b>DWG</b><span class="mono">${r.cad.file}</span><b>Единицы</b><span>миллиметры</span></div><p style="margin:16px 0"><a class="source-action" href="${r.pdf}" target="_blank" rel="noopener">Открыть исходный PDF ↗</a></p>`;
      $('det').classList.add('open');render();return;
    }
    if(r.status==='source_only'){

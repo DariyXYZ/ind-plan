@@ -264,6 +264,27 @@ def convert(plan, snap=40, ang=5):
                 for v, g in c:
                     for k in g:
                         nodes[k][axis] = m
+        # фаски-артефакты растра: короткое косое ребро между вертикалью и горизонталью → прямой угол (шахты, углы комнат)
+        adj = defaultdict(list)
+        for e in edges:
+            adj[e['i']].append(e['j']); adj[e['j']].append(e['i'])
+        for e in edges:
+            i, j = e['i'], e['j']
+            A, B = nodes[i], nodes[j]
+            dx, dy = B['X'] - A['X'], B['Y'] - A['Y']
+            if not dx or not dy or math.hypot(dx, dy) > 800:
+                continue
+            ax = lambda n, o: ('v' if nodes[o]['X'] == nodes[n]['X'] else 'h' if nodes[o]['Y'] == nodes[n]['Y'] else None)
+            si = {ax(i, k) for k in adj[i] if k != j} - {None}
+            sj = {ax(j, k) for k in adj[j] if k != i} - {None}
+            if 'v' in si and 'h' in sj:
+                c = (A['X'], B['Y'])
+            elif 'h' in si and 'v' in sj:
+                c = (B['X'], A['Y'])
+            else:
+                continue
+            for k in (i, j):
+                nodes[k]['X'], nodes[k]['Y'] = c
         # склеить совпавшие узлы, выкинуть нулевые и повторные рёбра
         canon, remap = {}, {}
         for k, n in enumerate(nodes):
