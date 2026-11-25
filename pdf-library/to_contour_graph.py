@@ -166,7 +166,7 @@ def signed_area(pts):
     return sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(pts, pts[1:] + pts[:1])) / 2
 
 
-def convert(plan):
+def convert(plan, snap=40, ang=5):
     rooms = [r for r in plan.get('rooms', []) if r.get('rings')]
     if not rooms:
         return None
@@ -220,6 +220,59 @@ def convert(plan):
                 continue
             seen.add((min(a, b), max(a, b)))
             edges.append({'i': a, 'j': b, 'L': left, 'R': right})
+
+    # выправка: почти вертикальные/горизонтальные (до 5°) — строго по осям, стены на одной линии — в одну
+    def orthogonalize(nodes, edges, ang=math.radians(5), snap=40):
+        par = list(range(len(nodes)))
+        def f(a):
+            while par[a] != a:
+                par[a] = par[par[a]]; a = par[a]
+            return a
+        for axis in ('X', 'Y'):
+            par[:] = range(len(nodes))
+            for e in edges:
+                A, B = nodes[e['i']], nodes[e['j']]
+                dx, dy = abs(B['X'] - A['X']), abs(B['Y'] - A['Y'])
+                if (axis == 'X' and dx <= math.tan(ang) * dy) or (axis == 'Y' and dy <= math.tan(ang) * dx):
+                    par[f(e['i'])] = f(e['j'])
+            groups = defaultdict(list)
+            for k in range(len(nodes)):
+                groups[f(k)].append(k)
+            vals = sorted((sum(nodes[k][axis] for k in g) / len(g), g) for g in groups.values())
+            cl, cur = [], []
+            for v, g in vals:  # соседние линии ближе snap мм — одна линия
+                if cur and v - cur[-1][0] > snap:
+                    cl.append(cur); cur = []
+                cur.append((v, g))
+            if cur:
+                cl.append(cur)
+            for c in cl:
+                w = sum(len(g) for v, g in c)
+                m = int(round(sum(v * len(g) for v, g in c) / w / 10) * 10)
+                for v, g in c:
+                    for k in g:
+                        nodes[k][axis] = m
+        # склеить совпавшие узлы, выкинуть нулевые и повторные рёбра
+        canon, remap = {}, {}
+        for k, n in enumerate(nodes):
+            remap[k] = canon.setdefault((n['X'], n['Y']), k)
+        out, seen2 = [], set()
+        for e in edges:
+            i, j = remap[e['i']], remap[e['j']]
+            key = (min(i, j), max(i, j))
+            if i == j or key in seen2:
+                continue
+            seen2.add(key)
+            out.append({**e, 'i': i, 'j': j})
+        used = sorted({k for e in out for k in (e['i'], e['j'])})
+        idx = {k: n for n, k in enumerate(used)}
+        new_nodes = [nodes[k] for k in used]
+        for e in out:
+            e['i'], e['j'] = idx[e['i']], idx[e['j']]
+        return new_nodes, out
+
+    if ang:
+        nodes, edges = orthogonalize(nodes, edges, math.radians(ang), snap)
 
     # толщины: от оси до пола комнаты
     def off(e, lab):
@@ -327,9 +380,12 @@ def convert(plan):
             out = e['out']
             thick = EXT_WALL if out == 'Exterior' else MOP_WALL
             item = {'StartNodeIndex': e['i'], 'EndNodeIndex': e['j'], 'LocationType': 'Perimeter', 'FillType': 'Wall',
-                    'OutsideSpaceType': out, 'LeftOffset': lo or 0, 'RightOffset': thick}
+                    'OutsideSpaceType': out, 'LeftOffset': 0, 'RightOffset': thick}
         else:
             wall = (lo or 0) + (ro or 0) >= 40 and not e.get('open')
+            if wall:  # толщина к ближайшему стандарту, ось посередине
+                t = min((80, 100, 120, 150, 200, 250, 300), key=lambda v: abs(v - (lo or 0) - (ro or 0)))
+                lo = ro = t // 2
             item = {'StartNodeIndex': e['i'], 'EndNodeIndex': e['j'], 'LocationType': 'Interior',
                     'FillType': 'Wall' if wall else 'Empty',
                     'LeftOffset': (lo or 0) if wall else 0, 'RightOffset': (ro or 0) if wall else 0}
@@ -397,7 +453,7 @@ def convert(plan):
             'Assumptions': ['ось стены = середина зазора между заливками пола (PDF)',
                             f'толщина периметра снаружи не известна: улица {EXT_WALL}, остальное {MOP_WALL} мм',
                             'OutsideSpaceType: Exterior там, где окно; CommonArea — глухое ребро прихожей; иначе null',
-                            'двери — по середине общего ребра; высоты проёмов типовые'],
+                            'двери — по середине общего ребра; высоты проёмов типовые', 'стены до 5° выправлены по осям, толщины приведены к 80/100/120/150/200/250/300'],
             'Issues': issues}
 
 
@@ -408,6 +464,10 @@ def main():
     for p in L:
         try:
             g = convert(p)
+            for snap, ang in ((0, 5), (0, 2), (0, 0)):  # мягче, если выправка порвала обходы
+                if not g or not g['Issues']:
+                    break
+                g = convert(p, snap, ang)
         except Exception as ex:  # одна квартира не должна ронять сборку
             g = {'Id': p['id'], 'Issues': [f'ошибка: {ex!r}']}
         if g:
