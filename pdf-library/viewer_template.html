@@ -140,7 +140,7 @@ function drawCG(r,T,opt){
   const loopPts=l=>l.map(([k,rv])=>P(rv?E[k].EndNodeIndex:E[k].StartNodeIndex));
   const col=sp=>ROLE_COL[role[sp.RoomId]]||'#ddd',NS='vector-effect="non-scaling-stroke"';let s='';
   g.Spaces.forEach(sp=>{s+=`<path d="${[sp.OuterLoop,...(sp.InnerLoops||[])].map(l=>path(loopPts(l))).join(' ')}" fill="${col(sp)}" fill-rule="evenodd"/>`});
-  (g.PerimeterHoles||[]).forEach(l=>{s+=`<path d="${path(loopPts(l))}" fill="var(--panel)" stroke="var(--wall)" stroke-width="1" ${NS}/>`});
+  (g.PerimeterHoles||[]).forEach(l=>{s+=`<path d="${path(loopPts(l))}" fill="#7fa7c9" stroke="var(--wall)" stroke-width="1" ${NS}><title>стояк</title></path>`});
   const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
   const pt=(q,a,c=0)=>T(q.x1+q.ux*a+q.nx*c,q.y1+q.uy*a+q.ny*c);
   // разрывы под проёмы
@@ -209,7 +209,7 @@ function open(id){
      $('detBody').innerHTML=`<h2>${r.title}</h2><div class="cnt">${r.id} · ${proj(r)}</div>
        <div class="toggle"><button class="chip${G?' on':''}" id="tg">Граф поверх плана</button></div>
        <div id="big">${svgPlan(r,{graph:G,big:true})}</div>
-       <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span></div>
+       <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#7fa7c9;height:8px"></i>стояк</span></div>
        <p>Схематичная обводка по исходному PDF: границы комнат и граф проходов требуют проверки по модели. Площади и размеры не установлены; схема не участвует в генераторе.</p>
        <table>${roomRows}</table>
        <p style="margin:16px 0"><a class="source-action" href="${r.pdf}" target="_blank" rel="noopener">Открыть PDF ↗</a></p>
@@ -224,7 +224,7 @@ function open(id){
   $('detBody').innerHTML=`<h2>${r.kind} · ${r.area} м²</h2><div class="cnt">${r.id} · ${proj(r)}</div>
    <div class="toggle"><button class="chip${G?' on':''}" id="tg">граф поверх плана</button></div>
    <div id="big">${svgPlan(r,{graph:G,big:true})}</div>
-    <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#4aa3ff;height:8px;width:8px;border-radius:9px"></i>окно</span></div>
+    <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#7fa7c9;height:8px"></i>стояк</span><span><i style="background:#4aa3ff;height:8px;width:8px;border-radius:9px"></i>окно</span></div>
    <div class="kv"><b>Граф</b><span>${r.graph}</span><b>Чем характерна</b><span>${r.why||'—'}</span>
    <b>Габарит</b><span>${(k.w/1000).toFixed(2)} × ${(k.d/1000).toFixed(2)} м, фасадов ${k.facades??'—'}</span>
    <b>Вход</b><span>${ENTRY[k.entry_type]||k.entry_type||'—'}</span><b>Спален / с/у</b><span>${k.bedrooms??'—'} / ${k.bathrooms??'—'}</span>

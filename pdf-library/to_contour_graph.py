@@ -81,6 +81,9 @@ def partition(L):
     for h, sl in enumerate(ndimage.find_objects(holes), 1):
         if min(sl[0].stop - sl[0].start, sl[1].stop - sl[1].start) * RES <= 760:
             F |= holes == h
+        else:  # стояк/шахта: простая форма — прямоугольник по габариту
+            F |= holes == h
+            F[sl] = False
     # спрямить контур квартиры: выступы/впадины мельче 30 см (заливка в оконных и дверных проёмах) — прочь, прямые углы целы
     k = int(SMOOTH_MM / RES) * 2 + 1
     sq = np.ones((k, k), bool)
@@ -411,7 +414,7 @@ def convert(plan, snap=40, ang=5):
         e = edges[old]
         lo, ro = off(e, e['L']), off(e, e['R'])
         if e['R'] == 0:
-            out = e['out']
+            out = 'Shaft' if old in hole_edges else e['out']
             thick = EXT_WALL if out == 'Exterior' else MOP_WALL
             item = {'StartNodeIndex': e['i'], 'EndNodeIndex': e['j'], 'LocationType': 'Perimeter', 'FillType': 'Wall',
                     'OutsideSpaceType': out, 'LeftOffset': 0, 'RightOffset': thick}
@@ -482,7 +485,7 @@ def convert(plan, snap=40, ang=5):
     if lost:
         issues.append('нет пространства: ' + ', '.join(lost))
     return {'Id': plan['id'], 'Nodes': nodes, 'Edges': E, 'PerimeterLoop': [[k, False] for k in range(len(perimeter))],
-            'PerimeterHoles': [[[remap[k], False] for k in lp] for lp in holes],
+            'PerimeterHoles': [[[remap[k], False] for k in lp] for lp in holes],  # стояки (мокрая зона)
             'Spaces': spaces, 'Openings': openings,
             'Assumptions': ['ось стены = середина зазора между заливками пола (PDF)',
                             f'толщина периметра снаружи не известна: улица {EXT_WALL}, остальное {MOP_WALL} мм',
