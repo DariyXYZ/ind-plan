@@ -248,7 +248,8 @@ def convert(plan, snap=40, ang=15):
             for e in edges:
                 A, B = nodes[e['i']], nodes[e['j']]
                 dx, dy = abs(B['X'] - A['X']), abs(B['Y'] - A['Y'])
-                if (axis == 'X' and dx <= math.tan(ang) * dy) or (axis == 'Y' and dy <= math.tan(ang) * dx):
+                t = 1.0 if math.hypot(dx, dy) < 600 else math.tan(ang)  # короткие (< 0.6 м) — до 45°
+                if (axis == 'X' and dx <= t * dy) or (axis == 'Y' and dy <= t * dx):
                     par[f(e['i'])] = f(e['j'])
             groups = defaultdict(list)
             for k in range(len(nodes)):
