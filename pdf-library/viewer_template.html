@@ -133,25 +133,24 @@ function centroid(room){if(room.label_at)return room.label_at;let A=0,X=0,Y=0;(r
   let c=[X/A,Y/A];const inside=(room.rects||[]).some(([x1,y1,x2,y2])=>c[0]>=x1&&c[0]<=x2&&c[1]>=y1&&c[1]<=y2);
   if(!inside){const b=[...room.rects].sort((p,q)=>(q[2]-q[0])*(q[3]-q[1])-(p[2]-p[0])*(p[3]-p[1]))[0];c=[(b[0]+b[2])/2,(b[1]+b[3])/2]}
   return c}
-// граф стен (ContourGraph): пространства по обходам, стены с толщиной, проёмы на рёбрах
+// граф стен (ContourGraph): квартира заливается цветом стен, сверху полы комнат — зазоры между ними и есть стены
 function drawCG(r,T,opt){
-  const g=r.cg,N=g.Nodes,E=g.Edges,role={};(r.rooms||[]).forEach(m=>role[m.id]=m.role);
-  const P=i=>[N[i].X,N[i].Y];let s='';
-  g.Spaces.forEach(sp=>{const pts=sp.OuterLoop.map(([k,rv])=>P(rv?E[k].EndNodeIndex:E[k].StartNodeIndex));
-    const loops=[pts,...(sp.InnerLoops||[]).map(l=>l.map(([k,rv])=>P(rv?E[k].EndNodeIndex:E[k].StartNodeIndex)))];
-    s+=`<path d="${loops.map(l=>l.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z').join(' ')}" fill="${ROLE_COL[role[sp.RoomId]]||'#ddd'}" fill-rule="evenodd"/>`});
-  const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,x2,y2,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
-  let walls='';
-  E.forEach(e=>{const q=geo(e);if(e.FillType==='Empty'){const [a,b]=[T(q.x1,q.y1),T(q.x2,q.y2)];s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="var(--wall)" stroke-width="${opt.big?18:30}" stroke-dasharray="60 60" opacity=".55"/>`;return}
-    const lo=e.LeftOffset,ro=e.RightOffset,m=Math.min(lo,ro,150);
-    const ax=q.x1-q.ux*m,ay=q.y1-q.uy*m,bx=q.x2+q.ux*m,by=q.y2+q.uy*m;
-    const pts=[[ax+q.nx*lo,ay+q.ny*lo],[bx+q.nx*lo,by+q.ny*lo],[bx-q.nx*ro,by-q.ny*ro],[ax-q.nx*ro,ay-q.ny*ro]];
-    walls+='M'+pts.map(p=>T(...p).join(' ')).join('L')+'Z'});
-  s+=`<path d="${walls}" fill="var(--wall)" stroke="var(--wall)" stroke-width="12" stroke-linejoin="round"/>`;
-  (g.Openings||[]).forEach(o=>{const e=E[o.EdgeIndex],q=geo(e),c=[q.x1+q.ux*q.L*o.t,q.y1+q.uy*q.L*o.t],h=o.WidthMm/2,lo=e.LeftOffset+25,ro=e.RightOffset+25;
+  const g=r.cg,N=g.Nodes,E=g.Edges,rooms=r.rooms||[],role={};rooms.forEach(m=>role[m.id]=m.role);
+  const P=i=>[N[i].X,N[i].Y],path=l=>l.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z';
+  const loopPts=l=>l.map(([k,rv])=>P(rv?E[k].EndNodeIndex:E[k].StartNodeIndex));
+  const per=loopPts(g.PerimeterLoop||[]);let s='';
+  const tw=E.filter(e=>e.LocationType==='Perimeter').reduce((a,e)=>Math.max(a,e.RightOffset),250);
+  if(per.length)s+=`<path d="${path(per)}" fill="var(--wall)" stroke="var(--wall)" stroke-width="${tw*2}" stroke-linejoin="miter" stroke-miterlimit="3"/>`;
+  rooms.forEach(m=>(m.rings||[]).forEach(q=>{s+=`<path d="${[q.outer,...(q.holes||[])].map(path).join(' ')}" fill="${ROLE_COL[m.role]||'#ddd'}" fill-rule="evenodd"/>`}));
+  (g.PerimeterHoles||[]).forEach(l=>{s+=`<path d="${path(loopPts(l))}" fill="var(--wall)"/>`});
+  const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
+  const spaceOf=(k,left)=>{const sp=g.Spaces.find(sp=>sp.OuterLoop.some(([i,rv])=>i===k&&rv!==left));return sp?ROLE_COL[role[sp.RoomId]]||'#ddd':'var(--panel)'};
+  (g.Openings||[]).forEach(o=>{const k=o.EdgeIndex,e=E[k],q=geo(e),c=[q.x1+q.ux*q.L*o.t,q.y1+q.uy*q.L*o.t],h=o.WidthMm/2;
+    const lo=Math.max(e.LeftOffset,60)+30,ro=(e.LocationType==='Perimeter'?Math.max(e.RightOffset,tw):Math.max(e.RightOffset,60))+30;
     const pts=[[c[0]-q.ux*h+q.nx*lo,c[1]-q.uy*h+q.ny*lo],[c[0]+q.ux*h+q.nx*lo,c[1]+q.uy*h+q.ny*lo],[c[0]+q.ux*h-q.nx*ro,c[1]+q.uy*h-q.ny*ro],[c[0]-q.ux*h-q.nx*ro,c[1]-q.uy*h-q.ny*ro]];
-    s+=`<path d="M${pts.map(p=>T(...p).join(' ')).join('L')}Z" fill="${o.Kind==='Window'?'#dff0ff':'var(--panel)'}"/>`;
-    if(o.Kind==='Window'){const a=T(c[0]-q.ux*h,c[1]-q.uy*h),b=T(c[0]+q.ux*h,c[1]+q.uy*h);s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#3a8fff" stroke-width="${opt.big?25:40}"/>`}});
+    if(o.Kind==='Window'){const m=(lo-ro)/2,a=T(c[0]-q.ux*h+q.nx*m,c[1]-q.uy*h+q.ny*m),b=T(c[0]+q.ux*h+q.nx*m,c[1]+q.uy*h+q.ny*m);
+      s+=`<path d="${path(pts.map((p,i)=>i<2?[p[0]-q.nx*30,p[1]-q.ny*30]:[p[0]+q.nx*30,p[1]+q.ny*30]))}" fill="#e3f1ff"/><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#3a8fff" stroke-width="${opt.big?25:40}"/>`}
+    else s+=`<path d="${path(pts)}" fill="${spaceOf(k,true)}"/>`});
   return s}
 function svgPlan(r,opt){
   const rooms=r.rooms||[],outer=(r.plan&&r.plan.outer)||[];

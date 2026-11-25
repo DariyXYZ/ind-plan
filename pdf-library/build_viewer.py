@@ -8,7 +8,7 @@ DB = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, 'db')  # папк�
 OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(DB, 'viewer.html')  # куда писать страницу
 lib = json.load(open(os.path.join(DB, 'library.json'), encoding='utf-8'))
 cg_p = os.path.join(DB, 'contour_graphs.json')
-cg = {x['Id']: {k: x[k] for k in ('Nodes', 'Edges', 'Spaces', 'Openings')} for x in json.load(open(cg_p, encoding='utf-8')) if 'Edges' in x} if os.path.exists(cg_p) else {}
+cg = {x['Id']: {k: x[k] for k in ('Nodes', 'Edges', 'Spaces', 'Openings', 'PerimeterLoop', 'PerimeterHoles')} for x in json.load(open(cg_p, encoding='utf-8')) if 'Edges' in x} if os.path.exists(cg_p) else {}
 llm_p = os.path.join(DB, 'library_llm.json')
 llm = {x['id']: x for x in json.load(open(llm_p, encoding='utf-8'))} if os.path.exists(llm_p) else {}
 keep = []
