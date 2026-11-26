@@ -141,16 +141,35 @@ def _same_areas(a, b, tol=0.03):
     return len(x) == len(y) and all(abs(u - v) <= tol * max(u, v, 1) for u, v in zip(x, y))
 
 
+def merge_copy(primary, duplicate):
+    primary['count'] += duplicate['count']
+    source, old_source = primary['source'], duplicate['source']
+    copies = source.setdefault('copies', [])
+    copies.append({'id': duplicate['id'], 'file': old_source['file'], 'floor': old_source['floor'],
+                   'page': old_source.get('page')})
+    copies.extend(old_source.get('copies', []))
+
+
+def apply_reviewed_duplicates(plans):
+    """Keep the reviewed drawing of this Barkhatnaya layout family."""
+    by_id = {plan['id']: plan for plan in plans}
+    primary, duplicate = by_id.get('bkh_073'), by_id.get('bkh_072')
+    if (primary and duplicate and primary['source']['floor'] == '2024-04-04__2 корпус 4'
+            and duplicate['source']['floor'] == '2024-04-02__2.4'):
+        merge_copy(primary, duplicate)
+        return [plan for plan in plans if plan is not duplicate]
+    return plans
+
+
 def dedupe(plans: list) -> list:
     """одна и та же квартира с разных этажей / зеркальная: граф совпадает, площади ±3% → одна запись"""
     out = []
-    for p in sorted(plans, key=lambda q: (q['geom'] != 'ok', q['id'])):
+    for p in sorted(apply_reviewed_duplicates(plans), key=lambda q: (q['geom'] != 'ok', q['id'])):
         twin = next((q for q in out if _sig(q) == _sig(p) and _same_areas(q, p)), None)
         if twin is None:
             p['source'].setdefault('copies', [])
             out.append(p); continue
-        twin['count'] += p['count']
-        twin['source']['copies'].append({'id': p['id'], 'file': p['source']['file'], 'floor': p['source']['floor']})
+        merge_copy(twin, p)
     return sorted(out, key=lambda q: q['id'])
 
 

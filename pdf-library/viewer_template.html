@@ -133,7 +133,8 @@ function chips(el, values, set, label){
    b.onclick=()=>{set.has(v)?set.delete(v):set.add(v);b.classList.toggle('on');render()};el.appendChild(b)});
 }
 DATA.forEach(r=>{r._f={fProj:proj(r),fType:r.kind,fEntry:(r.key&&r.key.entry_type)||'—',fGeom:r.status==='cad_geometry_pending'?'cad_geometry_pending':r.status==='source_only'?'source_only':r.geom};
-  r._txt=(r.id+' '+(r.title||'')+' '+proj(r)+' '+(r.graph||'')+' '+(r.rooms||[]).map(x=>x.name_src).join(' ')+' '+(r.why||'')).toLowerCase()});
+  const copyIds=(r.source?.copies||[]).map(copy=>copy.id).join(' ');
+  r._txt=(r.id+' '+copyIds+' '+(r.title||'')+' '+proj(r)+' '+(r.graph||'')+' '+(r.rooms||[]).map(x=>x.name_src).join(' ')+' '+(r.why||'')).toLowerCase()});
 const uniq = k => [...new Set(DATA.map(r=>r._f[k]))].sort();
 chips($('fProj'),uniq('fProj'),st.proj);
 chips($('fType'),['ST','1E','2E','3E','4E','5E'].filter(t=>DATA.some(r=>r.kind===t)).concat(uniq('fType').filter(t=>!/^(ST|\dE)$/.test(t))),st.type);

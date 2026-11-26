@@ -1,9 +1,12 @@
 """Check geometric invariants of the published outline graph."""
 import json
 from pathlib import Path
+from math import dist
 
 from shapely.geometry import Polygon, box
 from shapely.ops import unary_union
+from entry_doors import entrance_opening
+from to_contour_graph import clean_rings
 
 ROOT = Path(__file__).resolve().parent
 
@@ -42,6 +45,52 @@ def validate(plans):
     return rings_count
 
 
+def validate_catalog(plans, graphs):
+    by_id = {plan['id']: plan for plan in plans}
+    assert len(by_id) == len(plans) == len(graphs)
+    assert {g['Id'] for g in graphs} == set(by_id)
+    spaces = 0
+    for graph in graphs:
+        plan_id = graph['Id']
+        plan = by_id[plan_id]
+        nodes = [(n['X'], n['Y']) for n in graph['Nodes']]
+        edges = [(e['StartNodeIndex'], e['EndNodeIndex']) for e in graph['Edges']]
+        assert all(0 <= a < len(nodes) and 0 <= b < len(nodes) and nodes[a] != nodes[b]
+                   for a, b in edges), (plan_id, 'degenerate edge')
+        loops = [graph['PerimeterLoop'], *graph['PerimeterHoles']]
+        for space in graph['Spaces']:
+            loops.extend([space['OuterLoop'], *space['InnerLoops']])
+        for loop in loops:
+            steps = [edges[i][::-1] if reverse else edges[i] for i, reverse in loop]
+            assert len(steps) >= 3 and all(a[1] == b[0] for a, b in zip(steps, steps[1:]+steps[:1])), (plan_id, 'open contour')
+        rings = clean_rings(graph)
+        rooms = {room['id'] for room in plan['rooms']}
+        assert rings.keys() == rooms and len(graph['Spaces']) == len(rooms), (plan_id, 'room coverage')
+        shapes = [Polygon(r['outer'], r['holes']) for rs in rings.values() for r in rs]
+        assert all(p.is_valid and p.area > 0 for p in shapes), (plan_id, 'invalid room polygon')
+        assert sum(p.area for p in shapes)-unary_union(shapes).area < 100, (plan_id, 'room overlap')
+        links = {frozenset(e['between']) for e in plan['edges']}
+        reachable = {'MOP'}
+        for _ in rooms:
+            for link in links:
+                if link & reachable:
+                    reachable.update(link)
+        assert reachable == rooms | {'MOP'}, (plan_id, 'invalid room connectivity')
+        entry = entrance_opening(plan, graph)
+        assert entry and entry['WidthMm'] > 0, (plan_id, 'missing entrance')
+        for opening in [*graph['Openings'], entry]:
+            i = opening['EdgeIndex']
+            assert 0 <= i < len(edges) and 0 <= opening['t'] <= 1 and opening['WidthMm'] > 0, (plan_id, 'invalid opening')
+        a, b = edges[entry['EdgeIndex']]
+        assert graph['Edges'][entry['EdgeIndex']]['LocationType'] == 'Perimeter' and dist(nodes[a], nodes[b]) >= 650, (plan_id, 'entrance wall too short')
+        spaces += len(rooms)
+    return spaces
+
+
 if __name__ == '__main__':
     plans = json.loads((ROOT / 'db' / 'library.json').read_text(encoding='utf-8'))
     print(len(plans), 'plans,', validate(plans), 'valid directed loops')
+    catalog = ROOT.parent / 'catalog'
+    plans = json.loads((catalog / 'library.json').read_text(encoding='utf-8'))
+    graphs = json.loads((catalog / 'contour_graphs.json').read_text(encoding='utf-8'))
+    print(len(plans), 'catalog plans,', validate_catalog(plans, graphs), 'valid room polygons')

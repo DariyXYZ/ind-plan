@@ -7,7 +7,7 @@ import json
 import math
 from collections import defaultdict
 from pathlib import Path
-from shapely.geometry import LineString
+from shapely.geometry import LineString, Polygon
 
 ROOT = Path(__file__).resolve().parents[1]
 graphs = json.loads((ROOT / 'catalog/contour_graphs.json').read_text(encoding='utf-8'))
@@ -90,11 +90,21 @@ for graph in graphs:
     source = plan.get('source', {}).get('file', '')
     source_path = Path(source)
     source_available = source_path.is_file() or (ROOT / source).is_file()
+    area_mismatches = []
+    for room in plan['rooms']:
+        label = room.get('area')
+        if label is None or room['id'].startswith(('balcony', 'patio')):
+            continue
+        floor_area = sum(Polygon(r['outer'], r['holes']).area for r in room['rings']) / 1e6
+        delta = floor_area - label
+        if abs(delta) > .3 + .03 * label:
+            area_mismatches.append(f"{room['id']} {delta:+.2f}")
     rows.append(dict(id=plan_id, score=score, short_oblique=len(short_oblique),
                      mid_oblique=len(mid_oblique), odd_turns=len(odd_turns),
                      micro_edges=len(micro), edges=len(edges),
                      geometry=plan.get('geom', ''), source_available=source_available,
-                     source=source, example_edges=' '.join(str(e['index']) for e in short_oblique[:8])))
+                     source=source, example_edges=' '.join(str(e['index']) for e in short_oblique[:8]),
+                     floor_area_deviations_m2=' | '.join(area_mismatches)))
 
 rows.sort(key=lambda row: (-row['score'], row['id']))
 out = ROOT / 'catalog/geometry_audit.csv'
