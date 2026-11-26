@@ -7,7 +7,7 @@ import json
 import math
 from collections import defaultdict
 from pathlib import Path
-from shapely.geometry import LineString, Point
+from shapely.geometry import LineString
 
 ROOT = Path(__file__).resolve().parents[1]
 graphs = json.loads((ROOT / 'catalog/contour_graphs.json').read_text(encoding='utf-8'))
@@ -27,8 +27,8 @@ for graph in graphs:
         length = math.hypot(dx, dy)
         if length < 1:
             continue
-        angle = math.degrees(math.atan2(abs(dy), abs(dx)))
-        obliquity = min(angle, 90 - angle)
+        angle = math.degrees(math.atan2(dy, dx)) % 180
+        obliquity = min(angle % 90, 90 - angle % 90)
         interior = edge['LocationType'] != 'Perimeter'
         item = dict(index=index, length=length, angle=round(angle, 1),
                     obliquity=obliquity, interior=interior, start=start, end=end,
@@ -39,6 +39,24 @@ for graph in graphs:
         incident[end].append(item)
 
     long_axes = [e for e in edges if e['length'] >= 1800]
+
+    def straight_run(edge):
+        """Short edges can carry openings along a single long, sloping wall."""
+        visited = {edge['index']}
+        queue = [edge]
+        length = 0
+        for segment in queue:
+            length += segment['length']
+            if length >= 1500:
+                return True
+            for endpoint in (segment['start'], segment['end']):
+                for neighbor in incident[endpoint]:
+                    angle = abs(neighbor['angle'] - edge['angle'])
+                    if neighbor['index'] not in visited and min(angle, 180 - angle) <= 3:
+                        visited.add(neighbor['index'])
+                        queue.append(neighbor)
+        return False
+
     def local_deviation(edge):
         if not long_axes:
             return edge['obliquity']
@@ -47,8 +65,8 @@ for graph in graphs:
         difference = abs(edge['angle'] - reference['angle']) % 90
         return min(difference, 90 - difference)
 
-    short_oblique = [e for e in edges if e['interior'] and e['length'] < 800 and local_deviation(e) > 8]
-    mid_oblique = [e for e in edges if e['interior'] and 800 <= e['length'] < 1800 and local_deviation(e) > 8]
+    short_oblique = [e for e in edges if e['interior'] and e['length'] < 800 and local_deviation(e) > 8 and not straight_run(e)]
+    mid_oblique = [e for e in edges if e['interior'] and 800 <= e['length'] < 1800 and local_deviation(e) > 8 and not straight_run(e)]
     micro = [e for e in edges if e['interior'] and e['length'] < 250]
     odd_turns = []
     for node, neighbors in incident.items():

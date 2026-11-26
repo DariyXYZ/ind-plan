@@ -522,11 +522,41 @@ def convert(plan, snap=40, ang=15):
             'Issues': issues}
 
 
+def source_geometry_key(plan):
+    """Invalidate a reviewed graph when the source or floor geometry changes."""
+    from hashlib import sha256
+    data = [plan.get('source', {}).get('file'), plan.get('source', {}).get('page'),
+            sorted((r['id'], r['rings']) for r in plan['rooms'])]
+    return sha256(json.dumps(data, separators=(',', ':')).encode()).hexdigest()
+
+
+def clean_rings(graph):
+    nodes, edges = graph['Nodes'], graph['Edges']
+
+    def points(loop):
+        result = []
+        for index, reverse in loop:
+            node = nodes[edges[index]['EndNodeIndex' if reverse else 'StartNodeIndex']]
+            result.append([node['X'], node['Y']])
+        return result
+
+    return {space['RoomId']: [{'outer': points(space['OuterLoop']),
+                              'holes': [points(hole) for hole in space['InnerLoops']]}]
+            for space in graph['Spaces']}
+
+
 def main():
     src = Path(sys.argv[1] if len(sys.argv) > 1 else Path(__file__).with_name('db') / 'library.json')
     L = json.loads(src.read_text(encoding='utf-8'))
+    reviews = json.loads(Path(__file__).with_name('axis_reviews.json').read_text(encoding='utf-8'))
     out, bad = [], 0
     for p in L:
+        reviewed = reviews.get(p['id'])
+        if reviewed and reviewed['source_geometry'] == source_geometry_key(p):
+            out.append(reviewed['graph'])
+            continue
+        if reviewed:
+            print(f"{p['id']}: исходная геометрия изменилась, требуется повторная сверка осей")
         try:
             g = convert(p)
             for snap, ang in ((40, 10), (0, 5), (0, 2), (0, 0)):  # мягче, если выправка порвала обходы
@@ -539,10 +569,6 @@ def main():
             out.append(g)
             bad += bool(g['Issues'])
     # чистые контуры комнат (по осям стен, без артефактов заливки) — обратно в базу и в JSON для нейронки
-    def clean_rings(g):
-        N, E = g['Nodes'], g['Edges']
-        pts = lambda lp: [[N[E[k]['EndNodeIndex'] if rv else E[k]['StartNodeIndex']]['X'], N[E[k]['EndNodeIndex'] if rv else E[k]['StartNodeIndex']]['Y']] for k, rv in lp]
-        return {s['RoomId']: [{'outer': pts(s['OuterLoop']), 'holes': [pts(h) for h in s['InnerLoops']]}] for s in g['Spaces']}
     cg = {g['Id']: clean_rings(g) for g in out if 'Spaces' in g}
     for p in L:
         for r in p['rooms']:
