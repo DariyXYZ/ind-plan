@@ -190,15 +190,39 @@ function drawCG(r,T,opt){
   const fillOpacity=opt.underlay ? .18 : 1;
   g.Spaces.forEach(sp=>{s+=`<path d="${[sp.OuterLoop,...(sp.InnerLoops||[])].map(l=>path(loopPts(l))).join(' ')}" fill="${col(sp)}" fill-opacity="${fillOpacity}" fill-rule="evenodd"/>`});
   (g.PerimeterHoles||[]).forEach(l=>{s+=`<path d="${path(loopPts(l))}" fill="#7fa7c9" fill-opacity="${fillOpacity}" stroke="var(--wall)" stroke-width="1" ${NS}><title>стояк</title></path>`});
+  (g.Shafts||[]).forEach(outline=>{s+=`<path d="${path(outline)}" fill="#7fa7c9" fill-opacity="${opt.underlay ? .45 : 1}" stroke="var(--wall)" stroke-width="1" ${NS}><title>стояк</title></path>`});
   const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
   const pt=(q,a,c=0)=>T(q.x1+q.ux*a+q.nx*c,q.y1+q.uy*a+q.ny*c);
   // разрывы под проёмы
-  const gaps={};(g.Openings||[]).forEach(o=>{const q=geo(E[o.EdgeIndex]),c=q.L*o.t,h=o.WidthMm/2;(gaps[o.EdgeIndex]=gaps[o.EdgeIndex]||[]).push([Math.max(0,c-h),Math.min(q.L,c+h),o.Kind])});
+  const entry=g.EntryDoor;
+  const openingRange=o=>{
+    const {L}=geo(E[o.EdgeIndex]),center=L*o.t,half=o.WidthMm/2;
+    return [Math.max(0,center-half),Math.min(L,center+half)];
+  };
+  const gaps={};
+  const openings=(g.Openings||[]).filter(o=>o.Id!==entry?.Id || !entry?.Id);
+  if(entry)openings.push(entry);
+  openings.forEach(o=>{
+    const [a,b]=openingRange(o);
+    if(o.Kind==='Window'&&o.EdgeIndex===entry?.EdgeIndex){
+      const [start,end]=openingRange(entry);
+      if(a<end&&b>start)return;
+    }
+    (gaps[o.EdgeIndex]=gaps[o.EdgeIndex]||[]).push([a,b,o.Kind]);
+  });
   E.forEach((e,k)=>{const q=geo(e),per=e.LocationType==='Perimeter',empty=e.FillType==='Empty';
     const w=per?(opt.big?2:1.6):1,st=`stroke="var(--wall)" stroke-width="${w}" ${NS} stroke-linecap="round"${empty?' stroke-dasharray="3 3" opacity=".45"':''}`;
     let cur=0;const seg=[];(gaps[k]||[]).sort((a,b)=>a[0]-b[0]).forEach(([a,b])=>{if(a>cur)seg.push([cur,a]);cur=Math.max(cur,b)});if(cur<q.L)seg.push([cur,q.L]);
     seg.forEach(([a,b])=>{const p1=pt(q,a),p2=pt(q,b);s+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" ${st}/>`});
     (gaps[k]||[]).forEach(([a,b,kind])=>{if(kind!=='Window')return;const d=per?-60:0;[d-45,d+45].forEach(c=>{const p1=pt(q,a,c),p2=pt(q,b,c);s+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="#3a8fff" stroke-width="1" ${NS}/>`})})});
+  if(entry){
+    const q=geo(E[entry.EdgeIndex]),[a,b]=openingRange(entry);
+    const hingeAtEnd=entry.SwingHinge==='End', side=entry.SwingSide==='Outside' ? -1 : 1;
+    const hinge=pt(q,hingeAtEnd?b:a),closed=pt(q,hingeAtEnd?a:b),opened=pt(q,hingeAtEnd?b:a,side*(b-a));
+    const sweep=(closed[0]-hinge[0])*(opened[1]-hinge[1])-(closed[1]-hinge[1])*(opened[0]-hinge[0])>0 ? 1 : 0;
+    const title=entry.SwingVerified?'Входная дверь':'Входная дверь · открывание условное';
+    s+=`<g class="entry-door" fill="none" stroke="#127747"><title>${title}</title><path d="M${hinge} L${opened}" stroke-width="${opt.big?2.4:1.7}" ${NS}/><path d="M${closed} A${b-a} ${b-a} 0 0 ${sweep} ${opened}" stroke-width="1.2" ${entry.SwingVerified?'':'stroke-dasharray="3 2"'} ${NS}/></g>`;
+  }
   return s}
 // чертёж из DWG как есть: стены заливкой, двери линиями, подписи
 function cadSvg(c,big){if(!c)return '';const fs=big?260:340;
@@ -291,6 +315,7 @@ function open(id){
    <div class="toggle"><button class="chip${G?' on':''}" id="tg">граф поверх плана</button></div>
    <div id="big">${svgPlan(r,{graph:G,big:true,underlay:underlaySwitch.checked})}</div>
    ${r.underlay?.approximate?`<p id="underlay-note" ${underlaySwitch.checked?'':'hidden'}>Подложка из другой редакции PDF, совмещение приблизительное.</p>`:''}
+   ${r.cg?.EntryDoor&&!r.cg.EntryDoor.SwingVerified?'<p class="cnt">Открывание входной двери показано условно.</p>':''}
     <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#7fa7c9;height:8px"></i>стояк</span><span><i style="background:#4aa3ff;height:8px;width:8px;border-radius:9px"></i>окно</span></div>
    <div class="kv"><b>Граф</b><span>${r.graph}</span><b>Чем характерна</b><span>${r.why||'—'}</span>
    <b>Габарит</b><span>${(k.w/1000).toFixed(2)} × ${(k.d/1000).toFixed(2)} м, фасадов ${k.facades??'—'}</span>
