@@ -139,8 +139,9 @@ function drawCG(r,T,opt){
   const P=i=>[N[i].X,N[i].Y],path=l=>l.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z';
   const loopPts=l=>l.map(([k,rv])=>P(rv?E[k].EndNodeIndex:E[k].StartNodeIndex));
   const col=sp=>ROLE_COL[role[sp.RoomId]]||'#ddd',NS='vector-effect="non-scaling-stroke"';let s='';
-  g.Spaces.forEach(sp=>{s+=`<path d="${[sp.OuterLoop,...(sp.InnerLoops||[])].map(l=>path(loopPts(l))).join(' ')}" fill="${col(sp)}" fill-rule="evenodd"/>`});
-  (g.PerimeterHoles||[]).forEach(l=>{s+=`<path d="${path(loopPts(l))}" fill="#7fa7c9" stroke="var(--wall)" stroke-width="1" ${NS}><title>стояк</title></path>`});
+  const fillOpacity=opt.underlay ? .18 : 1;
+  g.Spaces.forEach(sp=>{s+=`<path d="${[sp.OuterLoop,...(sp.InnerLoops||[])].map(l=>path(loopPts(l))).join(' ')}" fill="${col(sp)}" fill-opacity="${fillOpacity}" fill-rule="evenodd"/>`});
+  (g.PerimeterHoles||[]).forEach(l=>{s+=`<path d="${path(loopPts(l))}" fill="#7fa7c9" fill-opacity="${fillOpacity}" stroke="var(--wall)" stroke-width="1" ${NS}><title>стояк</title></path>`});
   const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
   const pt=(q,a,c=0)=>T(q.x1+q.ux*a+q.nx*c,q.y1+q.uy*a+q.ny*c);
   // разрывы под проёмы
@@ -157,10 +158,13 @@ function cadSvg(c,big){if(!c)return '';const fs=big?260:340;
 function svgPlan(r,opt){
   const rooms=r.rooms||[],outer=(r.plan&&r.plan.outer)||[];
   const xs=[],ys=[];rooms.forEach(m=>{if(m.rings?.length)m.rings.forEach(q=>[q.outer,...q.holes].forEach(loop=>loop.forEach(([x,y])=>{xs.push(x);ys.push(y)})));else (m.rects||[]).forEach(([a,b,c,d])=>{xs.push(a,c);ys.push(b,d)})});outer.forEach(([x,y])=>{xs.push(x);ys.push(y)});
+  const underlay=opt.underlay&&r.underlay;
+  if(underlay){xs.push(underlay.x,underlay.x+underlay.w);ys.push(underlay.y-underlay.h,underlay.y)}
   if(!xs.length)return '<svg></svg>';
   const pad=400,x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
   const H=y1-y0,fy=y=>y1-(y-y0)-y0+y0, T=(x,y)=>[x-x0,y1-y];
   let s=`<svg viewBox="0 0 ${x1-x0} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+  if(underlay){const [x,y]=T(underlay.x,underlay.y);s+=`<image href="${underlay.file}" x="${x}" y="${y}" width="${underlay.w}" height="${underlay.h}" preserveAspectRatio="none"/>`}
   if(r.cg)s+=drawCG(r,T,opt);else{
   rooms.forEach(m=>{const col=ROLE_COL[m.role]||'#ddd';
     if(m.rings?.length){m.rings.forEach(q=>{const loops=[q.outer,...q.holes];const path=loops.map(loop=>loop.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z').join(' ');s+=`<path d="${path}" fill="${col}" fill-rule="evenodd" stroke="var(--wall)" stroke-width="${opt.big?30:45}" stroke-linejoin="miter"/>`})}
@@ -181,7 +185,7 @@ function svgPlan(r,opt){
   return s+'</svg>';
 }
 
-let G=true;
+let G=true, U=false;
 function render(){
   let rs=DATA.filter(pass);
   rs.sort(st.sort==='area'?(a,b)=>(a.area??Infinity)-(b.area??Infinity):st.sort==='count'?(a,b)=>(b.count||1)-(a.count||1)||(a.area??Infinity)-(b.area??Infinity):(a,b)=>a.id.localeCompare(b.id));
@@ -222,8 +226,10 @@ function open(id){
   const rooms=(r.rooms||[]).slice().sort((a,b)=>(b.area||0)-(a.area||0));
   const ch=r.checks||{};
   $('detBody').innerHTML=`<h2>${r.kind} · ${r.area} м²</h2><div class="cnt">${r.id} · ${proj(r)}</div>
-   <div class="toggle"><button class="chip${G?' on':''}" id="tg">граф поверх плана</button></div>
-   <div id="big">${svgPlan(r,{graph:G,big:true})}</div>
+   <div class="toggle"><button class="chip${G?' on':''}" id="tg">граф поверх плана</button>
+   ${r.underlay?` <label><input type="checkbox" id="underlay" ${U?'checked':''}> Подложка PDF</label>`:''}</div>
+   <div id="big">${svgPlan(r,{graph:G,big:true,underlay:U})}</div>
+   ${r.underlay?.approximate?`<p id="underlay-note" ${U?'':'hidden'}>Подложка из другой редакции PDF, совмещение приблизительное.</p>`:''}
     <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#7fa7c9;height:8px"></i>стояк</span><span><i style="background:#4aa3ff;height:8px;width:8px;border-radius:9px"></i>окно</span></div>
    <div class="kv"><b>Граф</b><span>${r.graph}</span><b>Чем характерна</b><span>${r.why||'—'}</span>
    <b>Габарит</b><span>${(k.w/1000).toFixed(2)} × ${(k.d/1000).toFixed(2)} м, фасадов ${k.facades??'—'}</span>
@@ -238,6 +244,11 @@ function open(id){
    <button class="chip" id="cp">Копировать</button>
    <pre class="mono" style="white-space:pre-wrap;background:var(--chip);padding:10px;border-radius:8px;max-height:260px;overflow:auto">${JSON.stringify(r.llm).replace(/</g,'&lt;')}</pre>`:''}`;
   $('tg').onclick=()=>{G=!G;open(id)};
+  if($('underlay'))$('underlay').onchange=e=>{
+    U=e.target.checked;
+    $('big').innerHTML=svgPlan(r,{graph:G,big:true,underlay:U});
+    if($('underlay-note'))$('underlay-note').hidden=!U;
+  };
   if(r.llm)$('cp').onclick=()=>{navigator.clipboard.writeText(JSON.stringify(r.llm)).then(()=>{$('cp').textContent='Скопировано'},()=>{$('cp').textContent='Не удалось — выделите текст ниже'})};
   $('det').classList.add('open');render();
 }

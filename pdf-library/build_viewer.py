@@ -11,11 +11,15 @@ cg_p = os.path.join(DB, 'contour_graphs.json')
 cg = {x['Id']: {k: x[k] for k in ('Nodes', 'Edges', 'Spaces', 'Openings', 'PerimeterLoop', 'PerimeterHoles')} for x in json.load(open(cg_p, encoding='utf-8')) if 'Edges' in x} if os.path.exists(cg_p) else {}
 llm_p = os.path.join(DB, 'library_llm.json')
 llm = {x['id']: x for x in json.load(open(llm_p, encoding='utf-8'))} if os.path.exists(llm_p) else {}
+underlays_path = Path(OUT).parent / 'underlays' / 'index.json'
+underlays = json.loads(underlays_path.read_text(encoding='utf-8')) if underlays_path.exists() else {}
 keep = []
 for r in lib:
     k = {k: r.get(k) for k in ('id', 'kind', 'area', 'geom', 'why', 'graph', 'key', 'checks', 'count', 'source', 'rooms', 'edges', 'plan')}
     k['llm'] = llm.get(r['id'])
     k['cg'] = cg.get(r['id'])
+    if r['id'] in underlays:
+        k['underlay'] = underlays[r['id']]
     keep.append(k)
 tpl = open(os.path.join(HERE, 'viewer_template.html'), encoding='utf-8').read()
 out = tpl.replace('/*DATA*/[]', json.dumps(keep, ensure_ascii=False, separators=(',', ':')))
