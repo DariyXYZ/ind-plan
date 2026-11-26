@@ -10,11 +10,28 @@
 @media (prefers-color-scheme:dark){:root{--bg:#131313;--panel:#1c1c1c;--ink:#ececec;--mute:#9a9a9a;--line:#2e2e2e;--chip:#2a2a2a;--acc:#ececec;--wall:#d8d8d8}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
-header{padding:16px 20px 8px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
-h1{font-size:20px;margin:0;font-weight:600}
+.catalog-header{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+.catalog-brand,.catalog-actions{display:flex;align-items:center;gap:16px}
+.catalog-brand{min-width:0}
+.catalog-home{color:var(--ink);text-decoration:none;font-weight:750;letter-spacing:.06em;white-space:nowrap;padding:8px 12px 8px 0;border-right:1px solid var(--line)}
+h1{font-size:18px;line-height:1.2;margin:0;font-weight:650}
+.catalog-brand .cnt{display:block;margin-top:3px;font-size:12px;font-variant-numeric:tabular-nums}
+.pdf-switch{display:flex;align-items:center;gap:8px;font-weight:600;white-space:nowrap;cursor:pointer;min-height:36px}
+.pdf-switch input{appearance:none;position:relative;display:block;margin:0;width:34px;height:20px;border:1px solid var(--mute);border-radius:20px;background:var(--chip);cursor:pointer}
+.pdf-switch input::before{content:"";position:absolute;width:12px;height:12px;inset:3px auto auto 3px;border-radius:50%;background:var(--mute)}
+.pdf-switch input:checked{background:#196254;border-color:#196254}
+.pdf-switch input:checked::before{left:17px;background:#fff}
+.catalog-actions :focus-visible,.catalog-home:focus-visible{outline:2px solid var(--open);outline-offset:3px}
+.downloads{position:relative}
+.downloads summary{cursor:pointer;list-style:none;border:1px solid var(--line);border-radius:8px;padding:7px 10px;white-space:nowrap}
+.downloads summary::-webkit-details-marker{display:none}
+.downloads summary::after{content:" ↓";color:var(--mute)}
+.download-links{position:absolute;right:0;top:calc(100% + 8px);min-width:172px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 2px 8px #0002}
+.download-links a{display:block;padding:7px 9px;border-radius:4px;text-decoration:none;color:var(--ink)}
+.download-links a:hover,.downloads summary:hover{background:var(--chip)}
 .cnt{color:var(--mute)}
-.wrap{display:grid;grid-template-columns:260px 1fr;gap:16px;padding:0 20px 20px}
-aside{background:var(--panel);border-radius:12px;padding:14px;align-self:start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.wrap{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;padding:16px 20px 20px}
+aside{background:var(--panel);border-radius:12px;padding:14px;align-self:start;position:sticky;top:calc(var(--header-height,64px) + 12px);max-height:calc(100dvh - var(--header-height,64px) - 24px);overflow:auto}
 aside h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:14px 0 6px;font-weight:600}
 aside h3:first-child{margin-top:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -38,7 +55,7 @@ label.ck{display:flex;gap:8px;align-items:center;padding:3px 0;cursor:pointer}
 .card .s{color:var(--mute);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
 .tag{font-size:11px;background:var(--chip);border-radius:99px;padding:2px 7px}
-.detail{position:fixed;right:0;top:0;bottom:0;width:min(560px,100vw);background:var(--panel);box-shadow:-8px 0 30px rgba(0,0,0,.15);padding:18px;overflow:auto;transform:translateX(105%);transition:transform .2s}
+.detail{position:fixed;z-index:5;right:0;top:var(--header-height,64px);bottom:0;width:min(560px,100vw);background:var(--panel);box-shadow:-8px 0 30px rgba(0,0,0,.15);padding:18px;overflow:auto;transform:translateX(105%);transition:transform .2s}
 .detail.open{transform:none}
 .detail .x{position:absolute;right:14px;top:12px;border:0;background:var(--chip);border-radius:99px;width:30px;height:30px;cursor:pointer;color:var(--ink);font-size:16px}
 .detail svg{width:100%;height:auto;max-height:440px}
@@ -52,14 +69,35 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 .legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
 .mono{font:12px/1.4 ui-monospace,Consolas,monospace;word-break:break-all;color:var(--mute)}
 .toggle{display:flex;gap:6px;margin:8px 0}
+.with-underlay{--wall:#2a2a2a;--ink:#161616;--panel:#fff}
 .empty{color:var(--mute);padding:40px;text-align:center}
-@media (max-width:760px){.wrap{grid-template-columns:1fr;padding:0 16px 16px}aside{position:static;max-height:none}header{padding:16px}}
+@media (max-width:760px){.wrap{grid-template-columns:minmax(0,1fr);padding:12px 16px 16px}aside{position:static;max-height:none}}
+@media (max-width:600px){
+  .catalog-header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:8px 12px}
+  .catalog-brand,.catalog-actions{display:contents}
+  .catalog-home{grid-column:1;grid-row:2;justify-self:start;border:0;padding:4px 0;font-size:12px}
+  .catalog-title{grid-column:1;grid-row:1}
+  .catalog-title h1{font-size:15px}
+  .pdf-switch{grid-column:2;grid-row:1;justify-self:end;font-size:13px}
+  .downloads{grid-column:2;grid-row:2;justify-self:end;font-size:12px}
+  .downloads summary{padding:3px 7px}
+}
 </style>
 </head>
 <body>
-<header><h1>База планировок IND</h1><span class="cnt" id="cnt"></span>
-<span class="cnt">Проверенные планы и исходные листы. Архитекторы их не оценивали.</span>
-<span class="cnt" style="margin-left:auto"><a href="../">← IND PLAN</a> · скачать: <a href="library_llm.json" download>для нейронки</a> · <a href="library.json" download>проверенная база</a> · <a href="source_refs.json" download>листы PDF</a></span></header>
+<header class="catalog-header" id="catalogHeader">
+  <div class="catalog-brand">
+    <a class="catalog-home" href="../">← IND PLAN</a>
+    <div class="catalog-title"><h1>База планировок IND</h1><span class="cnt" id="cnt"></span></div>
+  </div>
+  <div class="catalog-actions">
+    <label class="pdf-switch"><input type="checkbox" role="switch" id="underlay"> Подложки PDF</label>
+    <details class="downloads" id="downloads">
+      <summary>Скачать</summary>
+      <div class="download-links"><a href="library_llm.json" download>Для нейронки</a><a href="library.json" download>Проверенная база</a><a href="source_refs.json" download>Листы PDF</a></div>
+    </details>
+  </div>
+</header>
 <div class="wrap">
 <aside id="f">
  <h3>Поиск</h3><input type="search" id="q" placeholder="id, помещение, связь…">
@@ -72,6 +110,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
  <h3>Геометрия</h3><div class="chips" id="fGeom"></div>
  <h3>Сортировка</h3><select id="sort"><option value="area">по площади</option><option value="count">по частоте в проектах</option><option value="id">по id</option></select>
  <button class="reset" id="reset">Сбросить фильтры</button>
+ <p class="cnt">Проверенные планы и исходные листы. Оценка архитекторов не проводилась.</p>
 </aside>
 <main><div class="grid" id="grid"></div></main>
 </div>
@@ -109,7 +148,16 @@ $('sort').onchange=e=>{st.sort=e.target.value;render()};
 $('reset').onclick=()=>{['proj','type','entry','geom','must'].forEach(k=>st[k].clear());['aMin','aMax','wMin','wMax','q'].forEach(id=>{$(id).value='';st[id]=null});st.q='';
  document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));document.querySelectorAll('#fMust input').forEach(c=>c.checked=false);render()};
 $('close').onclick=()=>{$('det').classList.remove('open');st.sel=null;render()};
-document.addEventListener('keydown',e=>{if(e.key==='Escape')$('close').onclick()});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const downloads=$('downloads');
+  if(downloads.open){downloads.open=false;downloads.querySelector('summary').focus();return}
+  $('close').onclick();
+});
+document.addEventListener('click',e=>{
+  const downloads=$('downloads');
+  if(downloads.open&&!downloads.contains(e.target))downloads.open=false;
+});
 
 function pass(r){
   const k=r.key||{};
@@ -159,11 +207,11 @@ function svgPlan(r,opt){
   const rooms=r.rooms||[],outer=(r.plan&&r.plan.outer)||[];
   const xs=[],ys=[];rooms.forEach(m=>{if(m.rings?.length)m.rings.forEach(q=>[q.outer,...q.holes].forEach(loop=>loop.forEach(([x,y])=>{xs.push(x);ys.push(y)})));else (m.rects||[]).forEach(([a,b,c,d])=>{xs.push(a,c);ys.push(b,d)})});outer.forEach(([x,y])=>{xs.push(x);ys.push(y)});
   const underlay=opt.underlay&&r.underlay;
-  if(underlay){xs.push(underlay.x,underlay.x+underlay.w);ys.push(underlay.y-underlay.h,underlay.y)}
+  if(r.underlay){const {x,y,w,h}=r.underlay;xs.push(x,x+w);ys.push(y-h,y)}
   if(!xs.length)return '<svg></svg>';
   const pad=400,x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
   const H=y1-y0,fy=y=>y1-(y-y0)-y0+y0, T=(x,y)=>[x-x0,y1-y];
-  let s=`<svg viewBox="0 0 ${x1-x0} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+  let s=`<svg${underlay?' class="with-underlay"':''} viewBox="0 0 ${x1-x0} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
   if(underlay){const [x,y]=T(underlay.x,underlay.y);s+=`<image href="${underlay.file}" x="${x}" y="${y}" width="${underlay.w}" height="${underlay.h}" preserveAspectRatio="none"/>`}
   if(r.cg)s+=drawCG(r,T,opt);else{
   rooms.forEach(m=>{const col=ROLE_COL[m.role]||'#ddd';
@@ -185,7 +233,21 @@ function svgPlan(r,opt){
   return s+'</svg>';
 }
 
-let G=true, U=false;
+let G=true;
+const underlaySwitch=$('underlay');
+underlaySwitch.disabled=!PLANS.some(r=>r.underlay);
+underlaySwitch.onchange=()=>{
+  const selected=PLANS.find(r=>r.id===st.sel);
+  if(selected?.underlay){
+    $('big').innerHTML=svgPlan(selected,{graph:G,big:true,underlay:underlaySwitch.checked});
+    if($('underlay-note'))$('underlay-note').hidden=!underlaySwitch.checked;
+  }
+  render();
+};
+const catalogHeader=$('catalogHeader');
+new ResizeObserver(()=>{
+  document.documentElement.style.setProperty('--header-height',`${catalogHeader.getBoundingClientRect().height}px`);
+}).observe(catalogHeader);
 function render(){
   let rs=DATA.filter(pass);
   rs.sort(st.sort==='area'?(a,b)=>(a.area??Infinity)-(b.area??Infinity):st.sort==='count'?(a,b)=>(b.count||1)-(a.count||1)||(a.area??Infinity)-(b.area??Infinity):(a,b)=>a.id.localeCompare(b.id));
@@ -195,7 +257,7 @@ function render(){
   g.innerHTML=rs.map(r=>{if(r.status==='cad_geometry_pending')return `<div class="card source-card${st.sel===r.id?' sel':''}" data-id="${r.id}">${r.cad_svg?cadSvg(r.cad_svg):`<div class="pending-plan">Контур по DWG на проверке<br>Обводка скрыта</div>`}<div class="t"><span>${r.title}</span><span class="cnt">${r.id}</span></div><div class="s">${proj(r)}</div><div class="tags"><span class="tag">чертёж DWG · комнаты на проверке</span></div></div>`;
     if(r.status==='source_only')return `<div class="card source-card${st.sel===r.id?' sel':''}" data-id="${r.id}"><div class="pending-plan">Исходный лист<br>Геометрия не извлечена</div><div class="t"><span>${r.title}</span><span class="cnt">${r.id}</span></div><div class="s">${proj(r)}</div></div>`;
     const k=r.key||{};const tags=MUST.filter(([m])=>k[m]&&m!=='risers').map(([,l])=>`<span class="tag">${l}</span>`).join('');
-    return `<div class="card${st.sel===r.id?' sel':''}" data-id="${r.id}">${svgPlan(r,{graph:true})}
+    return `<div class="card${st.sel===r.id?' sel':''}" data-id="${r.id}">${svgPlan(r,{graph:true,underlay:underlaySwitch.checked})}
     <div class="t"><span>${r.kind} · ${r.area} м²</span><span class="cnt">${r.id}</span></div>
     <div class="s">${proj(r)}${(r.count||1)>1?' · встречается '+r.count+'×':''}</div><div class="tags">${tags}${r.geom==='approx'?'<span class="tag">геом. приблизит.</span>':''}</div></div>`}).join('');
   g.querySelectorAll('.card').forEach(c=>c.onclick=()=>open(c.dataset.id));
@@ -226,10 +288,9 @@ function open(id){
   const rooms=(r.rooms||[]).slice().sort((a,b)=>(b.area||0)-(a.area||0));
   const ch=r.checks||{};
   $('detBody').innerHTML=`<h2>${r.kind} · ${r.area} м²</h2><div class="cnt">${r.id} · ${proj(r)}</div>
-   <div class="toggle"><button class="chip${G?' on':''}" id="tg">граф поверх плана</button>
-   ${r.underlay?` <label><input type="checkbox" id="underlay" ${U?'checked':''}> Подложка PDF</label>`:''}</div>
-   <div id="big">${svgPlan(r,{graph:G,big:true,underlay:U})}</div>
-   ${r.underlay?.approximate?`<p id="underlay-note" ${U?'':'hidden'}>Подложка из другой редакции PDF, совмещение приблизительное.</p>`:''}
+   <div class="toggle"><button class="chip${G?' on':''}" id="tg">граф поверх плана</button></div>
+   <div id="big">${svgPlan(r,{graph:G,big:true,underlay:underlaySwitch.checked})}</div>
+   ${r.underlay?.approximate?`<p id="underlay-note" ${underlaySwitch.checked?'':'hidden'}>Подложка из другой редакции PDF, совмещение приблизительное.</p>`:''}
     <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#7fa7c9;height:8px"></i>стояк</span><span><i style="background:#4aa3ff;height:8px;width:8px;border-radius:9px"></i>окно</span></div>
    <div class="kv"><b>Граф</b><span>${r.graph}</span><b>Чем характерна</b><span>${r.why||'—'}</span>
    <b>Габарит</b><span>${(k.w/1000).toFixed(2)} × ${(k.d/1000).toFixed(2)} м, фасадов ${k.facades??'—'}</span>
@@ -244,11 +305,6 @@ function open(id){
    <button class="chip" id="cp">Копировать</button>
    <pre class="mono" style="white-space:pre-wrap;background:var(--chip);padding:10px;border-radius:8px;max-height:260px;overflow:auto">${JSON.stringify(r.llm).replace(/</g,'&lt;')}</pre>`:''}`;
   $('tg').onclick=()=>{G=!G;open(id)};
-  if($('underlay'))$('underlay').onchange=e=>{
-    U=e.target.checked;
-    $('big').innerHTML=svgPlan(r,{graph:G,big:true,underlay:U});
-    if($('underlay-note'))$('underlay-note').hidden=!U;
-  };
   if(r.llm)$('cp').onclick=()=>{navigator.clipboard.writeText(JSON.stringify(r.llm)).then(()=>{$('cp').textContent='Скопировано'},()=>{$('cp').textContent='Не удалось — выделите текст ниже'})};
   $('det').classList.add('open');render();
 }
