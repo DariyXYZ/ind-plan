@@ -1925,4 +1925,14 @@ renderProps=(_rp=>function(){_rp();const M=curM(),s=ED.sel;if(!ED.on||!M||!s||s.
  d.insertAdjacentHTML('beforebegin',`<div class="chk ${o.sl?'on':''}" style="margin-top:6px" role="checkbox" tabindex="0" aria-checked="${!!o.sl}" onclick="ipSl('${o.id}')" onkeydown="if(event.key==' '||event.key=='Enter'){event.preventDefault();ipSl('${o.id}')}"><span class="bx"><span class="i">check</span></span>Раздвижная</div>`)})(renderProps);
 if($('#s-projects').classList.contains('on'))ipGrid();
 
+/* ---------- 2026-11-27: контур из каталога планировок (catalog/ → кнопка «Контур в генератор») ---------- */
+function ipFromCatalog(){let d=null;try{d=JSON.parse(localStorage.getItem('indplan:from-catalog')||'null')}catch{}
+ if(!d||d.format!='ind-plan'||Date.now()-(d.ts||0)>36e5)return;
+ try{if(!localStorage.getItem(LSU))return;localStorage.removeItem('indplan:from-catalog')}catch{return}
+ if(/from=catalog/.test(location.search))history.replaceState(null,'',location.pathname);
+ openWs(true);$('#fn').textContent=d.name||'Из каталога';ipBuild(ipFromPlan(d),d.name||'каталог');
+ setTimeout(()=>toast(`Контур, окна, вход и стояки взяты из ${d.from}. Комнаты расставит генератор.`,{ms:6000}),2900)}
+go=(_g=>function(id){_g(id);if(id=='projects')setTimeout(ipFromCatalog,0)})(go);
+ipFromCatalog();
+
 /*/js:editor*/</script></body></html>

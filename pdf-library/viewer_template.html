@@ -2,344 +2,603 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>База планировок IND</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Каталог планировок · IND PLAN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
 <style>
-:root{--bg:#f6f6f4;--panel:#fff;--ink:#161616;--mute:#6b6b6b;--line:#e2e2de;--chip:#ececea;--acc:#161616;
- --door:#d33b2f;--open:#2f6fd3;--entry:#1f9d55;--balcony:#8a6db1;--wall:#2a2a2a}
-@media (prefers-color-scheme:dark){:root{--bg:#131313;--panel:#1c1c1c;--ink:#ececec;--mute:#9a9a9a;--line:#2e2e2e;--chip:#2a2a2a;--acc:#ececec;--wall:#d8d8d8}}
+/* токены и базовые компоненты — те же, что в IND PLAN (../index.html) */
+:root{--bg:#f3f3f1;--panel:#fff;--sub:#f7f7f5;--line:#e7e7e2;--line2:#d5d5ce;--text:#18181a;--muted:#6f6f68;--faint:#a3a39b;
+--acc:#3d5afe;--acc-soft:#eceffe;--acc-text:#2a43d6;--ok:#23824a;--ok-soft:#e4f3ea;--warn:#b26b00;--warn-soft:#fcf0dc;--err:#c53b30;--err-soft:#fbe5e3;
+--ln:#2a2a2a;--sh:0 1px 2px #0000000d,0 6px 20px #0000000f;--paper:#fff;--balc:#8a6db1}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141414;--panel:#1d1d1c;--sub:#242422;--line:#2f2f2c;--line2:#3d3d39;--text:#ececea;--muted:#a0a098;--faint:#6d6d66;--acc:#7c8dff;--acc-soft:#262b4a;--acc-text:#a9b4ff;--ok-soft:#173222;--warn-soft:#382a10;--err-soft:#3a1c19;--ln:#d8d8d4;--paper:#242422}}
+:root[data-theme="dark"]{--bg:#141414;--panel:#1d1d1c;--sub:#242422;--line:#2f2f2c;--line2:#3d3d39;--text:#ececea;--muted:#a0a098;--faint:#6d6d66;--acc:#7c8dff;--acc-soft:#262b4a;--acc-text:#a9b4ff;--ok-soft:#173222;--warn-soft:#382a10;--err-soft:#3a1c19;--ln:#d8d8d4;--paper:#242422}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
-.catalog-header{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--line)}
-.catalog-brand,.catalog-actions{display:flex;align-items:center;gap:16px}
-.catalog-brand{min-width:0}
-.catalog-home{color:var(--ink);text-decoration:none;font-weight:750;letter-spacing:.06em;white-space:nowrap;padding:8px 12px 8px 0;border-right:1px solid var(--line)}
-h1{font-size:18px;line-height:1.2;margin:0;font-weight:650}
-.catalog-brand .cnt{display:block;margin-top:3px;font-size:12px;font-variant-numeric:tabular-nums}
-.pdf-switch{display:flex;align-items:center;gap:8px;font-weight:600;white-space:nowrap;cursor:pointer;min-height:36px}
-.pdf-switch input{appearance:none;position:relative;display:block;margin:0;width:34px;height:20px;border:1px solid var(--mute);border-radius:20px;background:var(--chip);cursor:pointer}
-.pdf-switch input::before{content:"";position:absolute;width:12px;height:12px;inset:3px auto auto 3px;border-radius:50%;background:var(--mute)}
-.pdf-switch input:checked{background:#196254;border-color:#196254}
-.pdf-switch input:checked::before{left:17px;background:#fff}
-.catalog-actions :focus-visible,.catalog-home:focus-visible{outline:2px solid var(--open);outline-offset:3px}
-.downloads{position:relative}
-.downloads summary{cursor:pointer;list-style:none;border:1px solid var(--line);border-radius:8px;padding:7px 10px;white-space:nowrap}
-.downloads summary::-webkit-details-marker{display:none}
-.downloads summary::after{content:" ↓";color:var(--mute)}
-.download-links{position:absolute;right:0;top:calc(100% + 8px);min-width:172px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 2px 8px #0002}
-.download-links a{display:block;padding:7px 9px;border-radius:4px;text-decoration:none;color:var(--ink)}
-.download-links a:hover,.downloads summary:hover{background:var(--chip)}
-.cnt{color:var(--mute)}
-.wrap{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;padding:16px 20px 20px}
-aside{background:var(--panel);border-radius:12px;padding:14px;align-self:start;position:sticky;top:calc(var(--header-height,64px) + 12px);max-height:calc(100dvh - var(--header-height,64px) - 24px);overflow:auto}
-aside h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:14px 0 6px;font-weight:600}
-aside h3:first-child{margin-top:0}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:0;background:var(--chip);color:var(--ink);padding:5px 10px;border-radius:99px;cursor:pointer;font:inherit;font-size:13px}
-.chip.on{background:var(--acc);color:var(--bg)}
-input[type=number],input[type=search],select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
-.row2{display:flex;gap:6px}
-label.ck{display:flex;gap:8px;align-items:center;padding:3px 0;cursor:pointer}
-.reset{margin-top:14px;width:100%;background:var(--chip);border:0;border-radius:8px;padding:8px;cursor:pointer;color:var(--ink);font:inherit}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;align-content:start}
-.card{background:var(--panel);border-radius:12px;padding:10px;cursor:pointer;border:2px solid transparent}
-.card:hover{border-color:var(--line)}
-.card.sel{border-color:var(--acc)}
-.card svg{width:100%;height:190px;display:block}
-.card.source-card img{width:100%;height:190px;display:block;object-fit:contain;background:#fff}
-.pending-plan{height:190px;display:flex;align-items:center;justify-content:center;background:var(--chip);border-radius:8px;color:var(--mute);font-size:13px;text-align:center;padding:18px}
-.source-preview{width:100%;max-height:550px;display:block;object-fit:contain;background:#fff;border:1px solid var(--line);margin:14px 0}
-.source-action{display:inline-block;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink);text-decoration:none;font-weight:600}
-.source-action:hover{background:var(--chip)}
-.card .t{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-weight:600}
-.card .s{color:var(--mute);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
-.tag{font-size:11px;background:var(--chip);border-radius:99px;padding:2px 7px}
-.detail{position:fixed;z-index:5;right:0;top:var(--header-height,64px);bottom:0;width:min(560px,100vw);background:var(--panel);box-shadow:-8px 0 30px rgba(0,0,0,.15);padding:18px;overflow:auto;transform:translateX(105%);transition:transform .2s}
-.detail.open{transform:none}
-.detail .x{position:absolute;right:14px;top:12px;border:0;background:var(--chip);border-radius:99px;width:30px;height:30px;cursor:pointer;color:var(--ink);font-size:16px}
-.detail svg{width:100%;height:auto;max-height:440px}
-.detail h2{margin:0 0 4px;font-size:18px}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px;margin:10px 0}
-.kv b{color:var(--mute);font-weight:500}
+body{margin:0;font:14px/1.45 Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.i{font-family:'Material Symbols Rounded';font-size:20px;line-height:1;font-style:normal;display:inline-block;vertical-align:middle;font-variation-settings:'FILL' 0;user-select:none}
+button,input,select{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-weight:500;white-space:nowrap;text-decoration:none}
+.btn:hover{background:var(--sub)}.btn .i{font-size:18px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}.btn.pri:hover{filter:brightness(1.07)}
+.btn.ghost{border-color:transparent;background:transparent}.btn.ghost:hover{background:var(--sub)}
+.btn.sm{height:30px;padding:0 10px;font-size:13px}
+.btn.on{background:var(--acc-soft);border-color:transparent;color:var(--acc-text)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.ib{width:34px;height:34px;border-radius:8px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.ib:hover{background:var(--sub);color:var(--text)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;text-decoration:none}.logo b{width:28px;height:28px;border-radius:8px;background:var(--text);color:var(--panel);display:grid;place-items:center;font-size:11px}
+.avatar{width:32px;height:32px;border-radius:50%;background:#ffd7a8;color:#6b3d00;display:grid;place-items:center;font-weight:600;font-size:13px}
+.sp{flex:1}
+.lbl{font-size:12px;font-weight:600;color:var(--muted);margin:0 0 8px}
+.inp{height:36px;border:1px solid var(--line2);border-radius:9px;padding:0 10px;background:var(--panel);width:100%;min-width:0}
+select.inp{padding-right:4px}
+.badge{display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 6px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap}
+.b-ok{background:var(--ok-soft);color:var(--ok)}.b-w{background:var(--warn-soft);color:var(--warn)}.b-e{background:var(--err-soft);color:var(--err)}.b-n{background:var(--sub);color:var(--muted)}
+.seg{display:flex;background:var(--sub);border:1px solid var(--line);border-radius:9px;padding:2px}
+.seg button{flex:1;height:28px;padding:0 10px;border:0;background:transparent;border-radius:7px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap}
+.seg button.on{background:var(--panel);color:var(--text);box-shadow:0 1px 2px #0002}
+.chk{display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;font-size:13px;user-select:none}
+.chk .bx{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line2);display:grid;place-items:center;flex:none}
+.chk.on .bx{background:var(--acc);border-color:var(--acc)}.chk .bx .i{font-size:14px;color:#fff;opacity:0}.chk.on .bx .i{opacity:1}
+.chk small{color:var(--faint);margin-left:auto;font-size:12px;font-variant-numeric:tabular-nums}
+.chk.off{opacity:.4;cursor:default}
+.chk span.t{min-width:0}.chk span.t em{font-style:normal;color:var(--faint)}
+.num{font-variant-numeric:tabular-nums}
+.mono{font:12px/1.5 ui-monospace,Consolas,monospace;word-break:break-all}
+
+/* каркас */
+.top{position:sticky;top:0;z-index:20;height:56px;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.nav{display:flex;gap:2px;margin-left:12px}
+.nav a{height:34px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--sub);color:var(--text)}
+.nav a[aria-current]{color:var(--text);background:var(--sub)}
+.nav .i{font-size:18px}
+.page{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:calc(100dvh - 56px)}
+.left{background:var(--panel);border-right:1px solid var(--line);position:sticky;top:56px;height:calc(100dvh - 56px);overflow:auto;padding:16px}
+.blk{padding:14px 0;border-bottom:1px solid var(--line)}.blk:first-child{padding-top:0}.blk:last-child{border:0}
+.rng{display:grid;grid-template-columns:1fr 12px 1fr;align-items:center;gap:4px;color:var(--faint)}
+.srch{position:relative}.srch .i{position:absolute;left:10px;top:8px;font-size:18px;color:var(--faint)}.srch .inp{padding-left:34px}
+.note{font-size:12px;color:var(--muted);margin:0}
+main{min-width:0;padding:20px 24px 96px}
+.head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.head h1{font-size:28px;letter-spacing:-.02em;margin:0 0 4px}
+.head .lead{color:var(--muted);margin:0}
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.bar .cnt{font-weight:600}
+.bar .cnt small{color:var(--muted);font-weight:400}
+.flt-btn{display:none}
+.active{display:flex;gap:6px;flex-wrap:wrap}
+.active button{height:26px;padding:0 4px 0 8px;border-radius:7px;border:0;background:var(--acc-soft);color:var(--acc-text);font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:2px;cursor:pointer}
+.active button .i{font-size:16px}
+.grp{margin:8px 0 28px}
+.grp h2{font-size:15px;margin:0 0 12px;display:flex;align-items:baseline;gap:8px}
+.grp h2 small{color:var(--muted);font-weight:400;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:16px}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .15s;text-align:left;padding:0;display:block;width:100%}
+.card:hover{box-shadow:var(--sh);transform:translateY(-1px)}
+.card.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.card .th{height:196px;background:var(--paper);border-bottom:1px solid var(--line);padding:12px}
+.card .th svg{width:100%;height:100%;display:block}
+.card .bd{padding:10px 14px 12px}
+.card .t1{display:flex;align-items:baseline;gap:8px}
+.card .t1 b{font-size:15px;font-weight:600}
+.card .t1 .id{margin-left:auto;color:var(--faint);font-size:12px}
+.card .t2{color:var(--muted);font-size:12px;margin-top:2px}
+.card .t3{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;min-height:20px}
+.card .cmp{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line2);background:var(--panel);display:grid;place-items:center;cursor:pointer;color:var(--muted);opacity:0;transition:opacity .1s}
+.card:hover .cmp,.card .cmp.on,.card:focus-within .cmp{opacity:1}
+.card .cmp.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.card .cmp .i{font-size:18px}
+.empty{padding:56px 16px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--text);margin-bottom:4px}
+
+/* карточка плана (правая панель) */
+.det{position:fixed;z-index:15;top:56px;right:0;bottom:0;width:min(480px,100vw);background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;transform:translateX(102%);transition:transform .18s}
+.det.open{transform:none}
+@media (min-width:1360px){body.det-on main{padding-right:504px}}
+.det .dh{padding:14px 16px 12px;border-bottom:1px solid var(--line)}
+.det .dh .row{display:flex;align-items:flex-start;gap:8px}
+.det h2{font-size:19px;margin:0;letter-spacing:-.01em}
+.det .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.det .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.det .tabs{padding:10px 16px 0}
+.det .db{flex:1;overflow:auto;padding:14px 16px 24px}
+.det .plan{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px}
+.det .plan svg{width:100%;height:auto;max-height:52vh;display:block}
+.opts{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0 2px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0 0}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.kv{display:grid;grid-template-columns:132px 1fr;gap:6px 12px;font-size:13px;margin:16px 0 0}
+.kv dt{color:var(--muted)}.kv dd{margin:0}
 table{border-collapse:collapse;width:100%;font-size:13px}
-td{padding:3px 6px;border-bottom:1px solid var(--line)}
-td.n{text-align:right;font-variant-numeric:tabular-nums}
-.legend{display:flex;gap:12px;font-size:12px;color:var(--mute);margin:6px 0;flex-wrap:wrap}
-.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
-.mono{font:12px/1.4 ui-monospace,Consolas,monospace;word-break:break-all;color:var(--mute)}
-.toggle{display:flex;gap:6px;margin:8px 0}
-.with-underlay{--wall:#2a2a2a;--ink:#161616;--panel:#fff}
-.empty{color:var(--mute);padding:40px;text-align:center}
-@media (max-width:760px){.wrap{grid-template-columns:minmax(0,1fr);padding:12px 16px 16px}aside{position:static;max-height:none}}
-@media (max-width:600px){
-  .catalog-header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:8px 12px}
-  .catalog-brand,.catalog-actions{display:contents}
-  .catalog-home{grid-column:1;grid-row:2;justify-self:start;border:0;padding:4px 0;font-size:12px}
-  .catalog-title{grid-column:1;grid-row:1}
-  .catalog-title h1{font-size:15px}
-  .pdf-switch{grid-column:2;grid-row:1;justify-self:end;font-size:13px}
-  .downloads{grid-column:2;grid-row:2;justify-self:end;font-size:12px}
-  .downloads summary{padding:3px 7px}
+th{font-weight:600;color:var(--muted);font-size:12px;text-align:left;padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}
+td{padding:7px 8px 7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+td small{color:var(--faint)}
+h3{font-size:13px;margin:20px 0 8px}
+pre.json{white-space:pre-wrap;background:var(--sub);border:1px solid var(--line);padding:10px;border-radius:9px;max-height:280px;overflow:auto;margin:8px 0 0}
+
+/* сравнение */
+.tray{position:fixed;z-index:14;left:50%;bottom:16px;transform:translate(-50%,140%);display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;background:var(--panel);border:1px solid var(--line2);border-radius:12px;box-shadow:var(--sh);transition:transform .18s;max-width:calc(100vw - 32px)}
+.tray.on{transform:translate(-50%,0)}
+.tray .ids{display:flex;gap:6px;flex-wrap:wrap}
+.tray .ids button{height:26px;border:0;border-radius:7px;background:var(--sub);padding:0 4px 0 8px;font-size:12px;display:inline-flex;align-items:center;gap:2px;cursor:pointer}
+.tray .ids .i{font-size:16px;color:var(--muted)}
+.modal{position:fixed;inset:0;z-index:30;background:#0006;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.modal.on{display:flex}
+.mbox{background:var(--panel);border-radius:14px;width:min(1180px,100%);box-shadow:var(--sh)}
+.mbox .mh{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.mbox .mh h2{font-size:17px;margin:0}
+.cmpt{overflow-x:auto;padding:0 16px 16px}
+.cmpt table{min-width:640px;table-layout:fixed}
+.cmpt th:first-child,.cmpt td:first-child{width:160px;color:var(--muted);font-weight:500}
+.cmpt td{font-variant-numeric:tabular-nums}
+.cmpt .pl{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px;height:260px}
+.cmpt .pl svg{width:100%;height:100%;display:block}
+.cmpt td.diff{color:var(--acc-text);font-weight:600}
+
+@media (max-width:900px){
+ .page{grid-template-columns:minmax(0,1fr)}
+ .left{position:fixed;z-index:16;top:56px;left:0;width:min(320px,100vw);transform:translateX(-102%);transition:transform .18s;border-right:1px solid var(--line)}
+ .left.open{transform:none;box-shadow:var(--sh)}
+ .flt-btn{display:inline-flex}
+ main{padding:16px 16px 96px}
+ .nav a span.tx{display:none}
 }
+@media (max-width:520px){.head h1{font-size:22px}.grid{grid-template-columns:minmax(0,1fr)}.kv{grid-template-columns:110px 1fr}}
 </style>
 </head>
 <body>
-<header class="catalog-header" id="catalogHeader">
-  <div class="catalog-brand">
-    <a class="catalog-home" href="../">← IND PLAN</a>
-    <div class="catalog-title"><h1>База планировок IND</h1><span class="cnt" id="cnt"></span></div>
-  </div>
-  <div class="catalog-actions">
-    <label class="pdf-switch"><input type="checkbox" role="switch" id="underlay"> Подложки PDF</label>
-    <details class="downloads" id="downloads">
-      <summary>Скачать</summary>
-      <div class="download-links"><a href="library_llm.json" download>Для нейронки</a><a href="library.json" download>Проверенная база</a><a href="source_refs.json" download>Листы PDF</a></div>
-    </details>
-  </div>
+<header class="top">
+ <a class="logo" href="../"><b>IND</b>PLAN</a>
+ <nav class="nav"><a href="../" title="Мои планировки"><span class="i">folder_open</span><span class="tx">Мои планировки</span></a><a href="./" aria-current="page" title="Каталог планировок"><span class="i">grid_view</span><span class="tx">Каталог планировок</span></a></nav>
+ <span class="sp"></span>
+ <div class="avatar" id="ava" title="">ИН</div>
 </header>
-<div class="wrap">
-<aside id="f">
- <h3>Поиск</h3><input type="search" id="q" placeholder="id, помещение, связь…">
- <h3>Проект</h3><div class="chips" id="fProj"></div>
- <h3>Тип</h3><div class="chips" id="fType"></div>
- <h3>Площадь, м²</h3><div class="row2"><input type="number" id="aMin" placeholder="от"><input type="number" id="aMax" placeholder="до"></div>
- <h3>Ширина по фасаду, м</h3><div class="row2"><input type="number" id="wMin" placeholder="от" step="0.1"><input type="number" id="wMax" placeholder="до" step="0.1"></div>
- <h3>Вход</h3><div class="chips" id="fEntry"></div>
- <h3>Есть в квартире</h3><div id="fMust"></div>
- <h3>Геометрия</h3><div class="chips" id="fGeom"></div>
- <h3>Сортировка</h3><select id="sort"><option value="area">по площади</option><option value="count">по частоте в проектах</option><option value="id">по id</option></select>
- <button class="reset" id="reset">Сбросить фильтры</button>
- <p class="cnt">Проверенные планы и исходные листы. Оценка архитекторов не проводилась.</p>
+<div class="page">
+<aside class="left" id="left" aria-label="Фильтры">
+ <div class="blk"><div class="srch"><span class="i">search</span><input class="inp" type="search" id="q" placeholder="id, помещение, проект" aria-label="Поиск"></div></div>
+ <div class="blk"><p class="lbl">Тип</p><div id="fType"></div></div>
+ <div class="blk"><p class="lbl">Площадь, м²</p><div class="rng"><input class="inp num" type="number" id="aMin" placeholder="от" aria-label="Площадь от"><span>–</span><input class="inp num" type="number" id="aMax" placeholder="до" aria-label="Площадь до"></div>
+  <p class="lbl" style="margin-top:14px">Ширина по фасаду, м</p><div class="rng"><input class="inp num" type="number" step="0.1" id="wMin" placeholder="от" aria-label="Ширина от"><span>–</span><input class="inp num" type="number" step="0.1" id="wMax" placeholder="до" aria-label="Ширина до"></div></div>
+ <div class="blk"><p class="lbl">Фасадов с окнами</p><div id="fFac"></div></div>
+ <div class="blk"><p class="lbl">Санузлов</p><div id="fBath"></div></div>
+ <div class="blk"><p class="lbl">Есть в квартире</p><div id="fMust"></div></div>
+ <div class="blk"><p class="lbl">Вход</p><div id="fEntry"></div></div>
+ <div class="blk"><p class="lbl">Проект</p><div id="fProj"></div></div>
+ <div class="blk"><p class="note">Планы обведены по рабочим PDF бюро и прошли автоматические проверки: один вход, у жилых комнат есть окно, площади сходятся с подписями. Архитекторы их ещё не оценивали.</p></div>
 </aside>
-<main><div class="grid" id="grid"></div></main>
+<main>
+ <div class="head"><div style="flex:1;min-width:240px"><h1>Каталог планировок</h1><p class="lead">Квартиры из проектов IND. Берите контур в генератор, сравнивайте решения, ищите похожие.</p></div>
+  <a class="btn" href="library.json" download><span class="i">download</span>library.json</a>
+ </div>
+ <div class="bar">
+  <button class="btn sm flt-btn" id="fltBtn"><span class="i">tune</span>Фильтры</button>
+  <span class="cnt num" id="cnt"></span>
+  <div class="active" id="active"></div>
+  <span class="sp"></span>
+  <label class="chk" id="ulChk" style="padding:0;margin-right:4px"><span class="bx"><span class="i">check</span></span>Подложка PDF</label>
+  <div class="seg" id="view" role="group" aria-label="Вид превью"><button data-v="plan" class="on">План</button><button data-v="graph">План + связи</button></div>
+  <select class="inp" id="sort" style="width:auto;height:32px" aria-label="Сортировка"><option value="area">По площади</option><option value="width">По ширине фасада</option><option value="count">Частые сначала</option><option value="id">По id</option></select>
+ </div>
+ <div id="out"></div>
+</main>
 </div>
-<div class="detail" id="det"><button class="x" id="close" aria-label="Закрыть">×</button><div id="detBody"></div></div>
+
+<section class="det" id="det" aria-label="Карточка планировки"></section>
+<div class="tray" id="tray"><span style="font-size:13px;color:var(--muted)">Сравнение</span><div class="ids" id="trayIds"></div><button class="btn sm pri" id="cmpGo"><span class="i">compare</span>Сравнить</button><button class="ib" id="cmpClear" title="Очистить"><span class="i">close</span></button></div>
+<div class="modal" id="modal"><div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="mh"><h2 id="mTitle">Сравнение</h2><span class="sp"></span><button class="ib" id="mClose" aria-label="Закрыть"><span class="i">close</span></button></div><div class="cmpt" id="cmpBody"></div></div></div>
+
 <script>
 const PLANS = /*DATA*/[];
 const SOURCES = /*SOURCES*/[];
-const DATA = [...PLANS, ...SOURCES];
-const ROLE_COL = {kg:'#f3c6a5',kitchen:'#f3c6a5',living:'#f6d9b8',bedroom:'#bcd7f0',master:'#a9c8ec',kids:'#c9e3c1',hall:'#e7e1cf',corridor:'#e7e1cf',
- bath:'#b9e4e0',wc:'#b9e4e0',wardrobe:'#dccdeb',laundry:'#cfe7ec',storage:'#e2dccb',loggia:'#e9efe1',balcony:'#e9efe1',patio:'#e9efe1',study:'#e9d3df'};
-const MUST = [['wardrobe','гардеробная'],['master_bath','мастер-санузел'],['laundry','постирочная'],['separate_kitchen','отдельная кухня'],['kids','детская'],['risers','стояки отмечены']];
-const ENTRY = {hall:'в прихожую',corridor:'в коридор',corr:'в коридор',kg:'в КГ',kl:'в КГ'};
-const proj = r => (r.source && r.source.project) || '—';
-const st = {q:'',proj:new Set(),type:new Set(),entry:new Set(),geom:new Set(),must:new Set(),aMin:null,aMax:null,wMin:null,wMax:null,sort:'area',sel:null};
+const DATA = PLANS;
 const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nf = (n, d = 2) => n == null ? '—' : Number(n).toLocaleString('ru-RU', {maximumFractionDigits: d});
+const m1 = mm => mm ? nf(mm / 1000, 2) : '—';
 
-function chips(el, values, set, label){
-  el.innerHTML='';
-  values.forEach(v=>{const b=document.createElement('button');b.className='chip';b.textContent=(label?label(v):v)+' '+DATA.filter(r=>v===r._f[el.id]).length;
-   b.onclick=()=>{set.has(v)?set.delete(v):set.add(v);b.classList.toggle('on');render()};el.appendChild(b)});
-}
-DATA.forEach(r=>{r._f={fProj:proj(r),fType:r.kind,fEntry:(r.key&&r.key.entry_type)||'—',fGeom:r.status==='cad_geometry_pending'?'cad_geometry_pending':r.status==='source_only'?'source_only':r.geom};
-  const copyIds=(r.source?.copies||[]).map(copy=>copy.id).join(' ');
-  r._txt=(r.id+' '+copyIds+' '+(r.title||'')+' '+proj(r)+' '+(r.graph||'')+' '+(r.rooms||[]).map(x=>x.name_src).join(' ')+' '+(r.why||'')).toLowerCase()});
-const uniq = k => [...new Set(DATA.map(r=>r._f[k]))].sort();
-chips($('fProj'),uniq('fProj'),st.proj);
-chips($('fType'),['ST','1E','2E','3E','4E','5E'].filter(t=>DATA.some(r=>r.kind===t)).concat(uniq('fType').filter(t=>!/^(ST|\dE)$/.test(t))),st.type);
-chips($('fEntry'),uniq('fEntry'),st.entry,v=>ENTRY[v]||v);
-chips($('fGeom'),uniq('fGeom'),st.geom,v=>v==='ok'?'точная':v==='approx'?'приблизительная':v==='cad_geometry_pending'?'геометрия DWG на проверке':v==='source_only'?'исходный PDF':v);
-MUST.forEach(([k,l])=>{const n=DATA.filter(r=>r.key&&r.key[k]).length;const w=document.createElement('label');w.className='ck';
- w.innerHTML=`<input type="checkbox"> ${l} <span class="cnt">${n}</span>`;w.querySelector('input').onchange=e=>{e.target.checked?st.must.add(k):st.must.delete(k);render()};$('fMust').appendChild(w)});
-const num = id => {const v=parseFloat($(id).value);return isNaN(v)?null:v};
-['aMin','aMax','wMin','wMax'].forEach(id=>$(id).oninput=()=>{st[id]=num(id);render()});
-$('q').oninput=e=>{st.q=e.target.value.trim().toLowerCase();render()};
-$('sort').onchange=e=>{st.sort=e.target.value;render()};
-$('reset').onclick=()=>{['proj','type','entry','geom','must'].forEach(k=>st[k].clear());['aMin','aMax','wMin','wMax','q'].forEach(id=>{$(id).value='';st[id]=null});st.q='';
- document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));document.querySelectorAll('#fMust input').forEach(c=>c.checked=false);render()};
-$('close').onclick=()=>{$('det').classList.remove('open');st.sel=null;render()};
-document.addEventListener('keydown',e=>{
-  if(e.key!=='Escape')return;
-  const downloads=$('downloads');
-  if(downloads.open){downloads.open=false;downloads.querySelector('summary').focus();return}
-  $('close').onclick();
-});
-document.addEventListener('click',e=>{
-  const downloads=$('downloads');
-  if(downloads.open&&!downloads.contains(e.target))downloads.open=false;
+const ROLE = {kg:['Кухня-гостиная','#f3c6a5'],kitchen:['Кухня','#f3c6a5'],living:['Гостиная','#f6d9b8'],bedroom:['Спальня','#bcd7f0'],master:['Мастер-спальня','#a9c8ec'],
+ kids:['Детская','#c9e3c1'],hall:['Прихожая','#e7e1cf'],corridor:['Коридор','#e7e1cf'],bath:['Санузел','#b9e4e0'],wc:['Туалет','#b9e4e0'],wardrobe:['Гардеробная','#dccdeb'],
+ laundry:['Постирочная','#cfe7ec'],storage:['Кладовая','#e2dccb'],loggia:['Лоджия, балкон','#e9efe1'],balcony:['Балкон','#e9efe1'],patio:['Терраса','#e9efe1'],study:['Кабинет','#e9d3df'],other:['Помещение','#dddddd']};
+const roleName = r => (ROLE[r] || ROLE.other)[0], roleCol = r => (ROLE[r] || ROLE.other)[1];
+const TYPES = [['ST','Студия'],['1E','1E · кухня-гостиная + 1 комната'],['2E','2E · 1 спальня'],['3E','3E · 2 спальни'],['4E','4E · 3 спальни'],['5E','5E · 4 спальни']];
+const TYPE_SHORT = {ST:'Студия'};
+const MUST = [['wardrobe','Гардеробная'],['master_bath','Мастер-санузел'],['laundry','Постирочная'],['separate_kitchen','Отдельная кухня'],['kids','Детская']];
+const ENTRY = {hall:'В прихожую',corridor:'В коридор',corr:'В коридор',kg:'В кухню-гостиную',kl:'В кухню-гостиную'};
+function projName(p){p = String(p || '—').replace(/^\d+-\d+-\d+\s+/, '');const m = p.match(/^(.*?)\s*\(([^)]+)\)\s*$/);return m ? {name: m[1], city: m[2]} : {name: p, city: ''}}
+
+/* ---- предрасчёт полей для фильтров */
+DATA.forEach(r => {
+ const k = r.key || {}, p = projName(r.source && r.source.project);
+ r._p = p.name; r._city = p.city;
+ r._w = (k.facade_width_mm || k.w || 0) / 1000;
+ r._fac = k.facades == null ? '—' : k.facades >= 3 ? '3+' : String(k.facades);
+ r._bath = k.bathrooms == null ? '—' : k.bathrooms >= 3 ? '3+' : String(k.bathrooms);
+ r._entry = k.entry_type || k.entry || '—';
+ r._roles = (r.rooms || []).map(m => m.role);
+ r._txt = [r.id, ...(r.source?.copies || []).map(c => c.id), r.source?.project, r.graph, r.why, ...(r.rooms || []).map(m => m.name_src + ' ' + roleName(m.role))].join(' ').toLowerCase();
 });
 
-function pass(r){
-  const k=r.key||{};
-  if(st.proj.size&&!st.proj.has(r._f.fProj))return false;
-  if(st.type.size&&!st.type.has(r.kind))return false;
-  if(st.entry.size&&!st.entry.has(r._f.fEntry))return false;
-  if(st.geom.size&&!st.geom.has(r.geom))return false;
-  for(const m of st.must)if(!k[m])return false;
-  if((st.aMin!=null||st.aMax!=null)&&r.area==null)return false;
-  if(st.aMin!=null&&r.area<st.aMin)return false; if(st.aMax!=null&&r.area>st.aMax)return false;
-  const w=(k.facade_width_mm||k.w||0)/1000;
-  if((st.wMin!=null||st.wMax!=null)&&['source_only','cad_geometry_pending'].includes(r.status))return false;
-  if(st.wMin!=null&&w<st.wMin)return false; if(st.wMax!=null&&w>st.wMax)return false;
-  if(st.q&&!r._txt.includes(st.q))return false;
-  return true;
-}
-
-// ---- рисование плана + графа
-function centroid(room){if(room.label_at)return room.label_at;let A=0,X=0,Y=0;(room.rects||[]).forEach(([x1,y1,x2,y2])=>{const a=(x2-x1)*(y2-y1);A+=a;X+=a*(x1+x2)/2;Y+=a*(y1+y2)/2});
-  if(!A)return null;// центр самого большого прямоугольника, если центр масс вне помещения
-  let c=[X/A,Y/A];const inside=(room.rects||[]).some(([x1,y1,x2,y2])=>c[0]>=x1&&c[0]<=x2&&c[1]>=y1&&c[1]<=y2);
-  if(!inside){const b=[...room.rects].sort((p,q)=>(q[2]-q[0])*(q[3]-q[1])-(p[2]-p[0])*(p[3]-p[1]))[0];c=[(b[0]+b[2])/2,(b[1]+b[3])/2]}
-  return c}
-// граф стен (ContourGraph), тонкие линии: заливка комнат + контур 1px, периметр 2px, двери — разрыв, окна — голубая двойная линия
-function drawCG(r,T,opt){
-  const g=r.cg,N=g.Nodes,E=g.Edges,role={};(r.rooms||[]).forEach(m=>role[m.id]=m.role);
-  const P=i=>[N[i].X,N[i].Y],path=l=>l.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z';
-  const loopPts=l=>l.map(([k,rv])=>P(rv?E[k].EndNodeIndex:E[k].StartNodeIndex));
-  const col=sp=>ROLE_COL[role[sp.RoomId]]||'#ddd',NS='vector-effect="non-scaling-stroke"';let s='';
-  const fillOpacity=opt.underlay ? .18 : 1;
-  g.Spaces.forEach(sp=>{s+=`<path d="${[sp.OuterLoop,...(sp.InnerLoops||[])].map(l=>path(loopPts(l))).join(' ')}" fill="${col(sp)}" fill-opacity="${fillOpacity}" fill-rule="evenodd"/>`});
-  (g.PerimeterHoles||[]).forEach((loop,index)=>{
-    const title=g.VoidKinds?.[index]==='Stair'?'лестница':'пустота в контуре';
-    s+=`<path d="${path(loopPts(loop))}" fill="var(--panel)" fill-opacity="${fillOpacity}" stroke="var(--wall)" stroke-width="1" ${NS}><title>${title}</title></path>`;
-  });
-  (g.Shafts||[]).forEach(outline=>{s+=`<path d="${path(outline)}" fill="#7fa7c9" fill-opacity="${opt.underlay ? .45 : 1}" stroke="var(--wall)" stroke-width="1" ${NS}><title>стояк</title></path>`});
-  const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
-  const pt=(q,a,c=0)=>T(q.x1+q.ux*a+q.nx*c,q.y1+q.uy*a+q.ny*c);
-  // разрывы под проёмы
-  const entry=g.EntryDoor;
-  const openingRange=o=>{
-    const {L}=geo(E[o.EdgeIndex]),center=L*o.t,half=o.WidthMm/2;
-    return [Math.max(0,center-half),Math.min(L,center+half)];
-  };
-  const gaps={};
-  const openings=(g.Openings||[]).filter(o=>o.Id!==entry?.Id || !entry?.Id);
-  if(entry)openings.push(entry);
-  openings.forEach(o=>{
-    const [a,b]=openingRange(o);
-    if(o.Kind==='Window'&&o.EdgeIndex===entry?.EdgeIndex){
-      const [start,end]=openingRange(entry);
-      if(a<end&&b>start)return;
-    }
-    (gaps[o.EdgeIndex]=gaps[o.EdgeIndex]||[]).push([a,b,o.Kind]);
-  });
-  E.forEach((e,k)=>{const q=geo(e),per=e.LocationType==='Perimeter',empty=e.FillType==='Empty';
-    const w=per?(opt.big?2:1.6):1,st=`stroke="var(--wall)" stroke-width="${w}" ${NS} stroke-linecap="round"${empty?' stroke-dasharray="3 3" opacity=".45"':''}`;
-    let cur=0;const seg=[];(gaps[k]||[]).sort((a,b)=>a[0]-b[0]).forEach(([a,b])=>{if(a>cur)seg.push([cur,a]);cur=Math.max(cur,b)});if(cur<q.L)seg.push([cur,q.L]);
-    seg.forEach(([a,b])=>{const p1=pt(q,a),p2=pt(q,b);s+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" ${st}/>`});
-    (gaps[k]||[]).forEach(([a,b,kind])=>{if(kind!=='Window')return;const d=per?-60:0;[d-45,d+45].forEach(c=>{const p1=pt(q,a,c),p2=pt(q,b,c);s+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="#3a8fff" stroke-width="1" ${NS}/>`})})});
-  if(entry){
-    const q=geo(E[entry.EdgeIndex]),[a,b]=openingRange(entry);
-    const hingeAtEnd=entry.SwingHinge==='End', side=entry.SwingSide==='Outside' ? -1 : 1;
-    const hinge=pt(q,hingeAtEnd?b:a),closed=pt(q,hingeAtEnd?a:b),opened=pt(q,hingeAtEnd?b:a,side*(b-a));
-    const sweep=(closed[0]-hinge[0])*(opened[1]-hinge[1])-(closed[1]-hinge[1])*(opened[0]-hinge[0])>0 ? 1 : 0;
-    const title=entry.SwingVerified?'Входная дверь':'Входная дверь · открывание условное';
-    s+=`<g class="entry-door" fill="none" stroke="#127747"><title>${title}</title><path d="M${hinge} L${opened}" stroke-width="${opt.big?2.4:1.7}" ${NS}/><path d="M${closed} A${b-a} ${b-a} 0 0 ${sweep} ${opened}" stroke-width="1.2" ${entry.SwingVerified?'':'stroke-dasharray="3 2"'} ${NS}/></g>`;
-  }
-  return s}
-// чертёж из DWG как есть: стены заливкой, двери линиями, подписи
-function cadSvg(c,big){if(!c)return '';const fs=big?260:340;
-  return `<svg viewBox="0 0 ${c.w} ${c.h}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${big?'auto':'190px'};display:block"><rect width="${c.w}" height="${c.h}" fill="#f6f3ec"/><path d="${c.doors}" fill="none" stroke="var(--mute)" stroke-width="1" vector-effect="non-scaling-stroke"/><path d="${c.walls}" fill="var(--wall)" fill-rule="evenodd"/>${big?c.labels.map(l=>`<text x="${l.x}" y="${l.y}" text-anchor="middle" font-size="${fs}" fill="var(--ink)" style="paint-order:stroke;stroke:#f6f3ec;stroke-width:70">${l.name} ${String(l.area).replace('.',',')}</text>`).join(''):''}</svg>`}
-function svgPlan(r,opt){
-  const rooms=r.rooms||[],outer=(r.plan&&r.plan.outer)||[];
-  const xs=[],ys=[];rooms.forEach(m=>{if(m.rings?.length)m.rings.forEach(q=>[q.outer,...q.holes].forEach(loop=>loop.forEach(([x,y])=>{xs.push(x);ys.push(y)})));else (m.rects||[]).forEach(([a,b,c,d])=>{xs.push(a,c);ys.push(b,d)})});outer.forEach(([x,y])=>{xs.push(x);ys.push(y)});
-  const underlay=opt.underlay&&r.underlay;
-  if(r.underlay){const {x,y,w,h}=r.underlay;xs.push(x,x+w);ys.push(y-h,y)}
-  if(!xs.length)return '<svg></svg>';
-  const pad=400,x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
-  const H=y1-y0,fy=y=>y1-(y-y0)-y0+y0, T=(x,y)=>[x-x0,y1-y];
-  let s=`<svg${underlay?' class="with-underlay"':''} viewBox="0 0 ${x1-x0} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  if(underlay){const [x,y]=T(underlay.x,underlay.y);s+=`<image href="${underlay.file}" x="${x}" y="${y}" width="${underlay.w}" height="${underlay.h}" preserveAspectRatio="none"/>`}
-  if(r.cg)s+=drawCG(r,T,opt);else{
-  rooms.forEach(m=>{const col=ROLE_COL[m.role]||'#ddd';
-    if(m.rings?.length){m.rings.forEach(q=>{const loops=[q.outer,...q.holes];const path=loops.map(loop=>loop.map((p,i)=>`${i?'L':'M'}${T(...p).join(' ')}`).join(' ')+' Z').join(' ');s+=`<path d="${path}" fill="${col}" fill-rule="evenodd" stroke="var(--wall)" stroke-width="${opt.big?30:45}" stroke-linejoin="miter"/>`})}
-    else (m.rects||[]).forEach(([a,b,c,d])=>{const [px,py]=T(a,d);s+=`<rect x="${px}" y="${py}" width="${c-a}" height="${d-b}" fill="${col}"/>`})});
-  if(outer.length)s+=`<polygon points="${outer.map(p=>T(p[0],p[1]).join(',')).join(' ')}" fill="none" stroke="var(--wall)" stroke-width="${opt.big?60:90}" stroke-linejoin="round"/>`;
-  (r.plan&&r.plan.windows||[]).forEach(w=>{if(!w.at)return;const [px,py]=T(w.at[0],w.at[1]);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?110:150}" fill="#4aa3ff" opacity=".8"/>`});
-  }
-  if(opt.graph){
-    const C={};rooms.forEach(m=>C[m.id]=centroid(m));
-    const hall=rooms.find(m=>/hall|corr/.test(m.role||m.id))||rooms[0];
-    (r.edges||[]).forEach(e=>{const [a,b]=e.between;const t=e.type||(a==='MOP'||b==='MOP'?'entry':'door');
-      if(t==='entry'){const k=a==='MOP'?b:a;if(!C[k])return;const [px,py]=T(...C[k]);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?330:420}" fill="none" stroke="var(--entry)" stroke-width="${opt.big?70:110}"/>`;return}
-      if(!C[a]||!C[b])return;const [ax,ay]=T(...C[a]),[bx,by]=T(...C[b]);
-       s+=`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${t==='open'?'var(--open)':t==='balcony'?'var(--balcony)':'var(--door)'}" stroke-width="${opt.big?60:100}" ${t==='open'?`stroke-dasharray="${opt.big?'160 110':'220 150'}"`:''} stroke-linecap="round"/>`});
-    rooms.forEach(m=>{const c=C[m.id];if(!c)return;const [px,py]=T(...c);s+=`<circle cx="${px}" cy="${py}" r="${opt.big?150:220}" fill="var(--ink)"/>`;
-      if(opt.big)s+=`<text x="${px}" y="${py-260}" text-anchor="middle" font-size="300" fill="var(--ink)" style="paint-order:stroke;stroke:var(--panel);stroke-width:80">${m.name_src} ${m.area??''}</text>`});
-  }
-  return s+'</svg>';
-}
-
-let G=true;
-const underlaySwitch=$('underlay');
-underlaySwitch.disabled=!PLANS.some(r=>r.underlay);
-underlaySwitch.onchange=()=>{
-  const selected=PLANS.find(r=>r.id===st.sel);
-  if(selected?.underlay){
-    $('big').innerHTML=svgPlan(selected,{graph:G,big:true,underlay:underlaySwitch.checked});
-    if($('underlay-note'))$('underlay-note').hidden=!underlaySwitch.checked;
-  }
-  render();
+/* ---- состояние, в т.ч. в адресе */
+const st = {q:'', type:new Set(), fac:new Set(), bath:new Set(), must:new Set(), entry:new Set(), proj:new Set(), aMin:null, aMax:null, wMin:null, wMax:null,
+ sort:'area', view:'plan', ul:false, sel:null, like:null, cmp:[], tab:'plan', graph:false};
+const FACETS = {
+ type: {el:'fType', get:r => r.kind, opts:() => TYPES.filter(([v]) => DATA.some(r => r.kind === v)).concat(uniq(r => r.kind).filter(v => !TYPES.some(t => t[0] === v)).map(v => [v, v]))},
+ fac: {el:'fFac', get:r => r._fac, opts:() => [['1','Один'],['2','Два'],['3+','Три и больше']]},
+ bath: {el:'fBath', get:r => r._bath, opts:() => [['1','Один'],['2','Два'],['3+','Три и больше']]},
+ entry: {el:'fEntry', get:r => r._entry, opts:() => uniq(r => r._entry).map(v => [v, ENTRY[v] || v])},
+ proj: {el:'fProj', get:r => r._p, opts:() => uniq(r => r._p).map(v => [v, v, DATA.find(r => r._p === v)._city])},
 };
-const catalogHeader=$('catalogHeader');
-new ResizeObserver(()=>{
-  document.documentElement.style.setProperty('--header-height',`${catalogHeader.getBoundingClientRect().height}px`);
-}).observe(catalogHeader);
-function render(){
-  let rs=DATA.filter(pass);
-  rs.sort(st.sort==='area'?(a,b)=>(a.area??Infinity)-(b.area??Infinity):st.sort==='count'?(a,b)=>(b.count||1)-(a.count||1)||(a.area??Infinity)-(b.area??Infinity):(a,b)=>a.id.localeCompare(b.id));
-  $('cnt').textContent=`${rs.length} из ${DATA.length}`;
-  const g=$('grid');
-  if(!rs.length){g.innerHTML='<div class="empty">Ничего не подходит под фильтры</div>';return}
-  g.innerHTML=rs.map(r=>{if(r.status==='cad_geometry_pending')return `<div class="card source-card${st.sel===r.id?' sel':''}" data-id="${r.id}">${r.cad_svg?cadSvg(r.cad_svg):`<div class="pending-plan">Контур по DWG на проверке<br>Обводка скрыта</div>`}<div class="t"><span>${r.title}</span><span class="cnt">${r.id}</span></div><div class="s">${proj(r)}</div><div class="tags"><span class="tag">чертёж DWG · комнаты на проверке</span></div></div>`;
-    if(r.status==='source_only')return `<div class="card source-card${st.sel===r.id?' sel':''}" data-id="${r.id}"><div class="pending-plan">Исходный лист<br>Геометрия не извлечена</div><div class="t"><span>${r.title}</span><span class="cnt">${r.id}</span></div><div class="s">${proj(r)}</div></div>`;
-    const k=r.key||{};const tags=MUST.filter(([m])=>k[m]&&m!=='risers').map(([,l])=>`<span class="tag">${l}</span>`).join('');
-    return `<div class="card${st.sel===r.id?' sel':''}" data-id="${r.id}">${svgPlan(r,{graph:true,underlay:underlaySwitch.checked})}
-    <div class="t"><span>${r.kind} · ${r.area} м²</span><span class="cnt">${r.id}</span></div>
-    <div class="s">${proj(r)}${(r.count||1)>1?' · встречается '+r.count+'×':''}</div><div class="tags">${tags}${r.geom==='approx'?'<span class="tag">геом. приблизит.</span>':''}</div></div>`}).join('');
-  g.querySelectorAll('.card').forEach(c=>c.onclick=()=>open(c.dataset.id));
+function uniq(f){return [...new Set(DATA.map(f))].sort()}
+
+function pass(r, skip){
+ for (const [k, f] of Object.entries(FACETS)) if (k !== skip && st[k].size && !st[k].has(f.get(r))) return false;
+ if (skip !== 'must') for (const m of st.must) if (!(r.key || {})[m]) return false;
+ if (st.aMin != null && r.area < st.aMin) return false;
+ if (st.aMax != null && r.area > st.aMax) return false;
+ if (st.wMin != null && r._w < st.wMin) return false;
+ if (st.wMax != null && r._w > st.wMax) return false;
+ if (st.q && !r._txt.includes(st.q)) return false;
+ return true;
 }
-function open(id){
-  const r=DATA.find(x=>x.id===id);st.sel=id;const k=r.key||{},src=r.source||{};
-   if(r.status==='cad_geometry_pending'){
-     const rooms=(r.cad&&r.cad.rooms)||[];
-     $('detBody').innerHTML=`<h2>${r.title}</h2><div class="cnt">${r.id} · ${proj(r)}</div><p>Исходный DWG содержит стены, двери и подписи помещений с площадями. Комнаты и граф ещё на проверке (площади не сошлись), ниже — чертёж из DWG как есть.</p>${cadSvg(r.cad_svg,true)}<table>${rooms.map(m=>`<tr><td>${m.name_src}</td><td class="n">${m.area_m2.toFixed(2)} м²</td></tr>`).join('')}</table><div class="kv"><b>DWG</b><span class="mono">${r.cad.file}</span><b>Единицы</b><span>миллиметры</span></div><p style="margin:16px 0"><a class="source-action" href="${r.pdf}" target="_blank" rel="noopener">Открыть исходный PDF ↗</a></p>`;
-     $('det').classList.add('open');render();return;
-   }
-   if(r.status==='source_only'){
-     const roomRows=(r.rooms||[]).map(m=>`<tr><td>${m.name_src}</td><td class="cnt">${m.role}</td></tr>`).join('');
-     const sketch={id:r.id,type:r.kind,geometry_status:'schematic',coordinate_unit:'render_pixel_x10',source_pdf:r.pdf,rooms:r.rooms,edges:r.edges};
-     $('detBody').innerHTML=`<h2>${r.title}</h2><div class="cnt">${r.id} · ${proj(r)}</div>
-       <div class="toggle"><button class="chip${G?' on':''}" id="tg">Граф поверх плана</button></div>
-       <div id="big">${svgPlan(r,{graph:G,big:true})}</div>
-       <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#7fa7c9;height:8px"></i>стояк</span></div>
-       <p>Схематичная обводка по исходному PDF: границы комнат и граф проходов требуют проверки по модели. Площади и размеры не установлены; схема не участвует в генераторе.</p>
-       <table>${roomRows}</table>
-       <p style="margin:16px 0"><a class="source-action" href="${r.pdf}" target="_blank" rel="noopener">Открыть PDF ↗</a></p>
-       <h3 style="font-size:14px;margin:16px 0 6px">JSON схемы</h3><button class="chip" id="cp">Копировать</button>
-       <pre class="mono" style="white-space:pre-wrap;background:var(--chip);padding:10px;border-radius:8px;max-height:260px;overflow:auto">${JSON.stringify(sketch).replace(/</g,'&lt;')}</pre>`;
-     $('tg').onclick=()=>{G=!G;open(id)};
-     $('cp').onclick=()=>navigator.clipboard.writeText(JSON.stringify(sketch)).then(()=>{$('cp').textContent='Скопировано'});
-     $('det').classList.add('open');render();return;
-   }
-  const rooms=(r.rooms||[]).slice().sort((a,b)=>(b.area||0)-(a.area||0));
-  const ch=r.checks||{};
-  $('detBody').innerHTML=`<h2>${r.kind} · ${r.area} м²</h2><div class="cnt">${r.id} · ${proj(r)}</div>
-   <div class="toggle"><button class="chip${G?' on':''}" id="tg">граф поверх плана</button></div>
-   <div id="big">${svgPlan(r,{graph:G,big:true,underlay:underlaySwitch.checked})}</div>
-   ${r.underlay?.approximate?`<p id="underlay-note" ${underlaySwitch.checked?'':'hidden'}>Подложка из другой редакции PDF, совмещение приблизительное.</p>`:''}
-   ${r.cg?.EntryDoor&&!r.cg.EntryDoor.SwingVerified?'<p class="cnt">Открывание входной двери показано условно.</p>':''}
-    <div class="legend"><span><i style="background:var(--door)"></i>дверь</span><span><i style="background:var(--open)"></i>проём</span><span><i style="background:var(--balcony)"></i>выход на балкон</span><span><i style="background:var(--entry)"></i>вход</span><span><i style="background:#7fa7c9;height:8px"></i>стояк</span><span><i style="background:#4aa3ff;height:8px;width:8px;border-radius:9px"></i>окно</span></div>
-   <div class="kv"><b>Граф</b><span>${r.graph}</span><b>Чем характерна</b><span>${r.why||'—'}</span>
-   <b>Габарит</b><span>${(k.w/1000).toFixed(2)} × ${(k.d/1000).toFixed(2)} м, фасадов ${k.facades??'—'}</span>
-   <b>Вход</b><span>${ENTRY[k.entry_type]||k.entry_type||'—'}</span><b>Спален / с/у</b><span>${k.bedrooms??'—'} / ${k.bathrooms??'—'}</span>
-   <b>Геометрия</b><span>${r.geom==='ok'?'точная (заливки)':'приблизительная, площади из подписей'}</span>
-   <b>Проверки</b><span>${ch.ok?'пройдены':'не пройдены'}: входов ${ch.entries??'—'}, без окна ${(ch.no_window||[]).length}, площадь ${ch.area_total_ok?'сошлась':'нет'}</span>
-   <b>Повторов</b><span>${r.count||1}</span></div>
-   <table>${rooms.map(m=>`<tr><td>${m.name_src}</td><td class="cnt">${m.role||''}</td><td class="n">${m.area??''}</td></tr>`).join('')}</table>
-   <div class="kv"><b>Лист</b><span>${src.floor||''}</span><b>PDF</b><span class="mono">${src.file||''}</span>
-   ${(src.copies||[]).length?`<b>Повторы</b><span>${src.copies.map(c=>c.floor).join(', ')}</span>`:''}</div>
-   ${r.llm?`<h3 style="font-size:14px;margin:16px 0 6px">JSON для нейронки <span class="cnt">${JSON.stringify(r.llm).length} симв.</span></h3>
-   <button class="chip" id="cp">Копировать</button>
-   <pre class="mono" style="white-space:pre-wrap;background:var(--chip);padding:10px;border-radius:8px;max-height:260px;overflow:auto">${JSON.stringify(r.llm).replace(/</g,'&lt;')}</pre>`:''}`;
-  $('tg').onclick=()=>{G=!G;open(id)};
-  if(r.llm)$('cp').onclick=()=>{navigator.clipboard.writeText(JSON.stringify(r.llm)).then(()=>{$('cp').textContent='Скопировано'},()=>{$('cp').textContent='Не удалось — выделите текст ниже'})};
-  $('det').classList.add('open');render();
+
+/* ---- фильтры: чекбоксы как в генераторе, счётчики с учётом остальных фильтров */
+function chk(label, on, count, onclick, sub){
+ const d = document.createElement('div');
+ d.className = 'chk' + (on ? ' on' : '') + (!on && !count ? ' off' : '');
+ d.setAttribute('role', 'checkbox'); d.tabIndex = 0; d.setAttribute('aria-checked', on);
+ d.innerHTML = `<span class="bx"><span class="i">check</span></span><span class="t">${esc(label)}${sub ? ` <em>${esc(sub)}</em>` : ''}</span><small>${count}</small>`;
+ const act = () => { if (!on && !count) return; onclick(); };
+ d.onclick = act; d.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); act(); } };
+ return d;
 }
-const initialQuery=new URLSearchParams(location.search).get('q');
-if(initialQuery){$('q').value=initialQuery;st.q=initialQuery.trim().toLowerCase()}
-render();
+function renderFilters(){
+ for (const [k, f] of Object.entries(FACETS)) {
+  const base = DATA.filter(r => pass(r, k)), el = $(f.el); el.innerHTML = '';
+  f.opts().forEach(([v, l, sub]) => el.appendChild(chk(l, st[k].has(v), base.filter(r => f.get(r) === v).length, () => { toggle(st[k], v); update(); }, sub)));
+ }
+ const base = DATA.filter(r => pass(r, 'must')), el = $('fMust'); el.innerHTML = '';
+ MUST.forEach(([m, l]) => el.appendChild(chk(l, st.must.has(m), base.filter(r => (r.key || {})[m]).length, () => { toggle(st.must, m); update(); })));
+}
+const toggle = (s, v) => s.has(v) ? s.delete(v) : s.add(v);
+
+/* ---- чертёж: граф стен (cg), иначе прямоугольники комнат */
+const NS = 'vector-effect="non-scaling-stroke"';
+function bounds(r){
+ const xs = [], ys = [];
+ if (r.cg) r.cg.N.forEach(([x, y]) => { xs.push(x); ys.push(y); });
+ else (r.rooms || []).forEach(m => (m.rings || []).forEach(q => q.outer.forEach(([x, y]) => { xs.push(x); ys.push(y); })));
+ (r.plan?.outer || []).forEach(([x, y]) => { xs.push(x); ys.push(y); });
+ return xs.length ? [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)] : null;
+}
+function centroid(m){
+ if (m.label_at) return m.label_at;
+ let A = 0, X = 0, Y = 0; (m.rects || []).forEach(([x1, y1, x2, y2]) => { const a = (x2 - x1) * (y2 - y1); A += a; X += a * (x1 + x2) / 2; Y += a * (y1 + y2) / 2; });
+ if (!A) return null; let c = [X / A, Y / A];
+ if (!(m.rects || []).some(([x1, y1, x2, y2]) => c[0] >= x1 && c[0] <= x2 && c[1] >= y1 && c[1] <= y2)) { const b = [...m.rects].sort((p, q) => (q[2] - q[0]) * (q[3] - q[1]) - (p[2] - p[0]) * (p[3] - p[1]))[0]; c = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]; }
+ return c;
+}
+function drawCG(r, T, o){
+ const g = r.cg, role = {}; (r.rooms || []).forEach(m => role[m.id] = m.role);
+ const P = i => g.N[i], path = l => l.map((p, i) => `${i ? 'L' : 'M'}${T(...p).join(' ')}`).join(' ') + ' Z';
+ const loopPts = l => l.map(([k, rv]) => P(g.E[k][rv ? 1 : 0]));
+ const fo = o.underlay ? .2 : 1; let s = '';
+ g.S.forEach(sp => { s += `<path d="${[sp.o, ...sp.i].map(l => path(loopPts(l))).join(' ')}" fill="${roleCol(role[sp.r])}" fill-opacity="${fo}" fill-rule="evenodd"/>`; });
+ g.H.forEach((l, i) => { s += `<path d="${path(loopPts(l))}" fill="var(--paper)" stroke="var(--ln)" stroke-width="1" ${NS}><title>${g.VK[i] === 'Stair' ? 'лестница' : 'пустота'}</title></path>`; });
+ g.SH.forEach(l => { s += `<path d="${path(l)}" fill="#7fa7c9" fill-opacity="${o.underlay ? .45 : 1}" stroke="var(--ln)" stroke-width="1" ${NS}><title>стояк</title></path>`; });
+ const geo = e => { const [x1, y1] = P(e[0]), [x2, y2] = P(e[1]), L = Math.hypot(x2 - x1, y2 - y1) || 1; return {x1, y1, L, ux:(x2 - x1) / L, uy:(y2 - y1) / L, nx:-(y2 - y1) / L, ny:(x2 - x1) / L}; };
+ const pt = (q, a, c = 0) => T(q.x1 + q.ux * a + q.nx * c, q.y1 + q.uy * a + q.ny * c);
+ const rng = op => { const {L} = geo(g.E[op.e]), c = L * op.t, h = op.w / 2; return [Math.max(0, c - h), Math.min(L, c + h)]; };
+ const entry = g.ED, gaps = {};
+ const ops = g.O.filter(op => !entry || !entry.id || op.id !== entry.id); if (entry) ops.push(entry);
+ ops.forEach(op => { const [a, b] = rng(op); if (op.k === 'Window' && entry && op.e === entry.e) { const [x, y] = rng(entry); if (a < y && b > x) return; } (gaps[op.e] = gaps[op.e] || []).push([a, b, op.k]); });
+ g.E.forEach((e, k) => {
+  const q = geo(e), per = e[2], empty = e[3];
+  const sw = per ? (o.big ? 2.2 : 1.6) : 1, stl = `stroke="var(--ln)" stroke-width="${sw}" ${NS} stroke-linecap="round"${empty ? ' stroke-dasharray="3 3" opacity=".45"' : ''}`;
+  let cur = 0; const seg = []; (gaps[k] || []).sort((a, b) => a[0] - b[0]).forEach(([a, b]) => { if (a > cur) seg.push([cur, a]); cur = Math.max(cur, b); }); if (cur < q.L) seg.push([cur, q.L]);
+  seg.forEach(([a, b]) => { const p1 = pt(q, a), p2 = pt(q, b); s += `<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" ${stl}/>`; });
+  (gaps[k] || []).forEach(([a, b, kind]) => { if (kind !== 'Window') return; const d = per ? -60 : 0; [d - 45, d + 45].forEach(c => { const p1 = pt(q, a, c), p2 = pt(q, b, c); s += `<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="#3a8fff" stroke-width="1" ${NS}/>`; }); });
+ });
+ if (entry) {
+  const q = geo(g.E[entry.e]), [a, b] = rng(entry), atEnd = entry.hinge === 'End', side = entry.side === 'Outside' ? -1 : 1;
+  const hinge = pt(q, atEnd ? b : a), closed = pt(q, atEnd ? a : b), opened = pt(q, atEnd ? b : a, side * (b - a));
+  const sweep = (closed[0] - hinge[0]) * (opened[1] - hinge[1]) - (closed[1] - hinge[1]) * (opened[0] - hinge[0]) > 0 ? 1 : 0;
+  s += `<g fill="none" stroke="var(--ok)"><title>Входная дверь${entry.ver ? '' : ' · открывание условное'}</title><path d="M${hinge} L${opened}" stroke-width="${o.big ? 2.4 : 1.7}" ${NS}/><path d="M${closed} A${b - a} ${b - a} 0 0 ${sweep} ${opened}" stroke-width="1.2" ${entry.ver ? '' : 'stroke-dasharray="3 2"'} ${NS}/></g>`;
+ }
+ return s;
+}
+function svgPlan(r, o = {}){
+ const bb = bounds(r); if (!bb) return '<svg></svg>';
+ const ul = o.underlay && r.underlay;
+ let [x0, y0, x1, y1] = bb; if (ul) { const u = r.underlay; x0 = Math.min(x0, u.x); x1 = Math.max(x1, u.x + u.w); y0 = Math.min(y0, u.y - u.h); y1 = Math.max(y1, u.y); }
+ const pad = 350; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
+ const T = (x, y) => [Math.round(x - x0), Math.round(y1 - y)];
+ let s = `<svg viewBox="0 0 ${Math.round(x1 - x0)} ${Math.round(y1 - y0)}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="План ${esc(r.id)}">`;
+ if (ul) { const [x, y] = T(r.underlay.x, r.underlay.y); s += `<rect x="${x}" y="${y}" width="${r.underlay.w}" height="${r.underlay.h}" fill="#fff"/><image href="${esc(r.underlay.file)}" x="${x}" y="${y}" width="${r.underlay.w}" height="${r.underlay.h}" preserveAspectRatio="none"/>`; }
+ if (r.cg) s += drawCG(r, T, o);
+ else (r.rooms || []).forEach(m => (m.rings || []).forEach(q => { s += `<path d="${[q.outer, ...q.holes].map(l => l.map((p, i) => `${i ? 'L' : 'M'}${T(...p).join(' ')}`).join(' ') + ' Z').join(' ')}" fill="${roleCol(m.role)}" fill-rule="evenodd" stroke="var(--ln)" stroke-width="1" ${NS}/>`; }));
+ if (o.graph) {
+  const C = {}; (r.rooms || []).forEach(m => C[m.id] = centroid(m));
+  const R = o.big ? 150 : 210, W = o.big ? 2 : 1.6;
+  (r.edges || []).forEach(e => {
+   const [a, b] = e.between, t = e.type || (a === 'MOP' || b === 'MOP' ? 'entry' : 'door');
+   if (t === 'entry') { const k = a === 'MOP' ? b : a; if (!C[k]) return; const [x, y] = T(...C[k]); s += `<circle cx="${x}" cy="${y}" r="${R * 2}" fill="none" stroke="var(--ok)" stroke-width="${W}" ${NS}/>`; return; }
+   if (!C[a] || !C[b]) return; const [ax, ay] = T(...C[a]), [bx, by] = T(...C[b]);
+   s += `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${t === 'open' ? 'var(--acc)' : t === 'balcony' ? 'var(--balc)' : 'var(--err)'}" stroke-width="${W}" ${NS} ${t === 'open' ? 'stroke-dasharray="5 4"' : ''} stroke-linecap="round"/>`;
+  });
+  (r.rooms || []).forEach(m => { const c = C[m.id]; if (!c) return; const [x, y] = T(...c); s += `<circle cx="${x}" cy="${y}" r="${R}" fill="var(--ln)"/>`; });
+ }
+ if (o.labels) (r.rooms || []).forEach(m => { const c = centroid(m); if (!c) return; const [x, y] = T(...c);
+  s += `<text x="${x}" y="${y + (o.graph ? -330 : 90)}" text-anchor="middle" font-size="260" font-family="Inter,sans-serif" font-weight="500" fill="#18181a" style="paint-order:stroke;stroke:#ffffffcc;stroke-width:60">${nf(m.area, 1)}</text>`; });
+ return s + '</svg>';
+}
+
+/* ---- сетка */
+const typeOrder = k => { const i = TYPES.findIndex(t => t[0] === k); return i < 0 ? 99 : i; };
+const SORTS = {
+ area: (a, b) => a.area - b.area,
+ width: (a, b) => a._w - b._w || a.area - b.area,
+ count: (a, b) => (b.count || 1) - (a.count || 1) || a.area - b.area,
+ id: (a, b) => a.id.localeCompare(b.id),
+};
+function similar(r, n = 12){
+ const roles = rr => rr._roles.reduce((m, x) => (m[x] = (m[x] || 0) + 1, m), {});
+ const ra = roles(r);
+ return DATA.filter(x => x !== r && x.kind === r.kind).map(x => {
+  const rb = roles(x); let d = 0; new Set([...Object.keys(ra), ...Object.keys(rb)]).forEach(k => d += Math.abs((ra[k] || 0) - (rb[k] || 0)));
+  const s = Math.abs(x.area - r.area) / r.area + (r._w ? Math.abs(x._w - r._w) / r._w : 0) + d * .15 + Math.abs(((x.key || {}).facades || 0) - ((r.key || {}).facades || 0)) * .25 + (x._entry === r._entry ? 0 : .1);
+  return [s, x];
+ }).sort((a, b) => a[0] - b[0]).slice(0, n).map(p => p[1]);
+}
+function features(r){
+ const k = r.key || {}, out = [];
+ MUST.forEach(([m, l]) => { if (k[m]) out.push(`<span class="badge b-n">${l}</span>`); });
+ if ((r.count || 1) > 1) out.push(`<span class="badge b-n" title="Тот же план встречается на других листах">×${r.count} в проектах</span>`);
+ if (r.geom === 'approx') out.push('<span class="badge b-w" title="Границы комнат приблизительные, площади взяты из подписей">Контур приблизительный</span>');
+ if (r.checks && r.checks.ok === false) out.push('<span class="badge b-e" title="Не прошёл автоматические проверки — подробнее в карточке">Есть замечания</span>');
+ return out.join('');
+}
+function cardHtml(r){
+ const k = r.key || {}, inCmp = st.cmp.includes(r.id);
+ const bed = k.bedrooms ? `${k.bedrooms} сп` : '';
+ return `<div class="card${st.sel === r.id ? ' sel' : ''}" data-id="${r.id}" tabindex="0" role="button" aria-label="${esc(r.kind)} ${nf(r.area)} м², ${esc(r.id)}">
+  <div class="th" data-th="${r.id}"></div>
+  <button class="cmp${inCmp ? ' on' : ''}" data-cmp="${r.id}" title="${inCmp ? 'Убрать из сравнения' : 'Добавить в сравнение'}" aria-pressed="${inCmp}"><span class="i">${inCmp ? 'check' : 'add'}</span></button>
+  <div class="bd"><div class="t1"><b class="num">${esc(TYPE_SHORT[r.kind] || r.kind)} · ${nf(r.area)} м²</b><span class="id mono">${esc(r.id)}</span></div>
+  <div class="t2 num">${m1(k.facade_width_mm || k.w)} м по фасаду · ${[bed, k.bathrooms != null ? k.bathrooms + ' с/у' : ''].filter(Boolean).join(' · ')}</div>
+  <div class="t2">${esc(r._p)}${r._city ? ', ' + esc(r._city) : ''}</div>
+  <div class="t3">${features(r)}</div></div></div>`;
+}
+const thumbCache = new Map();
+const io = new IntersectionObserver(es => es.forEach(e => {
+ if (!e.isIntersecting) return; const el = e.target, r = BY[el.dataset.th]; io.unobserve(el);
+ const key = r.id + st.view + st.ul; if (!thumbCache.has(key)) thumbCache.set(key, svgPlan(r, {graph: st.view === 'graph', underlay: st.ul}));
+ el.innerHTML = thumbCache.get(key);
+}), {rootMargin: '400px'});
+const BY = Object.fromEntries(DATA.map(r => [r.id, r]));
+
+function renderList(){
+ let rs, note = '';
+ if (st.like) { const base = BY[st.like]; rs = similar(base); note = `Похожие на ${base.id}`; }
+ else rs = DATA.filter(r => pass(r)).sort(SORTS[st.sort]);
+ $('cnt').innerHTML = st.like ? `${rs.length} похожих <small>того же типа</small>` : `${rs.length} <small>из ${DATA.length}</small>`;
+ renderActive();
+ const out = $('out');
+ if (!rs.length) { out.innerHTML = '<div class="empty"><b>Под фильтры ничего не подходит</b>Ослабьте диапазон площади или ширины либо снимите часть отметок.</div>'; return; }
+ if (st.like || st.sort === 'id') out.innerHTML = `<div class="grid">${rs.map(cardHtml).join('')}</div>`;
+ else {
+  const groups = {}; rs.forEach(r => (groups[r.kind] = groups[r.kind] || []).push(r));
+  out.innerHTML = Object.keys(groups).sort((a, b) => typeOrder(a) - typeOrder(b)).map(k => {
+   const g = groups[k], lo = Math.min(...g.map(r => r.area)), hi = Math.max(...g.map(r => r.area));
+   const label = (TYPES.find(t => t[0] === k) || [k, k])[1];
+   return `<section class="grp"><h2>${esc(label)} <small class="num">${g.length} · ${nf(lo, 1)}–${nf(hi, 1)} м²</small></h2><div class="grid">${g.map(cardHtml).join('')}</div></section>`;
+  }).join('');
+ }
+ out.querySelectorAll('[data-th]').forEach(el => io.observe(el));
+}
+function renderActive(){
+ const chips = [];
+ if (st.like) chips.push([`Похожие на ${st.like}`, () => { st.like = null; }]);
+ for (const [k, f] of Object.entries(FACETS)) st[k].forEach(v => { const o = f.opts().find(x => x[0] === v); chips.push([o ? o[1].split(' · ')[0] : v, () => st[k].delete(v)]); });
+ st.must.forEach(m => chips.push([MUST.find(x => x[0] === m)[1], () => st.must.delete(m)]));
+ if (st.aMin != null || st.aMax != null) chips.push([`${st.aMin ?? '…'}–${st.aMax ?? '…'} м²`, () => { st.aMin = st.aMax = null; $('aMin').value = $('aMax').value = ''; }]);
+ if (st.wMin != null || st.wMax != null) chips.push([`фасад ${st.wMin ?? '…'}–${st.wMax ?? '…'} м`, () => { st.wMin = st.wMax = null; $('wMin').value = $('wMax').value = ''; }]);
+ if (st.q) chips.push([`«${st.q}»`, () => { st.q = ''; $('q').value = ''; }]);
+ const el = $('active'); el.innerHTML = '';
+ chips.forEach(([l, off]) => { const b = document.createElement('button'); b.innerHTML = `${esc(l)}<span class="i">close</span>`; b.title = 'Убрать'; b.onclick = () => { off(); update(); }; el.appendChild(b); });
+ if (chips.length > 1) { const b = document.createElement('button'); b.textContent = 'Сбросить всё'; b.style.cssText = 'background:transparent;color:var(--muted);padding:0 6px'; b.onclick = resetAll; el.appendChild(b); }
+}
+function resetAll(){
+ ['type', 'fac', 'bath', 'entry', 'proj', 'must'].forEach(k => st[k].clear());
+ ['aMin', 'aMax', 'wMin', 'wMax'].forEach(k => { st[k] = null; $(k).value = ''; });
+ st.q = ''; $('q').value = ''; st.like = null; update();
+}
+function update(){ renderFilters(); renderList(); syncUrl(); }
+
+/* ---- карточка плана */
+let llmData = null;
+function loadLlm(){ return llmData || (llmData = fetch('library_llm.json').then(r => r.ok ? r.json() : Promise.reject()).then(a => Object.fromEntries(a.map(x => [x.id, x])))); }
+function openPlan(id, tab){
+ const r = BY[id]; if (!r) return; st.sel = id; if (tab) st.tab = tab;
+ const k = r.key || {}, inCmp = st.cmp.includes(id);
+ $('det').innerHTML = `<div class="dh"><div class="row"><div style="flex:1;min-width:0"><h2 class="num">${esc(TYPE_SHORT[r.kind] || r.kind)} · ${nf(r.area)} м²</h2>
+   <div class="sub"><span class="mono">${esc(r.id)}</span> · ${esc(r._p)}${r._city ? ', ' + esc(r._city) : ''}</div></div>
+   <button class="ib" id="dClose" aria-label="Закрыть"><span class="i">close</span></button></div>
+  <div class="acts"><button class="btn pri" id="dGen" ${r.cg ? '' : 'disabled title="Нет графа стен"'}><span class="i">arrow_outward</span>Контур в генератор</button>
+   <button class="btn" id="dLike"><span class="i">join_inner</span>Похожие</button>
+   <button class="btn${inCmp ? ' on' : ''}" id="dCmp"><span class="i">${inCmp ? 'check' : 'add'}</span>Сравнить</button></div></div>
+  <div class="tabs"><div class="seg" id="dTabs"><button data-t="plan">План</button><button data-t="rooms">Помещения</button><button data-t="data">Источник и данные</button></div></div>
+  <div class="db" id="dBody"></div>`;
+ $('dClose').onclick = closePlan;
+ $('dGen').onclick = () => toGenerator(r);
+ $('dLike').onclick = () => { st.like = id; resetScroll(); update(); };
+ $('dCmp').onclick = () => { toggleCmp(id); openPlan(id); };
+ $$('#dTabs button').forEach(b => { b.classList.toggle('on', b.dataset.t === st.tab); b.onclick = () => { st.tab = b.dataset.t; openPlan(id); }; });
+ const body = $('dBody');
+ if (st.tab === 'plan') {
+  body.innerHTML = `<div class="plan" id="big">${svgPlan(r, {big: true, graph: st.graph, underlay: st.ul, labels: true})}</div>
+   <div class="opts"><div class="chk${st.graph ? ' on' : ''}" id="oGraph" role="checkbox" tabindex="0" aria-checked="${st.graph}"><span class="bx"><span class="i">check</span></span>Связи между комнатами</div>
+   ${r.underlay ? `<div class="chk${st.ul ? ' on' : ''}" id="oUl" role="checkbox" tabindex="0" aria-checked="${st.ul}"><span class="bx"><span class="i">check</span></span>Подложка PDF</div>` : ''}</div>
+   <div class="legend">${st.graph ? '<span><i style="background:var(--err)"></i>дверь</span><span><i style="background:var(--acc)"></i>проём</span><span><i style="background:var(--balc)"></i>выход на балкон</span><span><i style="background:var(--ok);height:8px;width:8px;border-radius:50%;border:2px solid var(--ok);background:none"></i>вход</span>' : ''}<span><i style="background:#3a8fff"></i>окно</span><span><i style="background:#7fa7c9;height:8px;width:8px"></i>стояк</span><span><i style="background:var(--ok)"></i>входная дверь</span></div>
+   ${r.cg?.ED && !r.cg.ED.ver ? '<p class="note" style="margin-top:6px">Открывание входной двери показано условно.</p>' : ''}
+   ${st.ul && r.underlay?.approximate ? '<p class="note" style="margin-top:6px">Подложка из другой редакции PDF, совмещение приблизительное.</p>' : ''}
+   <dl class="kv"><dt>Габарит</dt><dd class="num">${m1(k.w)} × ${m1(k.d)} м</dd>
+   <dt>Ширина по фасаду</dt><dd class="num">${m1(k.facade_width_mm || k.w)} м, фасадов с окнами ${k.facades ?? '—'}</dd>
+   <dt>Спальни / санузлы</dt><dd class="num">${k.bedrooms ?? '—'} / ${k.bathrooms ?? '—'}</dd>
+   <dt>Вход</dt><dd>${esc(ENTRY[r._entry] || r._entry)}</dd>
+   <dt>Чем характерна</dt><dd>${esc(r.why || '—')}</dd>
+   <dt>Проверки</dt><dd>${checksText(r)}</dd></dl>`;
+  const tg = (elId, key) => { const el = $(elId); if (!el) return; const f = () => { st[key] = !st[key]; if (key === 'ul') { syncUlChk(); renderList(); } openPlan(id); }; el.onclick = f; el.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); f(); } }; };
+  tg('oGraph', 'graph'); tg('oUl', 'ul');
+ } else if (st.tab === 'rooms') {
+  const rooms = (r.rooms || []).slice().sort((a, b) => (b.area || 0) - (a.area || 0)), tot = rooms.reduce((s, m) => s + (m.area || 0), 0);
+  body.innerHTML = `<table><thead><tr><th>Помещение</th><th class="n">м²</th><th class="n">доля</th></tr></thead><tbody>${rooms.map(m => `<tr><td><span class="sw" style="background:${roleCol(m.role)}"></span>${esc(roleName(m.role))}${m.name_src && m.name_src.toLowerCase() !== roleName(m.role).toLowerCase() ? ` <small>· ${esc(m.name_src)}</small>` : ''}</td><td class="n">${nf(m.area)}</td><td class="n">${tot ? Math.round(m.area / tot * 100) + '%' : ''}</td></tr>`).join('')}
+   <tr><td><b>Всего</b></td><td class="n"><b>${nf(tot)}</b></td><td></td></tr></tbody></table>
+   <h3>Связи</h3><p style="margin:0;font-size:13px">${esc(r.graph || '—')}</p>`;
+ } else {
+  const src = r.source || {};
+  body.innerHTML = `<dl class="kv" style="margin-top:0"><dt>Проект</dt><dd>${esc(src.project || '—')}</dd><dt>Лист</dt><dd>${esc(src.floor || '—')}</dd>
+   <dt>Файл PDF</dt><dd class="mono">${esc(src.file || '—')}</dd>
+   ${(src.copies || []).length ? `<dt>Тот же план</dt><dd>${src.copies.map(c => `<span class="mono">${esc(c.id || '')}</span> ${esc(c.floor || '')}`).join('<br>')}</dd>` : ''}
+   <dt>Геометрия</dt><dd>${r.geom === 'ok' ? 'Точная, по заливкам PDF' : 'Приблизительная, площади из подписей'}</dd></dl>
+   <h3>JSON для нейронки</h3><div style="display:flex;gap:8px;align-items:center"><button class="btn sm" id="cp" disabled><span class="i">content_copy</span>Копировать</button><span class="note" id="cpN">Загружаю…</span></div><pre class="json mono" id="llm" hidden></pre>`;
+  loadLlm().then(m => { const x = m[r.id]; if (!x) { $('cpN').textContent = 'Для этого плана JSON не собран.'; return; }
+   const s = JSON.stringify(x); $('llm').textContent = s; $('llm').hidden = false; $('cpN').textContent = `${s.length.toLocaleString('ru-RU')} символов`; $('cp').disabled = false;
+   $('cp').onclick = () => navigator.clipboard.writeText(s).then(() => { $('cpN').textContent = 'Скопировано'; }, () => { $('cpN').textContent = 'Не удалось — выделите текст вручную'; });
+  }, () => { $('cpN').innerHTML = 'Не загрузился. <a href="library_llm.json" download>Скачать файл целиком</a>'; });
+ }
+ $('det').classList.add('open'); document.body.classList.add('det-on');
+ document.querySelectorAll('.card.sel').forEach(c => c.classList.remove('sel'));
+ document.querySelector(`.card[data-id="${id}"]`)?.classList.add('sel');
+ syncUrl();
+}
+function checksText(r){
+ const c = r.checks || {}; if (!r.checks) return '—';
+ const bad = []; if (c.entries !== 1) bad.push(`входов ${c.entries}`); if ((c.no_window || []).length) bad.push(`без окна: ${c.no_window.join(', ')}`);
+ if ((c.unreached || []).length) bad.push(`недостижимы: ${c.unreached.join(', ')}`); if (!c.area_total_ok) bad.push('сумма площадей не сошлась');
+ return c.ok ? '<span class="badge b-ok">Пройдены</span>' : `<span class="badge b-e">Замечания</span> ${esc(bad.join('; '))}`;
+}
+function closePlan(){ $('det').classList.remove('open'); document.body.classList.remove('det-on'); st.sel = null; document.querySelectorAll('.card.sel').forEach(c => c.classList.remove('sel')); syncUrl(); }
+const $$ = s => document.querySelectorAll(s);
+const resetScroll = () => scrollTo({top: 0});
+
+/* ---- в генератор: наружный контур, окна, вход и стояки в формате ind-plan */
+function toGenerator(r){
+ const g = r.cg; if (!g || !g.L.length) return;
+ const P = i => g.N[i], segOf = {}; g.L.forEach(([k, rv], i) => segOf[k] = [i, rv]);
+ const axis = g.L.map(([k, rv]) => P(g.E[k][rv ? 1 : 0]));
+ const th = g.L.map(([k]) => g.E[k][4]).filter(Boolean).sort((a, b) => a - b);
+ const thickness = Math.min(600, Math.max(150, th[th.length >> 1] || 250));
+ const op = (o, kind) => { const s = segOf[o.e]; if (!s) return null; const e = g.E[o.e], [x1, y1] = P(e[0]), [x2, y2] = P(e[1]), L = Math.hypot(x2 - x1, y2 - y1); const at = L * o.t; return {kind, seg: s[0], at: Math.round(s[1] ? L - at : at), width: Math.round(o.w)}; };
+ const openings = [...g.O.filter(o => o.k === 'Window').map(o => op(o, 'window')), g.ED ? op(g.ED, 'door') : null].filter(Boolean);
+ const walls = [{type: 'exterior', axis, closed: true, thickness, openings}];
+ // стены между комнатами и лоджией/балконом — тоже наружные, на них окна
+ const role = {}; (r.rooms || []).forEach(m => role[m.id] = m.role);
+ const summer = new Set(); g.S.filter(sp => ['loggia', 'balcony', 'patio'].includes(role[sp.r])).forEach(sp => [sp.o, ...sp.i].forEach(l => l.forEach(([k]) => { if (!g.E[k][2]) summer.add(k); })));
+ summer.forEach(k => { const e = g.E[k], [x1, y1] = P(e[0]), [x2, y2] = P(e[1]), L = Math.hypot(x2 - x1, y2 - y1);
+  walls.push({type: 'exterior', axis: [P(e[0]), P(e[1])], thickness: Math.max(150, e[4] || thickness), openings: g.O.filter(o => o.k === 'Window' && o.e === k).map(o => ({kind: 'window', seg: 0, at: Math.round(L * o.t), width: Math.round(o.w)}))}); });
+ const risers = (r.plan?.risers || []).map(([x, y]) => ({at: [x, y], d: 110}));
+ const name = `${TYPE_SHORT[r.kind] || r.kind} ${nf(r.area, 1)} м² · по ${r.id}`;
+ const d = {format: 'ind-plan', source: 'catalog', from: r.id, name, ts: Date.now(), walls, risers, rooms: []};
+ try { localStorage.setItem('indplan:from-catalog', JSON.stringify(d)); } catch { alert('Браузер не дал сохранить контур. Разрешите хранение данных для сайта и попробуйте ещё раз.'); return; }
+ location.href = '../?from=catalog';
+}
+
+/* ---- сравнение до 3 планов */
+function toggleCmp(id){
+ const i = st.cmp.indexOf(id);
+ if (i >= 0) st.cmp.splice(i, 1); else { if (st.cmp.length >= 3) st.cmp.shift(); st.cmp.push(id); }
+ renderTray(); $$(`[data-cmp]`).forEach(b => { const on = st.cmp.includes(b.dataset.cmp); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.title = on ? 'Убрать из сравнения' : 'Добавить в сравнение'; b.innerHTML = `<span class="i">${on ? 'check' : 'add'}</span>`; });
+}
+function renderTray(){
+ $('tray').classList.toggle('on', st.cmp.length > 0);
+ $('trayIds').innerHTML = st.cmp.map(id => `<button data-rm="${id}" title="Убрать">${esc(id)}<span class="i">close</span></button>`).join('');
+ $$('#trayIds button').forEach(b => b.onclick = () => toggleCmp(b.dataset.rm));
+ $('cmpGo').disabled = st.cmp.length < 2; $('cmpGo').title = st.cmp.length < 2 ? 'Отметьте ещё хотя бы один план' : '';
+}
+function openCmp(){
+ const rs = st.cmp.map(id => BY[id]);
+ const roleArea = (r, roles) => (r.rooms || []).filter(m => roles.includes(m.role)).reduce((s, m) => s + (m.area || 0), 0);
+ const rows = [
+  ['Тип', r => TYPE_SHORT[r.kind] || r.kind],
+  ['Площадь, м²', r => nf(r.area), r => r.area],
+  ['Габарит, м', r => `${m1(r.key?.w)} × ${m1(r.key?.d)}`],
+  ['Ширина по фасаду, м', r => m1(r.key?.facade_width_mm || r.key?.w), r => r._w],
+  ['Фасадов с окнами', r => r.key?.facades ?? '—', r => r.key?.facades],
+  ['Спальни', r => r.key?.bedrooms ?? '—', r => r.key?.bedrooms],
+  ['Санузлы', r => r.key?.bathrooms ?? '—', r => r.key?.bathrooms],
+  ['Кухня-гостиная, м²', r => nf(roleArea(r, ['kg', 'kitchen', 'living']), 1), r => roleArea(r, ['kg', 'kitchen', 'living'])],
+  ['Спальни, м²', r => nf(roleArea(r, ['bedroom', 'master', 'kids']), 1), r => roleArea(r, ['bedroom', 'master', 'kids'])],
+  ['Прихожая и коридоры, м²', r => nf(roleArea(r, ['hall', 'corridor']), 1), r => roleArea(r, ['hall', 'corridor'])],
+  ['Санузлы, м²', r => nf(roleArea(r, ['bath', 'wc']), 1), r => roleArea(r, ['bath', 'wc'])],
+  ['Хранение, м²', r => nf(roleArea(r, ['wardrobe', 'storage', 'laundry']), 1), r => roleArea(r, ['wardrobe', 'storage', 'laundry'])],
+  ['Летние, м²', r => nf(roleArea(r, ['loggia', 'balcony', 'patio']), 1), r => roleArea(r, ['loggia', 'balcony', 'patio'])],
+  ['Вход', r => ENTRY[r._entry] || r._entry],
+  ['Проект', r => r._p],
+ ];
+ const max = f => { const v = rs.map(f); return v.map((x, i) => i > 0 && Math.abs((x ?? 0) - (v[0] ?? 0)) > .05); };
+ $('cmpBody').innerHTML = `<table><thead><tr><th></th>${rs.map(r => `<th><button class="btn ghost sm mono" data-open="${r.id}" style="padding:0 6px;margin-left:-6px">${esc(r.id)}</button></th>`).join('')}</tr></thead><tbody>
+  <tr><td></td>${rs.map(r => `<td><div class="pl">${svgPlan(r, {big: true, labels: true})}</div></td>`).join('')}</tr>
+  ${rows.map(([l, f, num]) => { const hi = num ? max(num) : rs.map(() => false); return `<tr><td>${l}</td>${rs.map((r, i) => `<td${hi[i] ? ' class="diff"' : ''}>${esc(f(r))}</td>`).join('')}</tr>`; }).join('')}</tbody></table>
+  <p class="note" style="margin-top:10px">Синим — значения, которые отличаются от первого плана.</p>`;
+ $$('#cmpBody [data-open]').forEach(b => b.onclick = () => { closeCmp(); openPlan(b.dataset.open, 'plan'); });
+ $('modal').classList.add('on'); $('mClose').focus();
+}
+function closeCmp(){ $('modal').classList.remove('on'); }
+
+/* ---- адрес страницы */
+function syncUrl(){
+ const p = new URLSearchParams();
+ if (st.sel) p.set('id', st.sel); if (st.like) p.set('like', st.like); if (st.q) p.set('q', st.q);
+ for (const k of ['type', 'fac', 'bath', 'must', 'entry', 'proj']) if (st[k].size) p.set(k, [...st[k]].join(','));
+ for (const k of ['aMin', 'aMax', 'wMin', 'wMax']) if (st[k] != null) p.set(k, st[k]);
+ if (st.sort !== 'area') p.set('sort', st.sort);
+ const s = p.toString(); history.replaceState(null, '', s ? '?' + s : location.pathname);
+}
+function readUrl(){
+ const p = new URLSearchParams(location.search);
+ for (const k of ['type', 'fac', 'bath', 'must', 'entry', 'proj']) if (p.get(k)) p.get(k).split(',').forEach(v => st[k].add(v));
+ for (const k of ['aMin', 'aMax', 'wMin', 'wMax']) if (p.get(k) && !isNaN(+p.get(k))) { st[k] = +p.get(k); $(k).value = st[k]; }
+ if (p.get('q')) { st.q = p.get('q').trim().toLowerCase(); $('q').value = p.get('q'); }
+ if (SORTS[p.get('sort')]) { st.sort = p.get('sort'); $('sort').value = st.sort; }
+ if (BY[p.get('like')]) st.like = p.get('like');
+ return BY[p.get('id')] ? p.get('id') : null;
+}
+
+/* ---- события */
+['aMin', 'aMax', 'wMin', 'wMax'].forEach(id => $(id).oninput = () => { const v = parseFloat($(id).value); st[id] = isNaN(v) ? null : v; update(); });
+$('q').oninput = e => { st.q = e.target.value.trim().toLowerCase(); update(); };
+$('sort').onchange = e => { st.sort = e.target.value; st.like = null; update(); };
+$$('#view button').forEach(b => b.onclick = () => { st.view = b.dataset.v; $$('#view button').forEach(x => x.classList.toggle('on', x === b)); renderList(); });
+function syncUlChk(){ const c = $('ulChk'); c.classList.toggle('on', st.ul); c.setAttribute('aria-checked', st.ul); }
+(() => { const c = $('ulChk'), has = DATA.some(r => r.underlay);
+ if (!has) { c.remove(); return; }
+ c.setAttribute('role', 'checkbox'); c.tabIndex = 0; c.title = 'Исходный лист PDF под обводкой';
+ const f = () => { st.ul = !st.ul; syncUlChk(); renderList(); if (st.sel) openPlan(st.sel); };
+ c.onclick = f; c.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); f(); } }; syncUlChk(); })();
+$('out').addEventListener('click', e => {
+ const cb = e.target.closest('[data-cmp]'); if (cb) { e.stopPropagation(); toggleCmp(cb.dataset.cmp); return; }
+ const c = e.target.closest('.card'); if (c) openPlan(c.dataset.id);
+});
+$('out').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('card')) { e.preventDefault(); openPlan(e.target.dataset.id); } });
+$('cmpGo').onclick = openCmp; $('cmpClear').onclick = () => { st.cmp = []; renderTray(); renderList(); if (st.sel) openPlan(st.sel); };
+$('mClose').onclick = closeCmp; $('modal').onclick = e => { if (e.target === $('modal')) closeCmp(); };
+$('fltBtn').onclick = () => $('left').classList.toggle('open');
+document.addEventListener('keydown', e => {
+ if (e.key !== 'Escape') return;
+ if ($('modal').classList.contains('on')) return closeCmp();
+ if ($('left').classList.contains('open')) return $('left').classList.remove('open');
+ if (st.sel) closePlan();
+});
+try { const u = localStorage.getItem('indplan:user') || ''; if (u) { $('ava').textContent = (u.split('@')[0].split(/[._-]/).map(s => s[0] || '').join('').slice(0, 2) || 'ИН').toUpperCase(); $('ava').title = u; } } catch {}
+
+const startId = readUrl();
+update();
+if (startId) openPlan(startId);
 </script>
 </body>
 </html>
