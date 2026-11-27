@@ -88,7 +88,7 @@ textarea.ta{width:100%;min-height:76px;border:1px solid var(--line2);border-radi
 .tb .ib.on{background:var(--acc);color:#fff}
 .lu{width:18px;height:18px;flex:none}
 .tbt{display:flex;align-items:center;gap:6px;height:38px;padding:0 10px;border:0;border-radius:9px;background:transparent;cursor:pointer;font-size:13px;color:var(--text)}.tbt:hover{background:var(--sub)}
-::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--text) 50%,transparent);background-clip:padding-box;border:4px solid transparent;border-radius:6px}::-webkit-scrollbar-button{display:none;height:0;width:0}::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}::-webkit-scrollbar-thumb{background:var(--text);background-clip:padding-box;border:4px solid transparent;border-radius:1px}::-webkit-scrollbar-button{display:none;width:0;height:0}@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:var(--text) transparent}}
 .tok{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 10px;border-radius:8px;background:var(--sub);font-size:13px;color:var(--muted)}.tok b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}.tok .i{font-size:17px;color:var(--acc)}
 .cost{display:inline-flex;align-items:center;gap:2px;margin-left:6px;padding:2px 7px 2px 5px;border-radius:6px;font-size:12px;font-weight:600;background:#ffffff2e;font-variant-numeric:tabular-nums}.cost .i{font-size:14px}
 #simbtn .cost{background:var(--sub);color:var(--muted)}

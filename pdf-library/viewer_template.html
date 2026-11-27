@@ -19,6 +19,7 @@ body{margin:0;font:14px/1.45 Inter,system-ui,sans-serif;background:var(--bg);col
 button,input,select{font:inherit;color:inherit}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}::-webkit-scrollbar-thumb{background:var(--text);background-clip:padding-box;border:4px solid transparent;border-radius:1px}::-webkit-scrollbar-button{display:none;width:0;height:0}@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:var(--text) transparent}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-weight:500;white-space:nowrap;text-decoration:none}
 .btn:hover{background:var(--sub)}.btn .i{font-size:18px}
 .btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}.btn.pri:hover{filter:brightness(1.07)}
