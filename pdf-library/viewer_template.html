@@ -30,6 +30,13 @@ a{color:inherit}
 .ib{width:34px;height:34px;border-radius:8px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
 .ib:hover{background:var(--sub);color:var(--text)}
 .logo{display:flex;align-items:center;gap:8px;font-weight:700;text-decoration:none}.logo b{width:28px;height:28px;border-radius:8px;background:var(--text);color:var(--panel);display:grid;place-items:center;font-size:11px}
+.sw{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:0;border-radius:8px;background:transparent;cursor:pointer;font-weight:500;color:var(--muted);white-space:nowrap}
+.sw:hover{background:var(--sub);color:var(--text)}.sw[aria-checked="true"]{color:var(--text)}
+.sw .tr{position:relative;width:30px;height:18px;border-radius:9px;background:var(--line2);transition:background .15s;flex:none}
+.sw .tr::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003;transition:transform .15s}
+.sw[aria-checked="true"] .tr{background:var(--acc)}.sw[aria-checked="true"] .tr::after{transform:translateX(12px)}
+.sw small{color:var(--faint);font-weight:400;font-variant-numeric:tabular-nums}
+@media (max-width:640px){.sw .lb{display:none}}
 .avatar{width:32px;height:32px;border-radius:50%;background:#ffd7a8;color:#6b3d00;display:grid;place-items:center;font-weight:600;font-size:13px}
 .sp{flex:1}
 .lbl{font-size:12px;font-weight:600;color:var(--muted);margin:0 0 8px}
@@ -157,6 +164,7 @@ pre.json{white-space:pre-wrap;background:var(--sub);border:1px solid var(--line)
  <a class="logo" href="../"><b>IND</b>PLAN</a>
  <nav class="nav"><a href="../" title="Мои планировки"><span class="i">folder_open</span><span class="tx">Мои планировки</span></a><a href="./" aria-current="page" title="Каталог планировок"><span class="i">grid_view</span><span class="tx">Каталог планировок</span></a></nav>
  <span class="sp"></span>
+ <button class="sw" id="ulSw" role="switch" aria-checked="false" title="Исходный лист PDF под обводкой"><span class="tr"></span><span class="lb">Подложка PDF</span><small id="ulN"></small></button>
  <div class="avatar" id="ava" title="">ИН</div>
 </header>
 <div class="page">
@@ -181,7 +189,6 @@ pre.json{white-space:pre-wrap;background:var(--sub);border:1px solid var(--line)
   <span class="cnt num" id="cnt"></span>
   <div class="active" id="active"></div>
   <span class="sp"></span>
-  <label class="chk" id="ulChk" style="padding:0;margin-right:4px"><span class="bx"><span class="i">check</span></span>Подложка PDF</label>
   <div class="seg" id="view" role="group" aria-label="Вид превью"><button data-v="plan" class="on">План</button><button data-v="graph">План + связи</button></div>
   <select class="inp" id="sort" style="width:auto;height:32px" aria-label="Сортировка"><option value="area">По площади</option><option value="width">По ширине фасада</option><option value="count">Частые сначала</option><option value="id">По id</option></select>
  </div>
@@ -449,8 +456,7 @@ function openPlan(id, tab){
  const body = $('dBody');
  if (st.tab === 'plan') {
   body.innerHTML = `<div class="plan" id="big">${svgPlan(r, {big: true, graph: st.graph, underlay: st.ul, labels: true})}</div>
-   <div class="opts"><div class="chk${st.graph ? ' on' : ''}" id="oGraph" role="checkbox" tabindex="0" aria-checked="${st.graph}"><span class="bx"><span class="i">check</span></span>Связи между комнатами</div>
-   ${r.underlay ? `<div class="chk${st.ul ? ' on' : ''}" id="oUl" role="checkbox" tabindex="0" aria-checked="${st.ul}"><span class="bx"><span class="i">check</span></span>Подложка PDF</div>` : ''}</div>
+   <div class="opts"><div class="chk${st.graph ? ' on' : ''}" id="oGraph" role="checkbox" tabindex="0" aria-checked="${st.graph}"><span class="bx"><span class="i">check</span></span>Связи между комнатами</div></div>
    <div class="legend">${ZONES.map(([z, l]) => `<span><i style="background:${Z[z]};height:10px;width:10px;border-radius:3px"></i>${l}</span>`).join('')}</div>
    <div class="legend">${st.graph ? '<span><i style="background:#18181a"></i>дверь</span><span><i style="background:repeating-linear-gradient(90deg,#18181a 0 4px,transparent 4px 7px)"></i>проём</span><span><i style="background:repeating-linear-gradient(90deg,#18181a 0 1px,transparent 1px 4px)"></i>выход на балкон</span><span><i style="height:10px;width:10px;border-radius:50%;border:2px solid #18181a;background:none"></i>вход</span>' : ''}<span><i style="background:#3a8fff"></i>окно</span><span><i style="background:#18181a;height:8px;width:8px"></i>стояк</span><span><i style="background:var(--ok)"></i>входная дверь</span></div>
    ${r.cg?.ED && !r.cg.ED.ver ? '<p class="note" style="margin-top:6px">Открывание входной двери показано условно.</p>' : ''}
@@ -461,8 +467,8 @@ function openPlan(id, tab){
    <dt>Вход</dt><dd>${esc(ENTRY[r._entry] || r._entry)}</dd>
    <dt>Чем характерна</dt><dd>${esc(r.why || '—')}</dd>
    <dt>Проверки</dt><dd>${checksText(r)}</dd></dl>`;
-  const tg = (elId, key) => { const el = $(elId); if (!el) return; const f = () => { st[key] = !st[key]; if (key === 'ul') { syncUlChk(); renderList(); } openPlan(id); }; el.onclick = f; el.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); f(); } }; };
-  tg('oGraph', 'graph'); tg('oUl', 'ul');
+  const tg = (elId, key) => { const el = $(elId); if (!el) return; const f = () => { st[key] = !st[key]; openPlan(id); }; el.onclick = f; el.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); f(); } }; };
+  tg('oGraph', 'graph');
  } else if (st.tab === 'rooms') {
   const rooms = (r.rooms || []).slice().sort((a, b) => (b.area || 0) - (a.area || 0)), tot = rooms.reduce((s, m) => s + (m.area || 0), 0);
   body.innerHTML = `<table><thead><tr><th>Помещение</th><th class="n">м²</th><th class="n">доля</th></tr></thead><tbody>${rooms.map(m => `<tr><td><span class="sw" style="background:${roleCol(m.role)}"></span>${esc(roleName(m.role))}${m.name_src && m.name_src.toLowerCase() !== roleName(m.role).toLowerCase() ? ` <small>· ${esc(m.name_src)}</small>` : ''}</td><td class="n">${nf(m.area)}</td><td class="n">${tot ? Math.round(m.area / tot * 100) + '%' : ''}</td></tr>`).join('')}
@@ -583,12 +589,14 @@ function readUrl(){
 $('q').oninput = e => { st.q = e.target.value.trim().toLowerCase(); update(); };
 $('sort').onchange = e => { st.sort = e.target.value; st.like = null; update(); };
 $$('#view button').forEach(b => b.onclick = () => { st.view = b.dataset.v; $$('#view button').forEach(x => x.classList.toggle('on', x === b)); renderList(); });
-function syncUlChk(){ const c = $('ulChk'); c.classList.toggle('on', st.ul); c.setAttribute('aria-checked', st.ul); }
-(() => { const c = $('ulChk'), has = DATA.some(r => r.underlay);
- if (!has) { c.remove(); return; }
- c.setAttribute('role', 'checkbox'); c.tabIndex = 0; c.title = 'Исходный лист PDF под обводкой';
- const f = () => { st.ul = !st.ul; syncUlChk(); renderList(); if (st.sel) openPlan(st.sel); };
- c.onclick = f; c.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); f(); } }; syncUlChk(); })();
+function syncUlChk(){ $('ulSw').setAttribute('aria-checked', st.ul); }
+(() => { const c = $('ulSw'), n = DATA.filter(r => r.underlay).length;
+ if (!n) { c.remove(); return; }
+ $('ulN').textContent = n < DATA.length ? `${n} из ${DATA.length}` : '';
+ c.title = `Исходный лист PDF под обводкой — есть у ${n} из ${DATA.length} планов`;
+ try { st.ul = localStorage.getItem('indplan:catalog-underlay') === '1'; } catch {}
+ c.onclick = () => { st.ul = !st.ul; try { localStorage.setItem('indplan:catalog-underlay', st.ul ? '1' : '0'); } catch {} syncUlChk(); renderList(); if (st.sel) openPlan(st.sel); };
+ syncUlChk(); })();
 $('out').addEventListener('click', e => {
  const cb = e.target.closest('[data-cmp]'); if (cb) { e.stopPropagation(); toggleCmp(cb.dataset.cmp); return; }
  const c = e.target.closest('.card'); if (c) openPlan(c.dataset.id);
