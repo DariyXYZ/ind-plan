@@ -305,7 +305,11 @@ function drawCG(r, T, o){
   (gaps[k] || []).forEach(([a, b, kind]) => { if (kind !== 'Window') return; const d = per ? -60 : 0; [d - 45, d + 45].forEach(c => { const p1 = pt(q, a, c), p2 = pt(q, b, c); s += `<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="#3a8fff" stroke-width="1" ${NS}/>`; }); });
  });
  if (entry) {
-  const q = geo(g.E[entry.e]), [a, b] = rng(entry), atEnd = entry.hinge === 'End', side = entry.side === 'Outside' ? -1 : 1;
+  const q = geo(g.E[entry.e]), [a, b] = rng(entry), atEnd = entry.hinge === 'End';
+  // входная дверь всегда открывается наружу: сторону берём по контуру квартиры, а не по данным
+  const poly = loopPts(g.L), inPoly = (x, y) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+  const mid = (a + b) / 2, probe = [q.x1 + q.ux * mid + q.nx * 150, q.y1 + q.uy * mid + q.ny * 150];
+  const side = poly.length > 2 ? (inPoly(...probe) ? -1 : 1) : (entry.side === 'Outside' ? -1 : 1);
   const hinge = pt(q, atEnd ? b : a), closed = pt(q, atEnd ? a : b), opened = pt(q, atEnd ? b : a, side * (b - a));
   const sweep = (closed[0] - hinge[0]) * (opened[1] - hinge[1]) - (closed[1] - hinge[1]) * (opened[0] - hinge[0]) > 0 ? 1 : 0;
   s += `<g fill="none" stroke="var(--ok)"><title>Входная дверь${entry.ver ? '' : ' · открывание условное'}</title><path d="M${hinge} L${opened}" stroke-width="${o.big ? 2.4 : 1.7}" ${NS}/><path d="M${closed} A${b - a} ${b - a} 0 0 ${sweep} ${opened}" stroke-width="1.2" ${entry.ver ? '' : 'stroke-dasharray="3 2"'} ${NS}/></g>`;
