@@ -202,9 +202,12 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 const nf = (n, d = 2) => n == null ? '—' : Number(n).toLocaleString('ru-RU', {maximumFractionDigits: d});
 const m1 = mm => mm ? nf(mm / 1000, 2) : '—';
 
-const ROLE = {kg:['Кухня-гостиная','#f3c6a5'],kitchen:['Кухня','#f3c6a5'],living:['Гостиная','#f6d9b8'],bedroom:['Спальня','#bcd7f0'],master:['Мастер-спальня','#a9c8ec'],
- kids:['Детская','#c9e3c1'],hall:['Прихожая','#e7e1cf'],corridor:['Коридор','#e7e1cf'],bath:['Санузел','#b9e4e0'],wc:['Туалет','#b9e4e0'],wardrobe:['Гардеробная','#dccdeb'],
- laundry:['Постирочная','#cfe7ec'],storage:['Кладовая','#e2dccb'],loggia:['Лоджия, балкон','#e9efe1'],balcony:['Балкон','#e9efe1'],patio:['Терраса','#e9efe1'],study:['Кабинет','#e9d3df'],other:['Помещение','#dddddd']};
+/* зоны в цветах Figma: дневная — оранжевый, спальная — фиолетовый, мокрая — голубой, вход и хранение — красный, летние — зелёный */
+const Z = {day:'#FF7237', sleep:'#874FFF', wet:'#00B6FF', entry:'#FF3737', out:'#24CB71'};
+const ZONES = [['day','Дневная'],['sleep','Спальная'],['wet','Мокрая'],['entry','Вход и хранение'],['out','Летние']];
+const ROLE = {kg:['Кухня-гостиная',Z.day],kitchen:['Кухня',Z.day],living:['Гостиная',Z.day],bedroom:['Спальня',Z.sleep],master:['Мастер-спальня',Z.sleep],
+ kids:['Детская',Z.sleep],study:['Кабинет',Z.sleep],hall:['Прихожая',Z.entry],corridor:['Коридор',Z.entry],wardrobe:['Гардеробная',Z.entry],storage:['Кладовая',Z.entry],
+ bath:['Санузел',Z.wet],wc:['Туалет',Z.wet],laundry:['Постирочная',Z.wet],loggia:['Лоджия, балкон',Z.out],balcony:['Балкон',Z.out],patio:['Терраса',Z.out],other:['Помещение','#c9c9c4']};
 const roleName = r => (ROLE[r] || ROLE.other)[0], roleCol = r => (ROLE[r] || ROLE.other)[1];
 const TYPES = [['ST','Студия'],['1E','1E · кухня-гостиная + 1 комната'],['2E','2E · 1 спальня'],['3E','3E · 2 спальни'],['4E','4E · 3 спальни'],['5E','5E · 4 спальни']];
 const TYPE_SHORT = {ST:'Студия'};
@@ -290,7 +293,7 @@ function drawCG(r, T, o){
  const fo = o.underlay ? .2 : 1; let s = '';
  g.S.forEach(sp => { s += `<path d="${[sp.o, ...sp.i].map(l => path(loopPts(l))).join(' ')}" fill="${roleCol(role[sp.r])}" fill-opacity="${fo}" fill-rule="evenodd"/>`; });
  g.H.forEach((l, i) => { s += `<path d="${path(loopPts(l))}" fill="var(--paper)" stroke="var(--ln)" stroke-width="1" ${NS}><title>${g.VK[i] === 'Stair' ? 'лестница' : 'пустота'}</title></path>`; });
- g.SH.forEach(l => { s += `<path d="${path(l)}" fill="#7fa7c9" fill-opacity="${o.underlay ? .45 : 1}" stroke="var(--ln)" stroke-width="1" ${NS}><title>стояк</title></path>`; });
+ g.SH.forEach(l => { s += `<path d="${path(l)}" fill="#18181a" fill-opacity="${o.underlay ? .5 : .85}" stroke="var(--ln)" stroke-width="1" ${NS}><title>стояк</title></path>`; });
  const geo = e => { const [x1, y1] = P(e[0]), [x2, y2] = P(e[1]), L = Math.hypot(x2 - x1, y2 - y1) || 1; return {x1, y1, L, ux:(x2 - x1) / L, uy:(y2 - y1) / L, nx:-(y2 - y1) / L, ny:(x2 - x1) / L}; };
  const pt = (q, a, c = 0) => T(q.x1 + q.ux * a + q.nx * c, q.y1 + q.uy * a + q.ny * c);
  const rng = op => { const {L} = geo(g.E[op.e]), c = L * op.t, h = op.w / 2; return [Math.max(0, c - h), Math.min(L, c + h)]; };
@@ -331,11 +334,11 @@ function svgPlan(r, o = {}){
   const R = o.big ? 150 : 210, W = o.big ? 2 : 1.6;
   (r.edges || []).forEach(e => {
    const [a, b] = e.between, t = e.type || (a === 'MOP' || b === 'MOP' ? 'entry' : 'door');
-   if (t === 'entry') { const k = a === 'MOP' ? b : a; if (!C[k]) return; const [x, y] = T(...C[k]); s += `<circle cx="${x}" cy="${y}" r="${R * 2}" fill="none" stroke="var(--ok)" stroke-width="${W}" ${NS}/>`; return; }
+   if (t === 'entry') { const k = a === 'MOP' ? b : a; if (!C[k]) return; const [x, y] = T(...C[k]); s += `<circle cx="${x}" cy="${y}" r="${R * 2}" fill="none" stroke="#18181a" stroke-width="${W * 1.6}" ${NS}/>`; return; }
    if (!C[a] || !C[b]) return; const [ax, ay] = T(...C[a]), [bx, by] = T(...C[b]);
-   s += `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${t === 'open' ? 'var(--acc)' : t === 'balcony' ? 'var(--balc)' : 'var(--err)'}" stroke-width="${W}" ${NS} ${t === 'open' ? 'stroke-dasharray="5 4"' : ''} stroke-linecap="round"/>`;
+   s += `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#18181a" stroke-width="${W}" ${NS} ${t === 'open' ? 'stroke-dasharray="5 4"' : t === 'balcony' ? 'stroke-dasharray="1 3"' : ''} stroke-linecap="round"/>`;
   });
-  (r.rooms || []).forEach(m => { const c = C[m.id]; if (!c) return; const [x, y] = T(...c); s += `<circle cx="${x}" cy="${y}" r="${R}" fill="var(--ln)"/>`; });
+  (r.rooms || []).forEach(m => { const c = C[m.id]; if (!c) return; const [x, y] = T(...c); s += `<circle cx="${x}" cy="${y}" r="${R}" fill="#18181a" stroke="#fff" stroke-width="1" ${NS}/>`; });
  }
  if (o.labels) (r.rooms || []).forEach(m => { const c = centroid(m); if (!c) return; const [x, y] = T(...c);
   s += `<text x="${x}" y="${y + (o.graph ? -330 : 90)}" text-anchor="middle" font-size="260" font-family="Inter,sans-serif" font-weight="500" fill="#18181a" style="paint-order:stroke;stroke:#ffffffcc;stroke-width:60">${nf(m.area, 1)}</text>`; });
@@ -448,7 +451,8 @@ function openPlan(id, tab){
   body.innerHTML = `<div class="plan" id="big">${svgPlan(r, {big: true, graph: st.graph, underlay: st.ul, labels: true})}</div>
    <div class="opts"><div class="chk${st.graph ? ' on' : ''}" id="oGraph" role="checkbox" tabindex="0" aria-checked="${st.graph}"><span class="bx"><span class="i">check</span></span>Связи между комнатами</div>
    ${r.underlay ? `<div class="chk${st.ul ? ' on' : ''}" id="oUl" role="checkbox" tabindex="0" aria-checked="${st.ul}"><span class="bx"><span class="i">check</span></span>Подложка PDF</div>` : ''}</div>
-   <div class="legend">${st.graph ? '<span><i style="background:var(--err)"></i>дверь</span><span><i style="background:var(--acc)"></i>проём</span><span><i style="background:var(--balc)"></i>выход на балкон</span><span><i style="background:var(--ok);height:8px;width:8px;border-radius:50%;border:2px solid var(--ok);background:none"></i>вход</span>' : ''}<span><i style="background:#3a8fff"></i>окно</span><span><i style="background:#7fa7c9;height:8px;width:8px"></i>стояк</span><span><i style="background:var(--ok)"></i>входная дверь</span></div>
+   <div class="legend">${ZONES.map(([z, l]) => `<span><i style="background:${Z[z]};height:10px;width:10px;border-radius:3px"></i>${l}</span>`).join('')}</div>
+   <div class="legend">${st.graph ? '<span><i style="background:#18181a"></i>дверь</span><span><i style="background:repeating-linear-gradient(90deg,#18181a 0 4px,transparent 4px 7px)"></i>проём</span><span><i style="background:repeating-linear-gradient(90deg,#18181a 0 1px,transparent 1px 4px)"></i>выход на балкон</span><span><i style="height:10px;width:10px;border-radius:50%;border:2px solid #18181a;background:none"></i>вход</span>' : ''}<span><i style="background:#3a8fff"></i>окно</span><span><i style="background:#18181a;height:8px;width:8px"></i>стояк</span><span><i style="background:var(--ok)"></i>входная дверь</span></div>
    ${r.cg?.ED && !r.cg.ED.ver ? '<p class="note" style="margin-top:6px">Открывание входной двери показано условно.</p>' : ''}
    ${st.ul && r.underlay?.approximate ? '<p class="note" style="margin-top:6px">Подложка из другой редакции PDF, совмещение приблизительное.</p>' : ''}
    <dl class="kv"><dt>Габарит</dt><dd class="num">${m1(k.w)} × ${m1(k.d)} м</dd>
