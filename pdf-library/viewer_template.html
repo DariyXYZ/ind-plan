@@ -190,7 +190,10 @@ function drawCG(r,T,opt){
   const col=sp=>ROLE_COL[role[sp.RoomId]]||'#ddd',NS='vector-effect="non-scaling-stroke"';let s='';
   const fillOpacity=opt.underlay ? .18 : 1;
   g.Spaces.forEach(sp=>{s+=`<path d="${[sp.OuterLoop,...(sp.InnerLoops||[])].map(l=>path(loopPts(l))).join(' ')}" fill="${col(sp)}" fill-opacity="${fillOpacity}" fill-rule="evenodd"/>`});
-  (g.PerimeterHoles||[]).forEach(l=>{s+=`<path d="${path(loopPts(l))}" fill="#7fa7c9" fill-opacity="${fillOpacity}" stroke="var(--wall)" stroke-width="1" ${NS}><title>стояк</title></path>`});
+  (g.PerimeterHoles||[]).forEach((loop,index)=>{
+    const title=g.VoidKinds?.[index]==='Stair'?'лестница':'пустота в контуре';
+    s+=`<path d="${path(loopPts(loop))}" fill="var(--panel)" fill-opacity="${fillOpacity}" stroke="var(--wall)" stroke-width="1" ${NS}><title>${title}</title></path>`;
+  });
   (g.Shafts||[]).forEach(outline=>{s+=`<path d="${path(outline)}" fill="#7fa7c9" fill-opacity="${opt.underlay ? .45 : 1}" stroke="var(--wall)" stroke-width="1" ${NS}><title>стояк</title></path>`});
   const geo=e=>{const [x1,y1]=P(e.StartNodeIndex),[x2,y2]=P(e.EndNodeIndex),L=Math.hypot(x2-x1,y2-y1)||1;return {x1,y1,L,ux:(x2-x1)/L,uy:(y2-y1)/L,nx:-(y2-y1)/L,ny:(x2-x1)/L}};
   const pt=(q,a,c=0)=>T(q.x1+q.ux*a+q.nx*c,q.y1+q.uy*a+q.ny*c);
